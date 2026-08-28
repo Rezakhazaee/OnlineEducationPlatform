@@ -35,4 +35,7 @@ public class Student
 
 
     public DateTime CreatedDate { get; set; } = DateTime.Now;
+    public string Status { get; set; } = "New";
+    public DateTime? UpdatedDate { get; set; }
+
 }
