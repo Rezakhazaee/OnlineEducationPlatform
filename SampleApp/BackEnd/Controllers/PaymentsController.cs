@@ -1,3 +1,4 @@
+using BackEnd.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BackEnd.Data;
@@ -19,20 +20,53 @@ public class PaymentsController : ControllerBase
 
     // GET: api/Payments
     [HttpGet]
-    public async Task<List<Payment>> Get()
-    {
-        return await _context.Payments.ToListAsync();
-    }
+public async Task<List<PaymentDto>> Get()
+{
+    return await _context.Payments
+        .Select(p => new PaymentDto
+        {
+            Id = p.Id,
+            EnrollmentId = p.EnrollmentId,
+            Amount = p.Amount,
+            PaymentDate = p.PaymentDate,
+            PaymentType = p.PaymentType,
+            Description = p.Description,
+            Status = p.Status
+        })
+        .ToListAsync();
+}
 
 
     // POST: api/Payments
     [HttpPost]
-    public async Task<ActionResult<Payment>> Create(Payment payment)
+    public async Task<ActionResult<PaymentDto>> Create(CreatePaymentDto dto)
     {
-        _context.Payments.Add(payment);
+        var payment = new Payment
+{
+    EnrollmentId = dto.EnrollmentId,
+    Amount = dto.Amount,
+    PaymentDate = dto.PaymentDate,
+    PaymentType = dto.PaymentType,
+    Description = dto.Description,
+    Status = dto.Status
+};
 
-        await _context.SaveChangesAsync();
+_context.Payments.Add(payment);
 
-        return payment;
+await _context.SaveChangesAsync();
+
+
+var result = new PaymentDto
+{
+    Id = payment.Id,
+    EnrollmentId = payment.EnrollmentId,
+    Amount = payment.Amount,
+    PaymentDate = payment.PaymentDate,
+    PaymentType = payment.PaymentType,
+    Description = payment.Description,
+    Status = payment.Status
+};
+
+return result;
     }
 }

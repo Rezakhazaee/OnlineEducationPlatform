@@ -1,3 +1,4 @@
+using BackEnd.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BackEnd.Data;
@@ -19,20 +20,52 @@ public class UsersController : ControllerBase
 
     // دریافت لیست کاربران
     [HttpGet]
-    public async Task<List<User>> Get()
+    public async Task<List<UserDto>> Get()
     {
-        return await _context.Users.ToListAsync();
+        return await _context.Users
+            .Select(u => new UserDto
+            {
+                Id = u.Id,
+                FullName = u.FullName,
+                Mobile = u.Mobile,
+                Username = u.Username,
+                Role = u.Role,
+                IsActive = u.IsActive,
+                CreatedAt = u.CreatedAt
+            })
+            .ToListAsync();
     }
 
 
     // ثبت کاربر جدید
     [HttpPost]
-    public async Task<ActionResult<User>> Create(User user)
+    public async Task<ActionResult<UserDto>> Create(CreateUserDto dto)
     {
+        var user = new User
+        {
+            FullName = dto.FullName,
+            Mobile = dto.Mobile,
+            Username = dto.Username,
+            PasswordHash = dto.PasswordHash,
+            Role = dto.Role,
+            IsActive = dto.IsActive
+        };
+
         _context.Users.Add(user);
 
         await _context.SaveChangesAsync();
 
-        return user;
+        var result = new UserDto
+        {
+            Id = user.Id,
+            FullName = user.FullName,
+            Mobile = user.Mobile,
+            Username = user.Username,
+            Role = user.Role,
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt
+        };
+
+        return result;
     }
 }

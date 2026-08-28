@@ -1,3 +1,4 @@
+using BackEnd.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BackEnd.Data;
@@ -18,19 +19,42 @@ public class OrganizationsController : ControllerBase
 
 
     [HttpGet]
-    public async Task<List<Organization>> Get()
-    {
-        return await _context.Organizations.ToListAsync();
-    }
+public async Task<List<OrganizationDto>> Get()
+{
+    return await _context.Organizations
+        .Select(o => new OrganizationDto
+        {
+            Id = o.Id,
+            Name = o.Name,
+            Description = o.Description,
+            IsActive = o.IsActive
+        })
+        .ToListAsync();
+}
 
 
     [HttpPost]
-    public async Task<ActionResult<Organization>> Create(Organization organization)
+    public async Task<ActionResult<OrganizationDto>> Create(CreateOrganizationDto dto)
     {
-        _context.Organizations.Add(organization);
+        var organization = new Organization
+{
+    Name = dto.Name,
+    Description = dto.Description,
+    IsActive = dto.IsActive
+};
 
-        await _context.SaveChangesAsync();
+_context.Organizations.Add(organization);
 
-        return organization;
+await _context.SaveChangesAsync();
+
+var result = new OrganizationDto
+{
+    Id = organization.Id,
+    Name = organization.Name,
+    Description = organization.Description,
+    IsActive = organization.IsActive
+};
+
+return result;
     }
 }

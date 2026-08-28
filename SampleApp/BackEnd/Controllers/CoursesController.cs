@@ -1,3 +1,4 @@
+using BackEnd.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BackEnd.Data;
@@ -19,20 +20,49 @@ public class CoursesController : ControllerBase
 
     // GET: api/Courses
     [HttpGet]
-    public async Task<List<Course>> Get()
-    {
-        return await _context.Courses.ToListAsync();
-    }
+public async Task<List<CourseDto>> Get()
+{
+    return await _context.Courses
+        .Select(c => new CourseDto
+        {
+            Id = c.Id,
+            Title = c.Title,
+            Description = c.Description,
+            Price = c.Price,
+            InstructorId = c.InstructorId,
+            IsActive = c.IsActive
+        })
+        .ToListAsync();
+}
 
 
     // POST: api/Courses
     [HttpPost]
-    public async Task<ActionResult<Course>> Create(Course course)
+    public async Task<ActionResult<CourseDto>> Create(CreateCourseDto dto)
     {
-        _context.Courses.Add(course);
+        var course = new Course
+{
+    Title = dto.Title,
+    Description = dto.Description,
+    Price = dto.Price,
+    InstructorId = dto.InstructorId,
+    IsActive = dto.IsActive
+};
 
-        await _context.SaveChangesAsync();
+_context.Courses.Add(course);
 
-        return course;
+await _context.SaveChangesAsync();
+
+var result = new CourseDto
+{
+    Id = course.Id,
+    Title = course.Title,
+    Description = course.Description,
+    Price = course.Price,
+    InstructorId = course.InstructorId,
+    IsActive = course.IsActive
+};
+
+return result;
     }
 }
