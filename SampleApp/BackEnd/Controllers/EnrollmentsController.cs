@@ -54,6 +54,89 @@ public class EnrollmentsController : ControllerBase
     }
 
 
+    // گزارش مالی یک ثبت نام
+    [HttpGet("{id}/financial")]
+    public async Task<ActionResult<EnrollmentFinancialDto>> GetFinancial(int id)
+    {
+        var enrollment = await _context.Enrollments
+            .Include(e => e.Student)
+            .Include(e => e.Course)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (enrollment == null)
+        {
+            return NotFound(new
+            {
+                message = "ثبت نام مورد نظر وجود ندارد"
+            });
+        }
+
+        if (enrollment.Course == null)
+        {
+            return BadRequest(new
+            {
+                message = "دوره مربوط به این ثبت نام وجود ندارد"
+            });
+        }
+
+
+        // فقط پرداخت‌های Paid محاسبه می‌شوند
+        var totalPaid = await _context.Payments
+            .Where(p =>
+                p.EnrollmentId == id &&
+                p.Status == "Paid")
+            .SumAsync(p => (decimal?)p.Amount) ?? 0;
+
+
+        var coursePrice = enrollment.Course.Price;
+
+        var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
+
+
+        string paymentStatus;
+
+        if (totalPaid <= 0)
+        {
+            paymentStatus = "Unpaid";
+        }
+        else if (totalPaid < coursePrice)
+        {
+            paymentStatus = "PartiallyPaid";
+        }
+        else if (totalPaid == coursePrice)
+        {
+            paymentStatus = "Paid";
+        }
+        else
+        {
+            paymentStatus = "Overpaid";
+        }
+
+
+        var result = new EnrollmentFinancialDto
+        {
+            EnrollmentId = enrollment.Id,
+
+            StudentName = enrollment.Student != null
+                ? enrollment.Student.FirstName + " " + enrollment.Student.LastName
+                : string.Empty,
+
+            CourseTitle = enrollment.Course.Title,
+
+            CoursePrice = coursePrice,
+
+            TotalPaid = totalPaid,
+
+            RemainingAmount = remainingAmount,
+
+            PaymentStatus = paymentStatus
+        };
+
+
+        return result;
+    }
+
+
     // ثبت نام دانشجو در دوره
     [HttpPost]
     public async Task<ActionResult<EnrollmentDto>> Create(CreateEnrollmentDto dto)
@@ -83,20 +166,21 @@ public class EnrollmentsController : ControllerBase
             });
         }
 
+
         // بررسی ثبت نام تکراری دانشجو در دوره
         var duplicateEnrollment = await _context.Enrollments
-          .AnyAsync(e =>
-          e.StudentId == dto.StudentId &&
-          e.CourseId == dto.CourseId &&
-          e.Status == "Active");
+            .AnyAsync(e =>
+                e.StudentId == dto.StudentId &&
+                e.CourseId == dto.CourseId &&
+                e.Status == "Active");
 
         if (duplicateEnrollment)
-      {
-         return BadRequest(new
-         {
-         message = "این دانشجو قبلاً در این دوره ثبت نام کرده است"
-         });
-      }
+        {
+            return BadRequest(new
+            {
+                message = "این دانشجو قبلاً در این دوره ثبت نام کرده است"
+            });
+        }
 
 
         // بررسی وجود پشتیبان آموزشی، در صورت ارسال

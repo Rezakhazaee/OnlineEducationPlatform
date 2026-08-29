@@ -59,14 +59,52 @@ public class PaymentsController : ControllerBase
     public async Task<ActionResult<PaymentDto>> Create(CreatePaymentDto dto)
     {
         // بررسی وجود ثبت نام
-        var enrollmentExists = await _context.Enrollments
-            .AnyAsync(e => e.Id == dto.EnrollmentId);
+        var enrollment = await _context.Enrollments
+            .Include(e => e.Course)
+            .FirstOrDefaultAsync(e => e.Id == dto.EnrollmentId);
 
-        if (!enrollmentExists)
+        if (enrollment == null)
         {
             return BadRequest(new
             {
                 message = "ثبت نام مورد نظر وجود ندارد"
+            });
+        }
+
+
+        // بررسی وجود دوره
+        if (enrollment.Course == null)
+        {
+            return BadRequest(new
+            {
+                message = "دوره مربوط به این ثبت نام وجود ندارد"
+            });
+        }
+
+
+        // فقط پرداخت‌های Paid در مجموع پرداخت‌شده محاسبه می‌شوند
+        var totalPaid = await _context.Payments
+            .Where(p =>
+                p.EnrollmentId == dto.EnrollmentId &&
+                p.Status == "Paid")
+            .SumAsync(p => (decimal?)p.Amount) ?? 0;
+
+
+        // محاسبه مجموع بعد از پرداخت جدید
+        var newTotalPaid = totalPaid + dto.Amount;
+
+
+        // جلوگیری از پرداخت بیشتر از قیمت دوره
+        if (newTotalPaid > enrollment.Course.Price)
+        {
+            return BadRequest(new
+            {
+                message = "مجموع پرداخت‌ها نمی‌تواند بیشتر از قیمت دوره باشد",
+                coursePrice = enrollment.Course.Price,
+                totalPaid = totalPaid,
+                newPaymentAmount = dto.Amount,
+                totalAfterPayment = newTotalPaid,
+                remainingAmount = enrollment.Course.Price - totalPaid
             });
         }
 
