@@ -1,8 +1,8 @@
+using BackEnd.Data;
 using BackEnd.DTOs;
+using BackEnd.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using BackEnd.Data;
-using BackEnd.Models;
 
 namespace BackEnd.Controllers;
 
@@ -18,55 +18,89 @@ public class PaymentsController : ControllerBase
     }
 
 
-    // GET: api/Payments
+    // دریافت لیست پرداخت‌ها با اطلاعات دانشجو و دوره
     [HttpGet]
-public async Task<List<PaymentDto>> Get()
-{
-    return await _context.Payments
-        .Select(p => new PaymentDto
-        {
-            Id = p.Id,
-            EnrollmentId = p.EnrollmentId,
-            Amount = p.Amount,
-            PaymentDate = p.PaymentDate,
-            PaymentType = p.PaymentType,
-            Description = p.Description,
-            Status = p.Status
-        })
-        .ToListAsync();
-}
+    public async Task<List<PaymentDetailDto>> Get()
+    {
+        return await _context.Payments
+            .Select(p => new PaymentDetailDto
+            {
+                Id = p.Id,
+
+                EnrollmentId = p.EnrollmentId,
+
+                StudentName = p.Enrollment != null &&
+                              p.Enrollment.Student != null
+                    ? p.Enrollment.Student.FirstName + " " +
+                      p.Enrollment.Student.LastName
+                    : string.Empty,
+
+                CourseTitle = p.Enrollment != null &&
+                              p.Enrollment.Course != null
+                    ? p.Enrollment.Course.Title
+                    : string.Empty,
+
+                Amount = p.Amount,
+
+                PaymentDate = p.PaymentDate,
+
+                PaymentType = p.PaymentType,
+
+                Description = p.Description,
+
+                Status = p.Status
+            })
+            .ToListAsync();
+    }
 
 
-    // POST: api/Payments
+    // ثبت پرداخت جدید
     [HttpPost]
     public async Task<ActionResult<PaymentDto>> Create(CreatePaymentDto dto)
     {
+        // بررسی وجود ثبت نام
+        var enrollmentExists = await _context.Enrollments
+            .AnyAsync(e => e.Id == dto.EnrollmentId);
+
+        if (!enrollmentExists)
+        {
+            return BadRequest(new
+            {
+                message = "ثبت نام مورد نظر وجود ندارد"
+            });
+        }
+
+
+        // ایجاد پرداخت
         var payment = new Payment
-{
-    EnrollmentId = dto.EnrollmentId,
-    Amount = dto.Amount,
-    PaymentDate = dto.PaymentDate,
-    PaymentType = dto.PaymentType,
-    Description = dto.Description,
-    Status = dto.Status
-};
-
-_context.Payments.Add(payment);
-
-await _context.SaveChangesAsync();
+        {
+            EnrollmentId = dto.EnrollmentId,
+            Amount = dto.Amount,
+            PaymentDate = dto.PaymentDate,
+            PaymentType = dto.PaymentType,
+            Description = dto.Description,
+            Status = dto.Status
+        };
 
 
-var result = new PaymentDto
-{
-    Id = payment.Id,
-    EnrollmentId = payment.EnrollmentId,
-    Amount = payment.Amount,
-    PaymentDate = payment.PaymentDate,
-    PaymentType = payment.PaymentType,
-    Description = payment.Description,
-    Status = payment.Status
-};
+        _context.Payments.Add(payment);
 
-return result;
+        await _context.SaveChangesAsync();
+
+
+        // آماده سازی نتیجه
+        var result = new PaymentDto
+        {
+            Id = payment.Id,
+            EnrollmentId = payment.EnrollmentId,
+            Amount = payment.Amount,
+            PaymentDate = payment.PaymentDate,
+            PaymentType = payment.PaymentType,
+            Description = payment.Description,
+            Status = payment.Status
+        };
+
+
+        return result;
     }
 }

@@ -1,8 +1,8 @@
+using BackEnd.Data;
 using BackEnd.DTOs;
+using BackEnd.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using BackEnd.Data;
-using BackEnd.Models;
 
 namespace BackEnd.Controllers;
 
@@ -18,55 +18,149 @@ public class EnrollmentsController : ControllerBase
     }
 
 
-    // GET: api/Enrollments
+    // دریافت لیست ثبت نام ها با اطلاعات دانشجو، دوره، پشتیبان و استاد
     [HttpGet]
-public async Task<List<EnrollmentDto>> Get()
-{
-    return await _context.Enrollments
-        .Select(e => new EnrollmentDto
-        {
-            Id = e.Id,
-            StudentId = e.StudentId,
-            CourseId = e.CourseId,
-            SupportUserId = e.SupportUserId,
-            InstructorId = e.InstructorId,
-            StartDate = e.StartDate,
-            Status = e.Status
-        })
-        .ToListAsync();
-}
+    public async Task<List<EnrollmentDetailDto>> Get()
+    {
+        return await _context.Enrollments
+            .Select(e => new EnrollmentDetailDto
+            {
+                Id = e.Id,
+
+                StudentId = e.StudentId,
+                StudentName = e.Student != null
+                    ? e.Student.FirstName + " " + e.Student.LastName
+                    : string.Empty,
+
+                CourseId = e.CourseId,
+                CourseTitle = e.Course != null
+                    ? e.Course.Title
+                    : string.Empty,
+
+                SupportUserId = e.SupportUserId,
+                SupportUserName = e.SupportUser != null
+                    ? e.SupportUser.FullName
+                    : null,
+
+                InstructorId = e.InstructorId,
+                InstructorName = e.Instructor != null
+                    ? e.Instructor.FullName
+                    : null,
+
+                StartDate = e.StartDate,
+                Status = e.Status
+            })
+            .ToListAsync();
+    }
 
 
-    // POST: api/Enrollments
+    // ثبت نام دانشجو در دوره
     [HttpPost]
     public async Task<ActionResult<EnrollmentDto>> Create(CreateEnrollmentDto dto)
     {
+        // بررسی وجود دانشجو
+        var studentExists = await _context.Students
+            .AnyAsync(s => s.Id == dto.StudentId);
+
+        if (!studentExists)
+        {
+            return BadRequest(new
+            {
+                message = "دانشجوی مورد نظر وجود ندارد"
+            });
+        }
+
+
+        // بررسی وجود دوره
+        var courseExists = await _context.Courses
+            .AnyAsync(c => c.Id == dto.CourseId);
+
+        if (!courseExists)
+        {
+            return BadRequest(new
+            {
+                message = "دوره مورد نظر وجود ندارد"
+            });
+        }
+
+        // بررسی ثبت نام تکراری دانشجو در دوره
+        var duplicateEnrollment = await _context.Enrollments
+          .AnyAsync(e =>
+          e.StudentId == dto.StudentId &&
+          e.CourseId == dto.CourseId &&
+          e.Status == "Active");
+
+        if (duplicateEnrollment)
+      {
+         return BadRequest(new
+         {
+         message = "این دانشجو قبلاً در این دوره ثبت نام کرده است"
+         });
+      }
+
+
+        // بررسی وجود پشتیبان آموزشی، در صورت ارسال
+        if (dto.SupportUserId.HasValue)
+        {
+            var supportExists = await _context.Users
+                .AnyAsync(u => u.Id == dto.SupportUserId.Value);
+
+            if (!supportExists)
+            {
+                return BadRequest(new
+                {
+                    message = "پشتیبان آموزشی مورد نظر وجود ندارد"
+                });
+            }
+        }
+
+
+        // بررسی وجود استاد، در صورت ارسال
+        if (dto.InstructorId.HasValue)
+        {
+            var instructorExists = await _context.Users
+                .AnyAsync(u => u.Id == dto.InstructorId.Value);
+
+            if (!instructorExists)
+            {
+                return BadRequest(new
+                {
+                    message = "استاد مورد نظر وجود ندارد"
+                });
+            }
+        }
+
+
+        // ایجاد ثبت نام
         var enrollment = new Enrollment
-{
-    StudentId = dto.StudentId,
-    CourseId = dto.CourseId,
-    SupportUserId = dto.SupportUserId,
-    InstructorId = dto.InstructorId,
-    StartDate = dto.StartDate,
-    Status = dto.Status
-};
-
-_context.Enrollments.Add(enrollment);
-
-await _context.SaveChangesAsync();
+        {
+            StudentId = dto.StudentId,
+            CourseId = dto.CourseId,
+            SupportUserId = dto.SupportUserId,
+            InstructorId = dto.InstructorId,
+            StartDate = dto.StartDate,
+            Status = dto.Status
+        };
 
 
-var result = new EnrollmentDto
-{
-    Id = enrollment.Id,
-    StudentId = enrollment.StudentId,
-    CourseId = enrollment.CourseId,
-    SupportUserId = enrollment.SupportUserId,
-    InstructorId = enrollment.InstructorId,
-    StartDate = enrollment.StartDate,
-    Status = enrollment.Status
-};
+        _context.Enrollments.Add(enrollment);
 
-return result;
+        await _context.SaveChangesAsync();
+
+
+        // آماده سازی نتیجه
+        var result = new EnrollmentDto
+        {
+            Id = enrollment.Id,
+            StudentId = enrollment.StudentId,
+            CourseId = enrollment.CourseId,
+            SupportUserId = enrollment.SupportUserId,
+            InstructorId = enrollment.InstructorId,
+            StartDate = enrollment.StartDate,
+            Status = enrollment.Status
+        };
+
+
+        return result;
     }
 }
