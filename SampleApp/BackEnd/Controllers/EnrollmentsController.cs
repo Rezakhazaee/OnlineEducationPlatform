@@ -137,6 +137,105 @@ public class EnrollmentsController : ControllerBase
     }
 
 
+    // جزئیات مالی ثبت نام به همراه لیست پرداخت‌ها
+    [HttpGet("{id}/financial-details")]
+    public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetails(int id)
+    {
+        var enrollment = await _context.Enrollments
+            .Include(e => e.Student)
+            .Include(e => e.Course)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (enrollment == null)
+        {
+            return NotFound(new
+            {
+                message = "ثبت نام مورد نظر وجود ندارد"
+            });
+        }
+
+        if (enrollment.Course == null)
+        {
+            return BadRequest(new
+            {
+                message = "دوره مربوط به این ثبت نام وجود ندارد"
+            });
+        }
+
+
+        // دریافت تمام پرداخت‌های ثبت نام
+        var payments = await _context.Payments
+            .Where(p => p.EnrollmentId == id)
+            .OrderBy(p => p.PaymentDate)
+            .Select(p => new PaymentItemDto
+            {
+                Id = p.Id,
+                Amount = p.Amount,
+                PaymentDate = p.PaymentDate,
+                PaymentType = p.PaymentType,
+                Description = p.Description,
+                Status = p.Status
+            })
+            .ToListAsync();
+
+
+        // فقط پرداخت‌های Paid در محاسبه مجموع لحاظ می‌شوند
+        var totalPaid = payments
+            .Where(p => p.Status == "Paid")
+            .Sum(p => p.Amount);
+
+
+        var coursePrice = enrollment.Course.Price;
+
+        var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
+
+
+        string paymentStatus;
+
+        if (totalPaid <= 0)
+        {
+            paymentStatus = "Unpaid";
+        }
+        else if (totalPaid < coursePrice)
+        {
+            paymentStatus = "PartiallyPaid";
+        }
+        else if (totalPaid == coursePrice)
+        {
+            paymentStatus = "Paid";
+        }
+        else
+        {
+            paymentStatus = "Overpaid";
+        }
+
+
+        var result = new EnrollmentFinancialDetailDto
+        {
+            EnrollmentId = enrollment.Id,
+
+            StudentName = enrollment.Student != null
+                ? enrollment.Student.FirstName + " " + enrollment.Student.LastName
+                : string.Empty,
+
+            CourseTitle = enrollment.Course.Title,
+
+            CoursePrice = coursePrice,
+
+            TotalPaid = totalPaid,
+
+            RemainingAmount = remainingAmount,
+
+            PaymentStatus = paymentStatus,
+
+            Payments = payments
+        };
+
+
+        return result;
+    }
+
+
     // ثبت نام دانشجو در دوره
     [HttpPost]
     public async Task<ActionResult<EnrollmentDto>> Create(CreateEnrollmentDto dto)
