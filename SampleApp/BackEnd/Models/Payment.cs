@@ -8,6 +8,8 @@ public class Payment
     // مربوط به کدام ثبت نام است؟
     public int EnrollmentId { get; set; }
 
+    public Enrollment? Enrollment { get; set; }
+
 
     // مبلغ پرداختی
     public decimal Amount { get; set; }
@@ -26,6 +28,6 @@ public class Payment
     public string? Description { get; set; }
 
 
-    // وضعیت پرداختgit status
+    // وضعیت پرداخت
     public string Status { get; set; } = "Paid";
 }

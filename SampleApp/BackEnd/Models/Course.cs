@@ -10,7 +10,10 @@ public class Course
 
     public decimal Price { get; set; }
 
+    // استاد دوره
     public int? InstructorId { get; set; }
+
+    public User? Instructor { get; set; }
 
     public bool IsActive { get; set; } = true;
 }
