@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BackEnd.Data;
 using BackEnd.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BackEnd.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class StudentsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;

@@ -316,6 +316,7 @@ public class PaymentsController : ControllerBase
         // ----------------------------------------
 
         var result = new PaymentDto
+           
         {
             Id = payment.Id,
 
@@ -335,4 +336,172 @@ public class PaymentsController : ControllerBase
 
         return result;
     }
+
+    // تغییر وضعیت پرداخت از Pending به Paid
+[HttpPut("{id}/pay")]
+public async Task<IActionResult> Pay(int id)
+{
+    var payment = await _context.Payments
+        .Include(p => p.Enrollment)
+        .ThenInclude(e => e!.Course)
+        .FirstOrDefaultAsync(p => p.Id == id);
+
+    if (payment == null)
+    {
+        return NotFound(new
+        {
+            message = "پرداخت مورد نظر پیدا نشد"
+        });
+    }
+
+    if (payment.Status != "Pending")
+    {
+        return BadRequest(new
+        {
+            message = "فقط پرداخت‌های Pending قابل تأیید هستند",
+            currentStatus = payment.Status
+        });
+    }
+
+    if (payment.Enrollment == null)
+    {
+        return BadRequest(new
+        {
+            message = "ثبت نام مربوط به این پرداخت پیدا نشد"
+        });
+    }
+
+    if (payment.Enrollment.Course == null)
+    {
+        return BadRequest(new
+        {
+            message = "دوره مربوط به این ثبت نام پیدا نشد"
+        });
+    }
+
+    // جلوگیری از ثبت قسط تکراری
+    if (payment.PaymentType != "FullPayment")
+    {
+        var installmentAlreadyExists = await _context.Payments
+            .AnyAsync(p =>
+                p.Id != payment.Id &&
+                p.EnrollmentId == payment.EnrollmentId &&
+                p.PaymentType == payment.PaymentType &&
+                p.Status == "Paid");
+
+        if (installmentAlreadyExists)
+        {
+            return BadRequest(new
+            {
+                message = "این قسط قبلاً پرداخت شده است"
+            });
+        }
+    }
+
+    // کنترل ترتیب اقساط
+    if (payment.PaymentType == "SecondInstallment")
+    {
+        var firstInstallmentExists = await _context.Payments
+            .AnyAsync(p =>
+                p.EnrollmentId == payment.EnrollmentId &&
+                p.PaymentType == "FirstInstallment" &&
+                p.Status == "Paid");
+
+        if (!firstInstallmentExists)
+        {
+            return BadRequest(new
+            {
+                message = "ابتدا باید قسط اول پرداخت شود"
+            });
+        }
+    }
+
+    if (payment.PaymentType == "ThirdInstallment")
+    {
+        var secondInstallmentExists = await _context.Payments
+            .AnyAsync(p =>
+                p.EnrollmentId == payment.EnrollmentId &&
+                p.PaymentType == "SecondInstallment" &&
+                p.Status == "Paid");
+
+        if (!secondInstallmentExists)
+        {
+            return BadRequest(new
+            {
+                message = "ابتدا باید قسط دوم پرداخت شود"
+            });
+        }
+    }
+
+    // محاسبه مجموع پرداخت‌های قبلی
+    var totalPaid = await _context.Payments
+        .Where(p =>
+            p.EnrollmentId == payment.EnrollmentId &&
+            p.Status == "Paid")
+        .SumAsync(p => (decimal?)p.Amount) ?? 0;
+
+    var coursePrice = payment.Enrollment.Course.Price;
+
+    var totalAfterPayment = totalPaid + payment.Amount;
+
+    // جلوگیری از پرداخت بیشتر از قیمت دوره
+    if (totalAfterPayment > coursePrice)
+    {
+        return BadRequest(new
+        {
+            message = "مجموع پرداخت‌ها نمی‌تواند بیشتر از قیمت دوره باشد",
+            coursePrice,
+            totalPaid,
+            paymentAmount = payment.Amount,
+            totalAfterPayment
+        });
+    }
+    // تغییر وضعیت
+    payment.Status = "Paid";
+
+    await _context.SaveChangesAsync();
+
+    return Ok(new
+    {
+        message = "پرداخت با موفقیت تأیید شد",
+        paymentId = payment.Id,
+        status = payment.Status
+    });
+}
+
+// تغییر وضعیت پرداخت از Pending به Cancelled
+[HttpPut("{id}/cancel")]
+public async Task<IActionResult> Cancel(int id)
+{
+    var payment = await _context.Payments
+        .FirstOrDefaultAsync(p => p.Id == id);
+
+    if (payment == null)
+    {
+        return NotFound(new
+        {
+            message = "پرداخت مورد نظر پیدا نشد"
+        });
+    }
+
+    if (payment.Status != "Pending")
+    {
+        return BadRequest(new
+        {
+            message = "فقط پرداخت‌های Pending قابل لغو هستند",
+            currentStatus = payment.Status
+        });
+    }
+
+    payment.Status = "Cancelled";
+
+    await _context.SaveChangesAsync();
+
+    return Ok(new
+    {
+        message = "پرداخت با موفقیت لغو شد",
+        paymentId = payment.Id,
+        status = payment.Status
+    });
+}
 }

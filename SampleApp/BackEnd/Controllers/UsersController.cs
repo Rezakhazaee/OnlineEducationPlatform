@@ -1,4 +1,5 @@
 using BackEnd.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BackEnd.Data;
@@ -8,6 +9,7 @@ namespace BackEnd.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Admin")]
 public class UsersController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -16,7 +18,6 @@ public class UsersController : ControllerBase
     {
         _context = context;
     }
-
 
     // دریافت لیست کاربران
     [HttpGet]
@@ -36,19 +37,42 @@ public class UsersController : ControllerBase
             .ToListAsync();
     }
 
-
     // ثبت کاربر جدید
     [HttpPost]
     public async Task<ActionResult<UserDto>> Create(CreateUserDto dto)
     {
+        var usernameExists = await _context.Users
+            .AnyAsync(u => u.Username == dto.Username);
+
+        if (usernameExists)
+        {
+            return BadRequest(new
+            {
+                message = "این نام کاربری قبلاً ثبت شده است"
+            });
+        }
+
+        var mobileExists = await _context.Users
+            .AnyAsync(u => u.Mobile == dto.Mobile);
+
+        if (mobileExists)
+        {
+            return BadRequest(new
+            {
+                message = "این شماره موبایل قبلاً ثبت شده است"
+            });
+        }
+
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+
         var user = new User
         {
             FullName = dto.FullName,
             Mobile = dto.Mobile,
             Username = dto.Username,
-            PasswordHash = dto.PasswordHash,
-            Role = dto.Role,
-            IsActive = dto.IsActive
+            PasswordHash = passwordHash,
+            Role = "Student",
+            IsActive = true
         };
 
         _context.Users.Add(user);
