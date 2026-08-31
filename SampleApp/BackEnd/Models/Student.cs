@@ -4,6 +4,12 @@ public class Student
 {
     public int Id { get; set; }
 
+    // ارتباط با حساب کاربری
+    public int? UserId { get; set; }
+
+    public User? User { get; set; }
+
+
     public string FirstName { get; set; } = string.Empty;
 
     public string LastName { get; set; } = string.Empty;

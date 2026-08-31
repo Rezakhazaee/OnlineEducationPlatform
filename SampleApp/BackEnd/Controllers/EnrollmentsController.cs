@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using BackEnd.Data;
 using BackEnd.DTOs;
 using BackEnd.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace BackEnd.Controllers;
 
@@ -237,10 +239,36 @@ public class EnrollmentsController : ControllerBase
 
 
     // ثبت نام دانشجو در دوره
+    [Authorize]
     [HttpPost]
     public async Task<ActionResult<EnrollmentDto>> Create(CreateEnrollmentDto dto)
     {
         // بررسی وجود دانشجو
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+if (!int.TryParse(userIdClaim, out var userId))
+{
+    return Unauthorized(new
+    {
+        message = "شناسه کاربر معتبر نیست"
+    });
+}
+
+if (User.IsInRole("Student"))
+{
+    var student = await _context.Students
+        .FirstOrDefaultAsync(s => s.UserId == userId);
+
+    if (student == null)
+    {
+        return BadRequest(new
+        {
+            message = "برای این کاربر پروفایل دانشجویی وجود ندارد"
+        });
+    }
+
+    dto.StudentId = student.Id;
+}
         var studentExists = await _context.Students
             .AnyAsync(s => s.Id == dto.StudentId);
 

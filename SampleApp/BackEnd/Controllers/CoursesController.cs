@@ -1,8 +1,9 @@
+using BackEnd.Data;
 using BackEnd.DTOs;
+using BackEnd.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using BackEnd.Data;
-using BackEnd.Models;
 
 namespace BackEnd.Controllers;
 
@@ -17,52 +18,62 @@ public class CoursesController : ControllerBase
         _context = context;
     }
 
-
+    // =========================
     // GET: api/Courses
+    // دریافت لیست دوره‌ها
+    // =========================
+
     [HttpGet]
-public async Task<List<CourseDto>> Get()
-{
-    return await _context.Courses
-        .Select(c => new CourseDto
-        {
-            Id = c.Id,
-            Title = c.Title,
-            Description = c.Description,
-            Price = c.Price,
-            InstructorId = c.InstructorId,
-            IsActive = c.IsActive
-        })
-        .ToListAsync();
-}
+    [Authorize]
+    public async Task<List<CourseDto>> Get()
+    {
+        return await _context.Courses
+            .Select(c => new CourseDto
+            {
+                Id = c.Id,
+                Title = c.Title,
+                Description = c.Description,
+                Price = c.Price,
+                InstructorId = c.InstructorId,
+                IsActive = c.IsActive
+            })
+            .ToListAsync();
+    }
 
 
+    // =========================
     // POST: api/Courses
+    // ایجاد دوره جدید
+    // فقط Admin
+    // =========================
+
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<CourseDto>> Create(CreateCourseDto dto)
     {
         var course = new Course
-{
-    Title = dto.Title,
-    Description = dto.Description,
-    Price = dto.Price,
-    InstructorId = dto.InstructorId,
-    IsActive = dto.IsActive
-};
+        {
+            Title = dto.Title,
+            Description = dto.Description,
+            Price = dto.Price,
+            InstructorId = dto.InstructorId,
+            IsActive = dto.IsActive
+        };
 
-_context.Courses.Add(course);
+        _context.Courses.Add(course);
 
-await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
 
-var result = new CourseDto
-{
-    Id = course.Id,
-    Title = course.Title,
-    Description = course.Description,
-    Price = course.Price,
-    InstructorId = course.InstructorId,
-    IsActive = course.IsActive
-};
+        var result = new CourseDto
+        {
+            Id = course.Id,
+            Title = course.Title,
+            Description = course.Description,
+            Price = course.Price,
+            InstructorId = course.InstructorId,
+            IsActive = course.IsActive
+        };
 
-return result;
+        return Ok(result);
     }
 }

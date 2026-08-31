@@ -26,6 +26,16 @@ public class ApplicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        
+// =========================
+// User -> Student
+// =========================
+
+    modelBuilder.Entity<Student>()
+    .HasOne(s => s.User)
+    .WithMany()
+    .HasForeignKey(s => s.UserId)
+    .OnDelete(DeleteBehavior.Restrict);
 
 
         // =========================
