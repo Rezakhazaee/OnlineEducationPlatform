@@ -20,6 +20,67 @@ public class EnrollmentsController : ControllerBase
     }
 
 
+    // دریافت ثبت نام‌های دانشجوی وارد شده
+    [Authorize(Roles = "Student")]
+    [HttpGet("my")]
+    public async Task<ActionResult<List<EnrollmentDetailDto>>> GetMyEnrollments()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (student == null)
+        {
+            return BadRequest(new
+            {
+                message = "برای این کاربر پروفایل دانشجویی وجود ندارد"
+            });
+        }
+
+        var enrollments = await _context.Enrollments
+            .Where(e => e.StudentId == student.Id)
+            .Select(e => new EnrollmentDetailDto
+            {
+                Id = e.Id,
+
+                StudentId = e.StudentId,
+                StudentName = e.Student != null
+                    ? e.Student.FirstName + " " + e.Student.LastName
+                    : string.Empty,
+
+                CourseId = e.CourseId,
+                CourseTitle = e.Course != null
+                    ? e.Course.Title
+                    : string.Empty,
+
+                SupportUserId = e.SupportUserId,
+                SupportUserName = e.SupportUser != null
+                    ? e.SupportUser.FullName
+                    : null,
+
+                InstructorId = e.InstructorId,
+                InstructorName = e.Instructor != null
+                    ? e.Instructor.FullName
+                    : null,
+
+                StartDate = e.StartDate,
+                Status = e.Status
+            })
+            .ToListAsync();
+
+        return Ok(enrollments);
+    }
+
+
     // دریافت لیست ثبت نام ها با اطلاعات دانشجو، دوره، پشتیبان و استاد
     [HttpGet]
     public async Task<List<EnrollmentDetailDto>> Get()
@@ -243,32 +304,37 @@ public class EnrollmentsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<EnrollmentDto>> Create(CreateEnrollmentDto dto)
     {
-        // بررسی وجود دانشجو
+        // بررسی شناسه کاربر از JWT
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-if (!int.TryParse(userIdClaim, out var userId))
-{
-    return Unauthorized(new
-    {
-        message = "شناسه کاربر معتبر نیست"
-    });
-}
-
-if (User.IsInRole("Student"))
-{
-    var student = await _context.Students
-        .FirstOrDefaultAsync(s => s.UserId == userId);
-
-    if (student == null)
-    {
-        return BadRequest(new
+        if (!int.TryParse(userIdClaim, out var userId))
         {
-            message = "برای این کاربر پروفایل دانشجویی وجود ندارد"
-        });
-    }
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
 
-    dto.StudentId = student.Id;
-}
+        // اگر کاربر Student باشد،
+        // StudentId از روی UserId تعیین می‌شود
+        if (User.IsInRole("Student"))
+        {
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == userId);
+
+            if (student == null)
+            {
+                return BadRequest(new
+                {
+                    message = "برای این کاربر پروفایل دانشجویی وجود ندارد"
+                });
+            }
+
+            dto.StudentId = student.Id;
+        }
+
+
+        // بررسی وجود دانشجو
         var studentExists = await _context.Students
             .AnyAsync(s => s.Id == dto.StudentId);
 

@@ -1,30 +1,198 @@
-using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using BackEnd.Data;
+using Microsoft.AspNetCore.OpenApi;
+using Scalar.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using System.Text;
 
-var dbPath = "../../BackEnd/app.db";
+var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = $"Data Source={dbPath}";
+builder.Services.AddControllers();
 
-using var connection = new SqliteConnection(connectionString);
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlite(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    ));
 
-await connection.OpenAsync();
 
-var command = connection.CreateCommand();
+// =========================
+// JWT Authentication
+// =========================
 
-command.CommandText = """
-    UPDATE Students
-    SET UserId = 5
-    WHERE Id = 4;
-    """;
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException(
+        "JWT Key تنظیم نشده است");
 
-var rows = await command.ExecuteNonQueryAsync();
+var jwtIssuer = builder.Configuration["Jwt:Issuer"]
+    ?? throw new InvalidOperationException(
+        "JWT Issuer تنظیم نشده است");
 
-Console.WriteLine($"تعداد Studentهای اصلاح‌شده: {rows}");
+var jwtAudience = builder.Configuration["Jwt:Audience"]
+    ?? throw new InvalidOperationException(
+        "JWT Audience تنظیم نشده است");
 
-if (rows == 1)
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters =
+            new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+
+                IssuerSigningKey =
+                    new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(jwtKey)
+                    ),
+
+                ValidateIssuer = true,
+                ValidIssuer = jwtIssuer,
+
+                ValidateAudience = true,
+                ValidAudience = jwtAudience,
+
+                ValidateLifetime = true,
+
+                ClockSkew = TimeSpan.Zero
+            };
+    });
+
+builder.Services.AddAuthorization();
+
+
+// =========================
+// OpenAPI
+// =========================
+
+builder.Services.AddOpenApi(options =>
 {
-    Console.WriteLine("Student با موفقیت به student_test متصل شد.");
+    options.AddDocumentTransformer(
+        (document, context, cancellationToken) =>
+        {
+            document.Servers = [];
+
+            var securitySchemes =
+                new Dictionary<string, IOpenApiSecurityScheme>
+                {
+                    ["Bearer"] = new OpenApiSecurityScheme
+                    {
+                        Type = SecuritySchemeType.Http,
+                        Scheme = "bearer",
+                        In = ParameterLocation.Header,
+                        BearerFormat = "JWT"
+                    }
+                };
+
+            document.Components ??= new OpenApiComponents();
+
+            document.Components.SecuritySchemes =
+                securitySchemes;
+
+            return Task.CompletedTask;
+        });
+
+    options.AddOperationTransformer(
+        (operation, context, cancellationToken) =>
+        {
+            var hasAuthorize =
+                context.Description.ActionDescriptor
+                    .EndpointMetadata
+                    .OfType<Microsoft.AspNetCore.Authorization.IAuthorizeData>()
+                    .Any();
+
+            if (hasAuthorize)
+            {
+                operation.Security ??=
+                    new List<OpenApiSecurityRequirement>();
+
+                operation.Security.Add(
+                    new OpenApiSecurityRequirement
+                    {
+                        [new OpenApiSecuritySchemeReference(
+                            "Bearer",
+                            null!
+                        )] = []
+                    });
+            }
+
+            return Task.CompletedTask;
+        });
+});
+
+
+var app = builder.Build();
+
+
+// =========================
+// HTTP Pipeline
+// =========================
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 }
-else
+
+app.UseHttpsRedirection();
+
+app.UseAuthentication();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+
+// =========================
+// Weather API
+// =========================
+
+var summaries = new[]
 {
-    Console.WriteLine("Student مورد نظر پیدا نشد.");
+    "Freezing",
+    "Bracing",
+    "Chilly",
+    "Cool",
+    "Mild",
+    "Warm",
+    "Balmy",
+    "Hot",
+    "Sweltering",
+    "Scorching"
+};
+
+app.MapGet("/weatherforecast", () =>
+{
+    var forecast = Enumerable.Range(1, 5)
+        .Select(index =>
+            new WeatherForecast
+            (
+                DateOnly.FromDateTime(
+                    DateTime.Now.AddDays(index)
+                ),
+
+                Random.Shared.Next(-20, 55),
+
+                summaries[
+                    Random.Shared.Next(
+                        summaries.Length)
+                ]
+            ))
+        .ToArray();
+
+    return forecast;
+})
+.WithName("GetWeatherForecast");
+
+app.Run();
+
+
+internal record WeatherForecast(
+    DateOnly Date,
+    int TemperatureC,
+    string? Summary)
+{
+    public int TemperatureF =>
+        32 + (int)(TemperatureC / 0.5556);
 }
