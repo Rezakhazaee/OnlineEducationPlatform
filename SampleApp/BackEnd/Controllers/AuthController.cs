@@ -2,6 +2,7 @@ using BackEnd.Data;
 using BackEnd.DTOs;
 using BackEnd.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -24,7 +25,6 @@ public class AuthController : ControllerBase
         _configuration = configuration;
     }
 
-
     // =========================
     // Register
     // =========================
@@ -33,8 +33,8 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register(CreateUserDto dto)
     {
         // بررسی نام کاربری تکراری
-        var usernameExists = _context.Users
-            .Any(u => u.Username == dto.Username);
+        var usernameExists = await _context.Users
+            .AnyAsync(u => u.Username == dto.Username);
 
         if (usernameExists)
         {
@@ -44,10 +44,9 @@ public class AuthController : ControllerBase
             });
         }
 
-
         // بررسی شماره موبایل تکراری
-        var mobileExists = _context.Users
-            .Any(u => u.Mobile == dto.Mobile);
+        var mobileExists = await _context.Users
+            .AnyAsync(u => u.Mobile == dto.Mobile);
 
         if (mobileExists)
         {
@@ -57,12 +56,10 @@ public class AuthController : ControllerBase
             });
         }
 
-
         // Hash کردن رمز عبور
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(
             dto.Password
         );
-
 
         // ایجاد کاربر
         var user = new User
@@ -72,18 +69,16 @@ public class AuthController : ControllerBase
             Username = dto.Username,
             PasswordHash = passwordHash,
 
-            // نقش پیش فرض
+            // نقش پیش‌فرض کاربران ثبت‌نام‌شده
             Role = "Student",
 
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
 
-
         _context.Users.Add(user);
 
         await _context.SaveChangesAsync();
-
 
         return Ok(new
         {
@@ -94,7 +89,6 @@ public class AuthController : ControllerBase
         });
     }
 
-
     // =========================
     // Login
     // =========================
@@ -103,9 +97,8 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login(LoginDto dto)
     {
         // پیدا کردن کاربر
-        var user = _context.Users
-            .FirstOrDefault(u => u.Username == dto.Username);
-
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Username == dto.Username);
 
         if (user == null)
         {
@@ -115,8 +108,7 @@ public class AuthController : ControllerBase
             });
         }
 
-
-        // بررسی فعال بودن کاربر
+        // بررسی فعال بودن حساب
         if (!user.IsActive)
         {
             return Unauthorized(new
@@ -125,13 +117,11 @@ public class AuthController : ControllerBase
             });
         }
 
-
         // بررسی رمز عبور
         var passwordValid = BCrypt.Net.BCrypt.Verify(
             dto.Password,
             user.PasswordHash
         );
-
 
         if (!passwordValid)
         {
@@ -141,10 +131,8 @@ public class AuthController : ControllerBase
             });
         }
 
-
-        // ساخت Token
+        // ساخت JWT Token
         var token = GenerateJwtToken(user);
-
 
         return Ok(new
         {
@@ -160,9 +148,8 @@ public class AuthController : ControllerBase
         });
     }
 
-
     // =========================
-    // Generate JWT
+    // Generate JWT Token
     // =========================
 
     private string GenerateJwtToken(User user)
@@ -186,7 +173,7 @@ public class AuthController : ControllerBase
             _configuration["Jwt:ExpireMinutes"] ?? "60"
         );
 
-
+        // Claims
         var claims = new List<Claim>
         {
             new Claim(
@@ -210,18 +197,18 @@ public class AuthController : ControllerBase
             )
         };
 
-
+        // Security Key
         var securityKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(key)
         );
 
-
+        // Credentials
         var credentials = new SigningCredentials(
             securityKey,
             SecurityAlgorithms.HmacSha256
         );
 
-
+        // ایجاد Token
         var token = new JwtSecurityToken(
             issuer: issuer,
             audience: audience,
@@ -232,7 +219,7 @@ public class AuthController : ControllerBase
             signingCredentials: credentials
         );
 
-
+        // تبدیل Token به String
         return new JwtSecurityTokenHandler()
             .WriteToken(token);
     }
