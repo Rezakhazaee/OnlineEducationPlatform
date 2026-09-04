@@ -187,6 +187,74 @@ public class CoursesController : ControllerBase
         return Ok(result);
     }
 
+    
+
+    // =========================
+// PUT: api/Courses/{id}/status
+// فعال / غیرفعال کردن دوره
+// =========================
+
+[HttpPut("{id}/status")]
+[Authorize]
+public async Task<ActionResult<CourseDto>> UpdateStatus(
+    int id,
+    UpdateCourseStatusDto dto)
+{
+    var course = await _context.Courses
+        .FirstOrDefaultAsync(c => c.Id == id);
+
+    // دوره پیدا نشد
+    if (course == null)
+    {
+        return NotFound(new
+        {
+            message = "دوره پیدا نشد"
+        });
+    }
+
+    // Instructor فقط می‌تواند وضعیت دوره خودش را تغییر دهد
+    if (User.IsInRole("Instructor"))
+    {
+        var userId = User.FindFirst(
+            System.Security.Claims.ClaimTypes.NameIdentifier
+        )?.Value;
+
+        if (!int.TryParse(userId, out var instructorId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        // دوره متعلق به این Instructor نیست
+        if (course.InstructorId != instructorId)
+        {
+            return NotFound(new
+            {
+                message = "دوره پیدا نشد"
+            });
+        }
+    }
+
+    // تغییر وضعیت دوره
+    course.IsActive = dto.IsActive;
+
+    await _context.SaveChangesAsync();
+
+    var result = new CourseDto
+    {
+        Id = course.Id,
+        Title = course.Title,
+        Description = course.Description,
+        Price = course.Price,
+        InstructorId = course.InstructorId,
+        IsActive = course.IsActive
+    };
+
+    return Ok(result);
+}
+
 
     // =========================
     // GET: api/Courses/instructors

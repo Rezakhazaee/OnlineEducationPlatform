@@ -6,13 +6,24 @@ public class EnrollmentDto
 
     public int StudentId { get; set; }
 
+    public string? StudentName { get; set; }
+
     public int CourseId { get; set; }
+
+    public string? CourseTitle { get; set; }
 
     public int? SupportUserId { get; set; }
 
+    public string? SupportUserName { get; set; }
+
     public int? InstructorId { get; set; }
+
+    public string? InstructorName { get; set; }
 
     public DateTime StartDate { get; set; }
 
     public string Status { get; set; } = string.Empty;
+
+    // توضیحات ثبت‌نام
+    public string? Description { get; set; }
 }

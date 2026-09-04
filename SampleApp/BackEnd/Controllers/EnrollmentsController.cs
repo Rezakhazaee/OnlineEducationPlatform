@@ -73,7 +73,9 @@ public class EnrollmentsController : ControllerBase
                     : null,
 
                 StartDate = e.StartDate,
-                Status = e.Status
+                Status = e.Status,
+
+                Description = e.Description
             })
             .ToListAsync();
 
@@ -111,7 +113,9 @@ public class EnrollmentsController : ControllerBase
                     : null,
 
                 StartDate = e.StartDate,
-                Status = e.Status
+                Status = e.Status,
+
+                Description = e.Description
             })
             .ToListAsync();
     }
@@ -416,7 +420,8 @@ public class EnrollmentsController : ControllerBase
             SupportUserId = dto.SupportUserId,
             InstructorId = dto.InstructorId,
             StartDate = dto.StartDate,
-            Status = dto.Status
+            Status = dto.Status,
+            Description = dto.Description
         };
 
 
@@ -434,7 +439,8 @@ public class EnrollmentsController : ControllerBase
             SupportUserId = enrollment.SupportUserId,
             InstructorId = enrollment.InstructorId,
             StartDate = enrollment.StartDate,
-            Status = enrollment.Status
+            Status = enrollment.Status,
+            Description = enrollment.Description
         };
 
 
