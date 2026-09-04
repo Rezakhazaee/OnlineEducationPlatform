@@ -82,6 +82,59 @@ public class EnrollmentsController : ControllerBase
         return Ok(enrollments);
     }
 
+    
+    // دریافت ثبت نام‌های دانشجویان اختصاص یافته به Support
+[Authorize(Roles = "Support")]
+[HttpGet("support/my")]
+public async Task<ActionResult<List<EnrollmentDetailDto>>> GetMySupportEnrollments()
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (!int.TryParse(userIdClaim, out var supportUserId))
+    {
+        return Unauthorized(new
+        {
+            message = "شناسه کاربر معتبر نیست"
+        });
+    }
+
+    var enrollments = await _context.Enrollments
+        .Where(e =>
+            e.Student != null &&
+            e.Student.SupportUserId == supportUserId)
+        .Select(e => new EnrollmentDetailDto
+        {
+            Id = e.Id,
+
+            StudentId = e.StudentId,
+            StudentName = e.Student != null
+                ? e.Student.FirstName + " " + e.Student.LastName
+                : string.Empty,
+
+            CourseId = e.CourseId,
+            CourseTitle = e.Course != null
+                ? e.Course.Title
+                : string.Empty,
+
+            SupportUserId = e.SupportUserId,
+            SupportUserName = e.SupportUser != null
+                ? e.SupportUser.FullName
+                : null,
+
+            InstructorId = e.InstructorId,
+            InstructorName = e.Instructor != null
+                ? e.Instructor.FullName
+                : null,
+
+            StartDate = e.StartDate,
+            Status = e.Status,
+
+            Description = e.Description
+        })
+        .ToListAsync();
+
+    return Ok(enrollments);
+}
 
     // دریافت لیست ثبت نام ها با اطلاعات دانشجو، دوره، پشتیبان و استاد
     [HttpGet]

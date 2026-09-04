@@ -22,6 +22,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<Payment> Payments { get; set; }
 
+    public DbSet<StudentFollowUp> StudentFollowUps { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -135,7 +137,27 @@ public class ApplicationDbContext : DbContext
             .WithMany()
             .HasForeignKey(e => e.InstructorId)
             .OnDelete(DeleteBehavior.Restrict);
+         
+         // =========================
+// StudentFollowUp -> Student
+// =========================
 
+modelBuilder.Entity<StudentFollowUp>()
+    .HasOne(f => f.Student)
+    .WithMany()
+    .HasForeignKey(f => f.StudentId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+
+// =========================
+// StudentFollowUp -> Support User
+// =========================
+
+modelBuilder.Entity<StudentFollowUp>()
+    .HasOne(f => f.SupportUser)
+    .WithMany()
+    .HasForeignKey(f => f.SupportUserId)
+    .OnDelete(DeleteBehavior.Restrict);
 
         // =========================
         // Payment -> Enrollment
