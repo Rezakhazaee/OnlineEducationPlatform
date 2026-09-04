@@ -10,7 +10,6 @@ namespace BackEnd.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin,Support")]
 public class StudentsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -19,6 +18,62 @@ public class StudentsController : ControllerBase
     {
         _context = context;
     }
+
+
+    // Student - مشاهده پروفایل خودش
+[Authorize(Roles = "Student")]
+[HttpGet("me")]
+public async Task<ActionResult<StudentDto>> GetMyProfile()
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+    if (userIdClaim == null)
+    {
+        return Unauthorized(new
+        {
+            message = "شناسه کاربر در توکن پیدا نشد"
+        });
+    }
+
+    if (!int.TryParse(userIdClaim.Value, out var userId))
+    {
+        return Unauthorized(new
+        {
+            message = "شناسه کاربر معتبر نیست"
+        });
+    }
+
+    var student = await _context.Students
+        .FirstOrDefaultAsync(s => s.UserId == userId);
+
+    if (student == null)
+    {
+        return NotFound(new
+        {
+            message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
+        });
+    }
+
+    var result = new StudentDto
+    {
+        Id = student.Id,
+        FirstName = student.FirstName,
+        LastName = student.LastName,
+        NationalCode = student.NationalCode,
+        BirthDate = student.BirthDate,
+        Mobile = student.Mobile,
+        Address = student.Address,
+        GuardianName = student.GuardianName,
+        GuardianMobile = student.GuardianMobile,
+        OrganizationId = student.OrganizationId,
+        MarketingUserId = student.MarketingUserId,
+        SupportUserId = student.SupportUserId,
+        CreatedDate = student.CreatedDate
+    };
+
+    return Ok(result);
+}
+
 
     // دریافت لیست دانشجویان
     [HttpGet]
@@ -88,6 +143,7 @@ public class StudentsController : ControllerBase
     }
 
     // ثبت دانشجوی جدید
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult<StudentDto>> Create(CreateStudentDto dto)
     {

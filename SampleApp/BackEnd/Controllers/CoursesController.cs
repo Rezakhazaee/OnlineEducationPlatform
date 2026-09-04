@@ -124,7 +124,7 @@ public class CoursesController : ControllerBase
     // =========================
 
     [HttpPut("{id}")]
-    [Authorize]
+    [Authorize(Roles = "Admin,Instructor")]
     public async Task<ActionResult<CourseDto>> Update(
         int id,
         UpdateCourseDto dto)
@@ -195,7 +195,7 @@ public class CoursesController : ControllerBase
 // =========================
 
 [HttpPut("{id}/status")]
-[Authorize]
+[Authorize(Roles = "Admin,Instructor")]
 public async Task<ActionResult<CourseDto>> UpdateStatus(
     int id,
     UpdateCourseStatusDto dto)

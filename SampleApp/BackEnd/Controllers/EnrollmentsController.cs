@@ -82,7 +82,213 @@ public class EnrollmentsController : ControllerBase
         return Ok(enrollments);
     }
 
-    
+    // Student - گزارش مالی ثبت نام خودش
+[Authorize(Roles = "Student")]
+[HttpGet("my/{id}/financial")]
+public async Task<ActionResult<EnrollmentFinancialDto>> GetMyFinancial(int id)
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (!int.TryParse(userIdClaim, out var userId))
+    {
+        return Unauthorized(new
+        {
+            message = "شناسه کاربر معتبر نیست"
+        });
+    }
+
+    var student = await _context.Students
+        .FirstOrDefaultAsync(s => s.UserId == userId);
+
+    if (student == null)
+    {
+        return NotFound(new
+        {
+            message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
+        });
+    }
+
+    var enrollment = await _context.Enrollments
+        .Include(e => e.Student)
+        .Include(e => e.Course)
+        .FirstOrDefaultAsync(e =>
+            e.Id == id &&
+            e.StudentId == student.Id);
+
+    if (enrollment == null)
+    {
+        return NotFound(new
+        {
+            message = "ثبت نام مورد نظر پیدا نشد"
+        });
+    }
+
+    if (enrollment.Course == null)
+    {
+        return BadRequest(new
+        {
+            message = "دوره مربوط به این ثبت نام وجود ندارد"
+        });
+    }
+
+    var totalPaid = await _context.Payments
+        .Where(p =>
+            p.EnrollmentId == id &&
+            p.Status == "Paid")
+        .SumAsync(p => (decimal?)p.Amount) ?? 0;
+
+    var coursePrice = enrollment.Course.Price;
+    var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
+
+    string paymentStatus;
+
+    if (totalPaid <= 0)
+    {
+        paymentStatus = "Unpaid";
+    }
+    else if (totalPaid < coursePrice)
+    {
+        paymentStatus = "PartiallyPaid";
+    }
+    else if (totalPaid == coursePrice)
+    {
+        paymentStatus = "Paid";
+    }
+    else
+    {
+        paymentStatus = "Overpaid";
+    }
+
+    var result = new EnrollmentFinancialDto
+    {
+        EnrollmentId = enrollment.Id,
+        StudentName = enrollment.Student != null
+            ? enrollment.Student.FirstName + " " + enrollment.Student.LastName
+            : string.Empty,
+        CourseTitle = enrollment.Course.Title,
+        CoursePrice = coursePrice,
+        TotalPaid = totalPaid,
+        RemainingAmount = remainingAmount,
+        PaymentStatus = paymentStatus
+    };
+
+    return Ok(result);
+}
+
+  // Student - جزئیات مالی ثبت نام خودش
+[Authorize(Roles = "Student")]
+[HttpGet("my/{id}/financial-details")]
+public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetMyFinancialDetails(int id)
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (!int.TryParse(userIdClaim, out var userId))
+    {
+        return Unauthorized(new
+        {
+            message = "شناسه کاربر معتبر نیست"
+        });
+    }
+
+    var student = await _context.Students
+        .FirstOrDefaultAsync(s => s.UserId == userId);
+
+    if (student == null)
+    {
+        return NotFound(new
+        {
+            message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
+        });
+    }
+
+    var enrollment = await _context.Enrollments
+        .Include(e => e.Student)
+        .Include(e => e.Course)
+        .FirstOrDefaultAsync(e =>
+            e.Id == id &&
+            e.StudentId == student.Id);
+
+    if (enrollment == null)
+    {
+        return NotFound(new
+        {
+            message = "ثبت نام مورد نظر پیدا نشد"
+        });
+    }
+
+    if (enrollment.Course == null)
+    {
+        return BadRequest(new
+        {
+            message = "دوره مربوط به این ثبت نام وجود ندارد"
+        });
+    }
+
+    var payments = await _context.Payments
+        .Where(p => p.EnrollmentId == id)
+        .OrderBy(p => p.PaymentDate)
+        .Select(p => new PaymentItemDto
+        {
+            Id = p.Id,
+            Amount = p.Amount,
+            PaymentDate = p.PaymentDate,
+            PaymentType = p.PaymentType,
+            Description = p.Description,
+            Status = p.Status
+        })
+        .ToListAsync();
+
+    var totalPaid = payments
+        .Where(p => p.Status == "Paid")
+        .Sum(p => p.Amount);
+
+    var coursePrice = enrollment.Course.Price;
+
+    var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
+
+    string paymentStatus;
+
+    if (totalPaid <= 0)
+    {
+        paymentStatus = "Unpaid";
+    }
+    else if (totalPaid < coursePrice)
+    {
+        paymentStatus = "PartiallyPaid";
+    }
+    else if (totalPaid == coursePrice)
+    {
+        paymentStatus = "Paid";
+    }
+    else
+    {
+        paymentStatus = "Overpaid";
+    }
+
+    var result = new EnrollmentFinancialDetailDto
+    {
+        EnrollmentId = enrollment.Id,
+
+        StudentName = enrollment.Student != null
+            ? enrollment.Student.FirstName + " " + enrollment.Student.LastName
+            : string.Empty,
+
+        CourseTitle = enrollment.Course.Title,
+
+        CoursePrice = coursePrice,
+
+        TotalPaid = totalPaid,
+
+        RemainingAmount = remainingAmount,
+
+        PaymentStatus = paymentStatus,
+
+        Payments = payments
+    };
+
+    return Ok(result);
+}
+
     // دریافت ثبت نام‌های دانشجویان اختصاص یافته به Support
 [Authorize(Roles = "Support")]
 [HttpGet("support/my")]
@@ -137,224 +343,356 @@ public async Task<ActionResult<List<EnrollmentDetailDto>>> GetMySupportEnrollmen
 }
 
     // دریافت لیست ثبت نام ها با اطلاعات دانشجو، دوره، پشتیبان و استاد
-    [HttpGet]
-    public async Task<List<EnrollmentDetailDto>> Get()
+    
+    [Authorize(Roles = "Admin,Support,Student")]
+[HttpGet]
+public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
+{
+    var query = _context.Enrollments
+        .Include(e => e.Student)
+        .Include(e => e.Course)
+        .Include(e => e.SupportUser)
+        .Include(e => e.Instructor)
+        .AsQueryable();
+
+    // Student → فقط ثبت‌نام‌های خودش
+    if (User.IsInRole("Student"))
     {
-        return await _context.Enrollments
-            .Select(e => new EnrollmentDetailDto
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
             {
-                Id = e.Id,
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
 
-                StudentId = e.StudentId,
-                StudentName = e.Student != null
-                    ? e.Student.FirstName + " " + e.Student.LastName
-                    : string.Empty,
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
 
-                CourseId = e.CourseId,
-                CourseTitle = e.Course != null
-                    ? e.Course.Title
-                    : string.Empty,
+        if (student == null)
+        {
+            return NotFound(new
+            {
+                message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
+            });
+        }
 
-                SupportUserId = e.SupportUserId,
-                SupportUserName = e.SupportUser != null
-                    ? e.SupportUser.FullName
-                    : null,
-
-                InstructorId = e.InstructorId,
-                InstructorName = e.Instructor != null
-                    ? e.Instructor.FullName
-                    : null,
-
-                StartDate = e.StartDate,
-                Status = e.Status,
-
-                Description = e.Description
-            })
-            .ToListAsync();
+        query = query.Where(e => e.StudentId == student.Id);
     }
 
+    // Support → فقط ثبت‌نام دانشجویان خودش
+    if (User.IsInRole("Support"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        query = query.Where(e =>
+            e.Student != null &&
+            e.Student.SupportUserId == userId);
+    }
+
+    var enrollments = await query
+        .Select(e => new EnrollmentDto
+        {
+            Id = e.Id,
+            StudentId = e.StudentId,
+            StudentName = e.Student != null
+                ? e.Student.FirstName + " " + e.Student.LastName
+                : string.Empty,
+            CourseId = e.CourseId,
+            CourseTitle = e.Course != null
+                ? e.Course.Title
+                : string.Empty,
+            SupportUserId = e.SupportUserId,
+            SupportUserName = e.SupportUser != null
+                ? e.SupportUser.FullName
+                : null,
+            InstructorId = e.InstructorId,
+            InstructorName = e.Instructor != null
+                ? e.Instructor.FullName
+                : null,
+            StartDate = e.StartDate,
+            Status = e.Status,
+            Description = e.Description
+        })
+        .ToListAsync();
+
+    return Ok(enrollments);
+}
 
     // گزارش مالی یک ثبت نام
-    [HttpGet("{id}/financial")]
-    public async Task<ActionResult<EnrollmentFinancialDto>> GetFinancial(int id)
-    {
-        var enrollment = await _context.Enrollments
-            .Include(e => e.Student)
-            .Include(e => e.Course)
-            .FirstOrDefaultAsync(e => e.Id == id);
+    [Authorize(Roles = "Admin,Support,Student")]
+[HttpGet("{id}/financial")]
+public async Task<ActionResult<EnrollmentFinancialDto>> GetFinancial(int id)
+{
+    var enrollment = await _context.Enrollments
+        .Include(e => e.Student)
+        .Include(e => e.Course)
+        .FirstOrDefaultAsync(e => e.Id == id);
 
-        if (enrollment == null)
+    if (enrollment == null)
+    {
+        return NotFound(new
+        {
+            message = "ثبت نام مورد نظر پیدا نشد"
+        });
+    }
+
+    // Student → فقط اطلاعات مالی ثبت نام خودش
+    if (User.IsInRole("Student"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (student == null)
         {
             return NotFound(new
             {
-                message = "ثبت نام مورد نظر وجود ندارد"
+                message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
             });
         }
 
-        if (enrollment.Course == null)
+        if (enrollment.StudentId != student.Id)
         {
-            return BadRequest(new
+            return NotFound(new
             {
-                message = "دوره مربوط به این ثبت نام وجود ندارد"
+                message = "ثبت نام مورد نظر پیدا نشد"
             });
         }
-
-
-        // فقط پرداخت‌های Paid محاسبه می‌شوند
-        var totalPaid = await _context.Payments
-            .Where(p =>
-                p.EnrollmentId == id &&
-                p.Status == "Paid")
-            .SumAsync(p => (decimal?)p.Amount) ?? 0;
-
-
-        var coursePrice = enrollment.Course.Price;
-
-        var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
-
-
-        string paymentStatus;
-
-        if (totalPaid <= 0)
-        {
-            paymentStatus = "Unpaid";
-        }
-        else if (totalPaid < coursePrice)
-        {
-            paymentStatus = "PartiallyPaid";
-        }
-        else if (totalPaid == coursePrice)
-        {
-            paymentStatus = "Paid";
-        }
-        else
-        {
-            paymentStatus = "Overpaid";
-        }
-
-
-        var result = new EnrollmentFinancialDto
-        {
-            EnrollmentId = enrollment.Id,
-
-            StudentName = enrollment.Student != null
-                ? enrollment.Student.FirstName + " " + enrollment.Student.LastName
-                : string.Empty,
-
-            CourseTitle = enrollment.Course.Title,
-
-            CoursePrice = coursePrice,
-
-            TotalPaid = totalPaid,
-
-            RemainingAmount = remainingAmount,
-
-            PaymentStatus = paymentStatus
-        };
-
-
-        return result;
     }
 
+    // Support → فقط اطلاعات مالی دانشجویان خودش
+    if (User.IsInRole("Support"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        if (enrollment.Student == null ||
+            enrollment.Student.SupportUserId != userId)
+        {
+            return NotFound(new
+            {
+                message = "ثبت نام مورد نظر پیدا نشد"
+            });
+        }
+    }
+
+    if (enrollment.Course == null)
+    {
+        return BadRequest(new
+        {
+            message = "دوره مربوط به این ثبت نام وجود ندارد"
+        });
+    }
+
+    var totalPaid = await _context.Payments
+        .Where(p =>
+            p.EnrollmentId == id &&
+            p.Status == "Paid")
+        .SumAsync(p => (decimal?)p.Amount) ?? 0;
+
+    var coursePrice = enrollment.Course.Price;
+    var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
+
+    string paymentStatus;
+
+    if (totalPaid <= 0)
+    {
+        paymentStatus = "Unpaid";
+    }
+    else if (totalPaid < coursePrice)
+    {
+        paymentStatus = "PartiallyPaid";
+    }
+    else if (totalPaid == coursePrice)
+    {
+        paymentStatus = "Paid";
+    }
+    else
+    {
+        paymentStatus = "Overpaid";
+    }
+
+    var result = new EnrollmentFinancialDto
+    {
+        EnrollmentId = enrollment.Id,
+        StudentName = enrollment.Student != null
+            ? enrollment.Student.FirstName + " " + enrollment.Student.LastName
+            : string.Empty,
+        CourseTitle = enrollment.Course.Title,
+        CoursePrice = coursePrice,
+        TotalPaid = totalPaid,
+        RemainingAmount = remainingAmount,
+        PaymentStatus = paymentStatus
+    };
+
+    return Ok(result);
+}
 
     // جزئیات مالی ثبت نام به همراه لیست پرداخت‌ها
-    [HttpGet("{id}/financial-details")]
-    public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetails(int id)
-    {
-        var enrollment = await _context.Enrollments
-            .Include(e => e.Student)
-            .Include(e => e.Course)
-            .FirstOrDefaultAsync(e => e.Id == id);
+    [Authorize(Roles = "Admin,Support,Student")]
+[HttpGet("{id}/financial-details")]
+public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetails(int id)
+{
+    var enrollment = await _context.Enrollments
+        .Include(e => e.Student)
+        .Include(e => e.Course)
+        .FirstOrDefaultAsync(e => e.Id == id);
 
-        if (enrollment == null)
+    if (enrollment == null)
+    {
+        return NotFound(new
+        {
+            message = "ثبت نام مورد نظر پیدا نشد"
+        });
+    }
+
+    // Student → فقط اطلاعات مالی ثبت نام خودش
+    if (User.IsInRole("Student"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (student == null)
         {
             return NotFound(new
             {
-                message = "ثبت نام مورد نظر وجود ندارد"
+                message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
             });
         }
 
-        if (enrollment.Course == null)
+        if (enrollment.StudentId != student.Id)
         {
-            return BadRequest(new
+            return NotFound(new
             {
-                message = "دوره مربوط به این ثبت نام وجود ندارد"
+                message = "ثبت نام مورد نظر پیدا نشد"
             });
         }
-
-
-        // دریافت تمام پرداخت‌های ثبت نام
-        var payments = await _context.Payments
-            .Where(p => p.EnrollmentId == id)
-            .OrderBy(p => p.PaymentDate)
-            .Select(p => new PaymentItemDto
-            {
-                Id = p.Id,
-                Amount = p.Amount,
-                PaymentDate = p.PaymentDate,
-                PaymentType = p.PaymentType,
-                Description = p.Description,
-                Status = p.Status
-            })
-            .ToListAsync();
-
-
-        // فقط پرداخت‌های Paid در محاسبه مجموع لحاظ می‌شوند
-        var totalPaid = payments
-            .Where(p => p.Status == "Paid")
-            .Sum(p => p.Amount);
-
-
-        var coursePrice = enrollment.Course.Price;
-
-        var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
-
-
-        string paymentStatus;
-
-        if (totalPaid <= 0)
-        {
-            paymentStatus = "Unpaid";
-        }
-        else if (totalPaid < coursePrice)
-        {
-            paymentStatus = "PartiallyPaid";
-        }
-        else if (totalPaid == coursePrice)
-        {
-            paymentStatus = "Paid";
-        }
-        else
-        {
-            paymentStatus = "Overpaid";
-        }
-
-
-        var result = new EnrollmentFinancialDetailDto
-        {
-            EnrollmentId = enrollment.Id,
-
-            StudentName = enrollment.Student != null
-                ? enrollment.Student.FirstName + " " + enrollment.Student.LastName
-                : string.Empty,
-
-            CourseTitle = enrollment.Course.Title,
-
-            CoursePrice = coursePrice,
-
-            TotalPaid = totalPaid,
-
-            RemainingAmount = remainingAmount,
-
-            PaymentStatus = paymentStatus,
-
-            Payments = payments
-        };
-
-
-        return result;
     }
 
+    // Support → فقط اطلاعات مالی دانشجویان خودش
+    if (User.IsInRole("Support"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        if (enrollment.Student == null ||
+            enrollment.Student.SupportUserId != userId)
+        {
+            return NotFound(new
+            {
+                message = "ثبت نام مورد نظر پیدا نشد"
+            });
+        }
+    }
+
+    if (enrollment.Course == null)
+    {
+        return BadRequest(new
+        {
+            message = "دوره مربوط به این ثبت نام وجود ندارد"
+        });
+    }
+
+    var payments = await _context.Payments
+        .Where(p => p.EnrollmentId == id)
+        .OrderBy(p => p.PaymentDate)
+        .Select(p => new PaymentItemDto
+        {
+            Id = p.Id,
+            Amount = p.Amount,
+            PaymentDate = p.PaymentDate,
+            PaymentType = p.PaymentType,
+            Description = p.Description,
+            Status = p.Status
+        })
+        .ToListAsync();
+
+    var totalPaid = payments
+        .Where(p => p.Status == "Paid")
+        .Sum(p => p.Amount);
+
+    var coursePrice = enrollment.Course.Price;
+    var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
+
+    string paymentStatus;
+
+    if (totalPaid <= 0)
+    {
+        paymentStatus = "Unpaid";
+    }
+    else if (totalPaid < coursePrice)
+    {
+        paymentStatus = "PartiallyPaid";
+    }
+    else if (totalPaid == coursePrice)
+    {
+        paymentStatus = "Paid";
+    }
+    else
+    {
+        paymentStatus = "Overpaid";
+    }
+
+    var result = new EnrollmentFinancialDetailDto
+    {
+        EnrollmentId = enrollment.Id,
+        StudentName = enrollment.Student != null
+            ? enrollment.Student.FirstName + " " + enrollment.Student.LastName
+            : string.Empty,
+        CourseTitle = enrollment.Course.Title,
+        CoursePrice = coursePrice,
+        TotalPaid = totalPaid,
+        RemainingAmount = remainingAmount,
+        PaymentStatus = paymentStatus,
+        Payments = payments
+    };
+
+    return Ok(result);
+}
 
     // ثبت نام دانشجو در دوره
     [Authorize]

@@ -3,6 +3,8 @@ using BackEnd.DTOs;
 using BackEnd.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BackEnd.Controllers;
 
@@ -53,7 +55,63 @@ public class PaymentsController : ControllerBase
             .ToListAsync();
     }
 
+    
+    
+    // Student - مشاهده پرداخت‌های خودش
+    [Authorize(Roles = "Student")]
+    [HttpGet("my")]
+    public async Task<ActionResult<List<PaymentDetailDto>>> GetMyPayments()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (student == null)
+        {
+            return NotFound(new
+            {
+                message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
+            });
+        }
+
+        var payments = await _context.Payments
+            .Where(p =>
+                p.Enrollment != null &&
+                p.Enrollment.StudentId == student.Id)
+            .Select(p => new PaymentDetailDto
+            {
+                Id = p.Id,
+                EnrollmentId = p.EnrollmentId,
+                StudentName = p.Enrollment != null &&
+                              p.Enrollment.Student != null
+                    ? p.Enrollment.Student.FirstName + " " +
+                      p.Enrollment.Student.LastName
+                    : string.Empty,
+                CourseTitle = p.Enrollment != null &&
+                              p.Enrollment.Course != null
+                    ? p.Enrollment.Course.Title
+                    : string.Empty,
+                Amount = p.Amount,
+                PaymentDate = p.PaymentDate,
+                PaymentType = p.PaymentType,
+                Description = p.Description,
+                Status = p.Status
+            })
+            .ToListAsync();
+
+        return Ok(payments);
+    }
+
+    
     // ثبت پرداخت جدید
     [HttpPost]
     public async Task<ActionResult<PaymentDto>> Create(CreatePaymentDto dto)
