@@ -37,10 +37,30 @@ public class UsersController : ControllerBase
             .ToListAsync();
     }
 
-    // ثبت کاربر جدید
+    // ثبت کاربر جدید توسط Admin
     [HttpPost]
-    public async Task<ActionResult<UserDto>> Create(CreateUserDto dto)
+    public async Task<ActionResult<UserDto>> Create(
+        CreateAdminUserDto dto)
     {
+        // بررسی Role
+        var allowedRoles = new[]
+        {
+            "Admin",
+            "Instructor",
+            "Support",
+            "Student"
+        };
+
+        if (!allowedRoles.Contains(dto.Role))
+        {
+            return BadRequest(new
+            {
+                message = "Role وارد شده معتبر نیست",
+                allowedRoles = allowedRoles
+            });
+        }
+
+        // بررسی نام کاربری
         var usernameExists = await _context.Users
             .AnyAsync(u => u.Username == dto.Username);
 
@@ -52,6 +72,7 @@ public class UsersController : ControllerBase
             });
         }
 
+        // بررسی موبایل
         var mobileExists = await _context.Users
             .AnyAsync(u => u.Mobile == dto.Mobile);
 
@@ -63,7 +84,10 @@ public class UsersController : ControllerBase
             });
         }
 
-        var passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+        // Hash کردن رمز عبور
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword(
+            dto.Password
+        );
 
         var user = new User
         {
@@ -71,7 +95,7 @@ public class UsersController : ControllerBase
             Mobile = dto.Mobile,
             Username = dto.Username,
             PasswordHash = passwordHash,
-            Role = "Student",
+            Role = dto.Role,
             IsActive = true
         };
 
@@ -90,6 +114,6 @@ public class UsersController : ControllerBase
             CreatedAt = user.CreatedAt
         };
 
-        return result;
+        return Ok(result);
     }
 }
