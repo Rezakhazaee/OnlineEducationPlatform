@@ -10,6 +10,7 @@ namespace BackEnd.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Admin,Support")]
 public class StudentFollowUpsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -19,14 +20,15 @@ public class StudentFollowUpsController : ControllerBase
         _context = context;
     }
 
+    // Admin - مشاهده همه پیگیری‌ها
     // Support - مشاهده پیگیری‌های دانشجویان خودش
-    [Authorize(Roles = "Support")]
-    [HttpGet("support/my")]
-    public async Task<ActionResult<List<StudentFollowUp>>> GetMyFollowUps()
+    [HttpGet]
+    public async Task<ActionResult> GetFollowUps()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
 
-        if (!int.TryParse(userIdClaim, out var supportUserId))
+        if (!int.TryParse(userIdClaim, out var userId))
         {
             return Unauthorized(new
             {
@@ -34,11 +36,18 @@ public class StudentFollowUpsController : ControllerBase
             });
         }
 
-        var followUps = await _context.StudentFollowUps
-            .Where(f =>
-                f.Student != null &&
-                f.Student.SupportUserId == supportUserId)
+        var query = _context.StudentFollowUps
             .Include(f => f.Student)
+            .AsQueryable();
+
+        if (role == "Support")
+        {
+            query = query.Where(f =>
+                f.Student != null &&
+                f.Student.SupportUserId == userId);
+        }
+
+        var followUps = await query
             .OrderByDescending(f => f.FollowUpDate)
             .Select(f => new
             {
@@ -58,11 +67,10 @@ public class StudentFollowUpsController : ControllerBase
         return Ok(followUps);
     }
 
-    // Support - ثبت پیگیری جدید
+    // Support - مشاهده پیگیری‌های دانشجویان خودش
     [Authorize(Roles = "Support")]
-    [HttpPost]
-    public async Task<ActionResult> CreateFollowUp(
-        CreateStudentFollowUpDto dto)
+    [HttpGet("support/my")]
+    public async Task<ActionResult> GetMyFollowUps()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -74,7 +82,45 @@ public class StudentFollowUpsController : ControllerBase
             });
         }
 
-        // بررسی اینکه دانشجو وجود دارد
+        var followUps = await _context.StudentFollowUps
+            .Where(f =>
+                f.Student != null &&
+                f.Student.SupportUserId == supportUserId)
+            .OrderByDescending(f => f.FollowUpDate)
+            .Select(f => new
+            {
+                f.Id,
+                f.StudentId,
+                StudentName = f.Student != null
+                    ? f.Student.FirstName + " " + f.Student.LastName
+                    : string.Empty,
+                f.SupportUserId,
+                f.FollowUpDate,
+                f.Status,
+                f.Description,
+                f.CreatedDate
+            })
+            .ToListAsync();
+
+        return Ok(followUps);
+    }
+
+    // Admin و Support - ثبت پیگیری
+    [HttpPost]
+    public async Task<ActionResult> CreateFollowUp(
+        CreateStudentFollowUpDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
         var student = await _context.Students
             .FirstOrDefaultAsync(s => s.Id == dto.StudentId);
 
@@ -86,13 +132,13 @@ public class StudentFollowUpsController : ControllerBase
             });
         }
 
-        // بررسی مالکیت دانشجو
-        if (student.SupportUserId != supportUserId)
+        // Support فقط برای دانشجوی خودش اجازه ثبت دارد
+        if (role == "Support" &&
+            student.SupportUserId != userId)
         {
             return Forbid();
         }
 
-        // بررسی وضعیت پیگیری
         var allowedStatuses = new[]
         {
             "Pending",
@@ -113,7 +159,9 @@ public class StudentFollowUpsController : ControllerBase
         var followUp = new StudentFollowUp
         {
             StudentId = dto.StudentId,
-            SupportUserId = supportUserId,
+            SupportUserId = role == "Support"
+                ? userId
+                : student.SupportUserId ?? userId,
             FollowUpDate = dto.FollowUpDate,
             Status = dto.Status,
             Description = dto.Description,
@@ -137,16 +185,16 @@ public class StudentFollowUpsController : ControllerBase
         });
     }
 
-    // Support - ویرایش پیگیری دانشجوی خودش
-    [Authorize(Roles = "Support")]
+    // Admin و Support - ویرایش پیگیری
     [HttpPut("{id}")]
     public async Task<ActionResult> UpdateFollowUp(
         int id,
         UpdateStudentFollowUpDto dto)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
 
-        if (!int.TryParse(userIdClaim, out var supportUserId))
+        if (!int.TryParse(userIdClaim, out var userId))
         {
             return Unauthorized(new
             {
@@ -154,7 +202,6 @@ public class StudentFollowUpsController : ControllerBase
             });
         }
 
-        // پیدا کردن پیگیری
         var followUp = await _context.StudentFollowUps
             .Include(f => f.Student)
             .FirstOrDefaultAsync(f => f.Id == id);
@@ -167,14 +214,14 @@ public class StudentFollowUpsController : ControllerBase
             });
         }
 
-        // بررسی مالکیت دانشجو
-        if (followUp.Student == null ||
-            followUp.Student.SupportUserId != supportUserId)
+        // Support فقط پیگیری دانشجوی خودش را ویرایش می‌کند
+        if (role == "Support" &&
+            (followUp.Student == null ||
+             followUp.Student.SupportUserId != userId))
         {
             return Forbid();
         }
 
-        // وضعیت‌های مجاز
         var allowedStatuses = new[]
         {
             "Pending",
@@ -192,7 +239,6 @@ public class StudentFollowUpsController : ControllerBase
             });
         }
 
-        // به‌روزرسانی اطلاعات پیگیری
         followUp.FollowUpDate = dto.FollowUpDate;
         followUp.Status = dto.Status;
         followUp.Description = dto.Description;
@@ -209,6 +255,52 @@ public class StudentFollowUpsController : ControllerBase
             status = followUp.Status,
             description = followUp.Description,
             createdDate = followUp.CreatedDate
+        });
+    }
+
+    // Admin و Support - حذف پیگیری
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteFollowUp(int id)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        var followUp = await _context.StudentFollowUps
+            .Include(f => f.Student)
+            .FirstOrDefaultAsync(f => f.Id == id);
+
+        if (followUp == null)
+        {
+            return NotFound(new
+            {
+                message = "پیگیری پیدا نشد"
+            });
+        }
+
+        // Support فقط پیگیری دانشجوی خودش را حذف می‌کند
+        if (role == "Support" &&
+            (followUp.Student == null ||
+             followUp.Student.SupportUserId != userId))
+        {
+            return Forbid();
+        }
+
+        _context.StudentFollowUps.Remove(followUp);
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "پیگیری با موفقیت حذف شد",
+            id = followUp.Id
         });
     }
 }
