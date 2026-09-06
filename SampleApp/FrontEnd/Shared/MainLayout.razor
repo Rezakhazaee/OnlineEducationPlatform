@@ -1,19 +1,24 @@
 ﻿@inherits LayoutComponentBase
 
-<PageTitle>FrontEnd</PageTitle>
+<PageTitle>سامانه آموزش آنلاین</PageTitle>
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+<div class="app-shell">
+    <header class="app-header">
+        <div class="brand">
+            <a href="/">سامانه آموزش آنلاین</a>
         </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
+        <nav class="header-nav">
+            <a href="/">خانه</a>
+            <a href="/login">ورود</a>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        @Body
     </main>
+
+    <footer class="app-footer">
+        <span>سامانه آموزش آنلاین</span>
+    </footer>
 </div>
