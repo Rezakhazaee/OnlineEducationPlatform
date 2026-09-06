@@ -452,10 +452,11 @@
                                         <td>
 
                                             <button
-                                                class="course-edit-btn"
-                                                @onclick="() => OpenEditForm(course)">
+                                             type="button"
+                                             class="course-edit-btn"
+                                             @onclick="@(() => EditCourse(course))">
 
-                                                ویرایش
+                                             ویرایش
 
                                             </button>
 
@@ -576,24 +577,25 @@
         ShowForm = true;
     }
 
+private void EditCourse(CourseDto course)
+{
+    EditingCourseId = course.Id;
 
-    private void OpenEditForm(CourseDto course)
-    {
-        EditingCourseId = course.Id;
+    FormTitle = course.Title;
+    FormDescription = course.Description ?? string.Empty;
+    FormPrice = course.Price;
 
-        FormTitle = course.Title;
-        FormDescription = course.Description ?? string.Empty;
-        FormPrice = course.Price;
+    FormInstructorId =
+        course.InstructorId?.ToString()
+        ?? string.Empty;
 
-        FormInstructorId =
-            course.InstructorId?.ToString()
-            ?? string.Empty;
+    FormIsActive = course.IsActive;
 
-        FormIsActive = course.IsActive;
+    FormError = null;
 
-        FormError = null;
-        ShowForm = true;
-    }
+    ShowForm = true;
+   }
+    
 
 
     private void CloseForm()
