@@ -1,38 +1,87 @@
-using FrontEnd.Data;
+using BackEnd.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+// Controllers
+builder.Services.AddControllers();
 
-builder.Services.AddHttpClient("Backend", client =>
-{
-    client.BaseAddress = new Uri(
-        builder.Configuration["BackendUrl"] ?? "http://localhost:8080"
+// Database - SQLite
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlite(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    )
+);
+
+// JWT Authentication
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException(
+        "Jwt:Key is not configured"
     );
-});
 
-builder.Services.AddHttpClient<WeatherForecastClient>(c =>
-{
-    var url = builder.Configuration["WEATHER_URL"]
-        ?? throw new InvalidOperationException("WEATHER_URL is not set");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"]
+    ?? throw new InvalidOperationException(
+        "Jwt:Issuer is not configured"
+    );
 
-    c.BaseAddress = new(url);
-});
+var jwtAudience = builder.Configuration["Jwt:Audience"]
+    ?? throw new InvalidOperationException(
+        "Jwt:Audience is not configured"
+    );
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters =
+            new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+
+                IssuerSigningKey =
+                    new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(jwtKey)
+                    ),
+
+                ValidateIssuer = true,
+                ValidIssuer = jwtIssuer,
+
+                ValidateAudience = true,
+                ValidAudience = jwtAudience,
+
+                ValidateLifetime = true,
+
+                ClockSkew = TimeSpan.Zero
+            };
+    });
+
+// Authorization
+builder.Services.AddAuthorization();
+
+// OpenAPI
+builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
+// OpenAPI + Scalar
+if (app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
-    app.UseHsts();
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
+// HTTPS
 app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
 
-app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
+// Authentication & Authorization
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Controllers
+app.MapControllers();
 
 app.Run();

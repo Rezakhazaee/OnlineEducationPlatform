@@ -1,0 +1,184 @@
+@page "/login"
+@using FrontEnd.Services
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>ورود | آموزش‌یار</PageTitle>
+
+<div class="login-page">
+
+    <div class="login-card">
+
+        <div class="login-brand">
+
+            <div class="login-brand-mark">
+                آ
+            </div>
+
+            <div>
+                <strong>آموزش‌یار</strong>
+                <span>سامانه آموزش آنلاین</span>
+            </div>
+
+        </div>
+
+
+        <div class="login-header">
+
+            <span>خوش آمدید</span>
+
+            <h1>
+                ورود به حساب کاربری
+            </h1>
+
+            <p>
+                برای ادامه، نام کاربری و رمز عبور خود را وارد کنید.
+            </p>
+
+        </div>
+
+
+        <div class="login-form">
+
+            <div class="form-group">
+
+                <label>
+                    نام کاربری
+                </label>
+
+                <input
+                    type="text"
+                    @bind="Username"
+                    placeholder="نام کاربری خود را وارد کنید"
+                    disabled="@IsLoading" />
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    رمز عبور
+                </label>
+
+                <input
+                    type="password"
+                    @bind="Password"
+                    placeholder="رمز عبور خود را وارد کنید"
+                    disabled="@IsLoading" />
+
+            </div>
+
+
+            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                <div class="login-error">
+                    @ErrorMessage
+                </div>
+            }
+
+
+            <button
+                class="login-submit"
+                @onclick="HandleLogin"
+                disabled="@IsLoading">
+
+                @if (IsLoading)
+                {
+                    <span>در حال ورود...</span>
+                }
+                else
+                {
+                    <span>ورود به سامانه</span>
+                    <span>←</span>
+                }
+
+            </button>
+
+        </div>
+
+
+        <div class="login-footer">
+
+            <span>
+                حساب کاربری ندارید؟
+            </span>
+
+            <a href="/register">
+                ثبت‌نام کنید
+            </a>
+
+        </div>
+
+
+        <a href="/" class="back-home">
+            ← بازگشت به صفحه اصلی
+        </a>
+
+    </div>
+
+</div>
+
+
+@code {
+
+    private string Username { get; set; } = string.Empty;
+
+    private string Password { get; set; } = string.Empty;
+
+    private string? ErrorMessage { get; set; }
+
+    private bool IsLoading { get; set; }
+
+
+    private async Task HandleLogin()
+    {
+        ErrorMessage = null;
+
+        if (string.IsNullOrWhiteSpace(Username) ||
+            string.IsNullOrWhiteSpace(Password))
+        {
+            ErrorMessage =
+                "لطفاً نام کاربری و رمز عبور را وارد کنید.";
+
+            return;
+        }
+
+        IsLoading = true;
+
+        try
+        {
+            var result = await Auth.Login(
+                Username,
+                Password
+            );
+
+            if (!result.Success)
+            {
+                ErrorMessage = result.Message;
+                return;
+            }
+
+
+            // اگر مدیر است → پنل مدیریت
+            if (Auth.IsAdmin)
+            {
+                Navigation.NavigateTo("/admin");
+                return;
+            }
+
+
+            // سایر کاربران → صفحه اصلی
+            Navigation.NavigateTo("/");
+        }
+        catch
+        {
+            ErrorMessage =
+                "ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}
