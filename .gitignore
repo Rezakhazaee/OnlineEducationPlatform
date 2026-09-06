@@ -481,3 +481,8 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 .azure
+
+# SQLite local database files
+*.db
+*.db-shm
+*.db-wal

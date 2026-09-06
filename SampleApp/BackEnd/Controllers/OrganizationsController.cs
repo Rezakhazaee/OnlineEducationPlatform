@@ -1,6 +1,7 @@
 using BackEnd.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using BackEnd.Data;
 using BackEnd.Models;
 
@@ -8,6 +9,7 @@ namespace BackEnd.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class OrganizationsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -34,7 +36,8 @@ public async Task<List<OrganizationDto>> Get()
 
 
     [HttpPost]
-    public async Task<ActionResult<OrganizationDto>> Create(CreateOrganizationDto dto)
+    [Authorize(Roles = "Admin")]
+      public async Task<ActionResult<OrganizationDto>> Create(CreateOrganizationDto dto)
     {
         var organization = new Organization
 {
