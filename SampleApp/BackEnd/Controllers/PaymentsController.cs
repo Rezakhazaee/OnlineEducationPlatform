@@ -21,6 +21,7 @@ public class PaymentsController : ControllerBase
 
 
     // دریافت لیست پرداخت‌ها با اطلاعات دانشجو و دوره
+    [Authorize(Roles = "Admin,Support")]
     [HttpGet]
     public async Task<List<PaymentDetailDto>> Get()
     {
@@ -113,6 +114,7 @@ public class PaymentsController : ControllerBase
 
     
     // ثبت پرداخت جدید
+    [Authorize(Roles = "Admin,Support")]  
     [HttpPost]
     public async Task<ActionResult<PaymentDto>> Create(CreatePaymentDto dto)
     {
@@ -396,6 +398,7 @@ public class PaymentsController : ControllerBase
     }
 
     // تغییر وضعیت پرداخت از Pending به Paid
+[Authorize(Roles = "Admin,Support")]
 [HttpPut("{id}/pay")]
 public async Task<IActionResult> Pay(int id)
 {
@@ -528,6 +531,7 @@ public async Task<IActionResult> Pay(int id)
 }
 
 // تغییر وضعیت پرداخت از Pending به Cancelled
+[Authorize(Roles = "Admin,Support")]
 [HttpPut("{id}/cancel")]
 public async Task<IActionResult> Cancel(int id)
 {
