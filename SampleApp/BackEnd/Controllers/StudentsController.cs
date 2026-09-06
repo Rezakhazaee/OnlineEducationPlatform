@@ -178,6 +178,7 @@ public async Task<ActionResult<StudentDto>> GetMyProfile()
 
         var student = new Student
         {
+            UserId = dto.UserId,
             FirstName = dto.FirstName,
             LastName = dto.LastName,
             NationalCode = dto.NationalCode,

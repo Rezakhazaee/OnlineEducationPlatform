@@ -4,6 +4,7 @@ namespace BackEnd.DTOs;
 
 public class CreateStudentDto
 {
+public int? UserId { get; set; }
     [Required(ErrorMessage = "نام دانشجو الزامی است")]
     [MinLength(2, ErrorMessage = "نام باید حداقل ۲ کاراکتر باشد")]
     public string FirstName { get; set; } = string.Empty;
