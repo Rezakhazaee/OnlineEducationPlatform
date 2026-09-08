@@ -96,7 +96,157 @@
             </div>
 
         </header>
+         
+         @if (ShowCreateUserForm)
+            {
+                <section class="admin-content-card">
 
+                    <div class="admin-card-header">
+                        <div>
+                            <span>کاربر جدید</span>
+                            <h2>افزودن کاربر</h2>
+                        </div>
+
+                        <button
+                            class="admin-outline-btn"
+                            @onclick="CloseCreateUserForm">
+
+                            انصراف
+
+                        </button>
+                    </div>
+
+                    <div class="admin-form">
+
+                        <div class="admin-form-group">
+                            <label>نام و نام خانوادگی</label>
+                            <input
+                                class="admin-input"
+                                @bind="NewUser.FullName"
+                                placeholder="مثلاً علی رضایی" />
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label>شماره موبایل</label>
+                            <input
+                                class="admin-input"
+                                @bind="NewUser.Mobile"
+                                placeholder="مثلاً 09120000001" />
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label>نام کاربری</label>
+                            <input
+                                class="admin-input"
+                                @bind="NewUser.Username"
+                                placeholder="نام کاربری" />
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label>رمز عبور</label>
+                            <input
+                                type="password"
+                                class="admin-input"
+                                @bind="NewUser.Password"
+                                placeholder="رمز عبور" />
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label>نقش</label>
+
+                            <select
+                                class="admin-input"
+                                @bind="NewUser.Role">
+
+                                <option value="Student">دانشجو</option>
+                                <option value="Instructor">مدرس</option>
+                                <option value="Support">پشتیبان</option>
+                                <option value="Admin">مدیر</option>
+
+                            </select>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(CreateUserMessage))
+                        {
+                            <div class="admin-error">
+                                @CreateUserMessage
+                            </div>
+                        }
+
+                        <button
+                            class="admin-primary-btn"
+                            @onclick="CreateUser">
+
+                            ایجاد کاربر
+
+                        </button>
+
+                    </div>
+
+                </section>
+            }
+
+            @if (ShowEditUserForm)
+            {
+                <section class="admin-content-card">
+                    <div class="admin-card-header">
+                        <div>
+                            <span>ویرایش کاربر</span>
+                            <h2>ویرایش اطلاعات کاربر</h2>
+                        </div>
+
+                        <button class="admin-outline-btn" @onclick="CloseEditUserForm">
+                            انصراف
+                        </button>
+                    </div>
+
+                    <div class="admin-form">
+
+                        <div class="admin-form-group">
+                            <label>نام و نام خانوادگی</label>
+
+                            <input
+                                class="admin-input"
+                                @bind="EditUser.FullName"
+                                placeholder="نام و نام خانوادگی" />
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label>شماره موبایل</label>
+
+                            <input
+                                class="admin-input"
+                                @bind="EditUser.Mobile"
+                                placeholder="شماره موبایل" />
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label>نام کاربری</label>
+
+                            <input
+                                class="admin-input"
+                                @bind="EditUser.Username"
+                                placeholder="نام کاربری" />
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(EditUserMessage))
+                        {
+                            <div class="admin-error">
+                                @EditUserMessage
+                            </div>
+                        }
+
+                        <button
+                            class="admin-primary-btn"
+                            @onclick="UpdateUser">
+
+                            ذخیره تغییرات
+
+                        </button>
+
+                    </div>
+                </section>
+            }
 
         @if (IsLoading)
         {
@@ -157,6 +307,13 @@
                     <div class="users-count">
                         @Users.Count کاربر
                     </div>
+                    <button
+                        class="admin-primary-btn"
+                        @onclick="OpenCreateUserForm">
+
+                        + افزودن کاربر
+
+                    </button>
 
                 </div>
 
@@ -211,6 +368,10 @@
 
                                     <th>
                                         تاریخ ثبت
+                                    </th>
+
+                                    <th>
+                                      عملیات
                                     </th>
 
                                 </tr>
@@ -286,6 +447,39 @@
                                         <td>
                                             @user.CreatedAt.ToString("yyyy/MM/dd")
                                         </td>
+                                        <td>
+
+                                            @if (user.Id == 1)
+                                            {
+                                                <span class="user-status active">
+                                                    Admin اصلی
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <div class="admin-user-actions">
+
+                                                    <button
+                                                        class="admin-outline-btn"
+                                                        @onclick="() => OpenEditUserForm(user)">
+
+                                                        ویرایش
+
+                                                    </button>
+
+                                                    <button
+                                                        class="admin-outline-btn"
+                                                        @onclick="() => ToggleUserStatus(user)">
+
+                                                        @(user.IsActive ? "غیرفعال کردن" : "فعال کردن")
+
+                                                    </button>
+
+                                                </div>
+                                            }
+               
+
+                                        </td>
 
                                     </tr>
                                 }
@@ -306,7 +500,7 @@
 
 
 @code {
-
+     
     private List<UserDto> Users { get; set; } = new();
 
     private bool IsLoading { get; set; } = true;
@@ -347,7 +541,149 @@
         }
     }
 
+private async Task ToggleUserStatus(UserDto user)
+{
+    try
+    {
+        var client = Auth.CreateAuthenticatedClient();
 
+        var newStatus = !user.IsActive;
+
+        var response = await client.PutAsJsonAsync(
+            $"api/Users/{user.Id}/status",
+            new
+            {
+                IsActive = newStatus
+            }
+        );
+
+        if (response.IsSuccessStatusCode)
+        {
+            user.IsActive = newStatus;
+        }
+        else
+        {
+            ErrorMessage = "تغییر وضعیت کاربر انجام نشد.";
+        }
+    }
+    catch
+    {
+        ErrorMessage = "ارتباط با سرور برقرار نشد.";
+    }
+}
+      private bool ShowCreateUserForm { get; set; }
+
+private string? CreateUserMessage { get; set; }
+
+private CreateUserModel NewUser { get; set; } = new();
+
+private void OpenCreateUserForm()
+{
+    CreateUserMessage = null;
+    NewUser = new CreateUserModel();
+    ShowCreateUserForm = true;
+}
+
+private void CloseCreateUserForm()
+{
+    CreateUserMessage = null;
+    ShowCreateUserForm = false;
+}
+private async Task UpdateUser()
+{
+    EditUserMessage = null;
+
+    if (string.IsNullOrWhiteSpace(EditUser.FullName) ||
+        string.IsNullOrWhiteSpace(EditUser.Mobile) ||
+        string.IsNullOrWhiteSpace(EditUser.Username))
+    {
+        EditUserMessage = "لطفاً همه اطلاعات کاربر را وارد کنید.";
+        return;
+    }
+
+    try
+    {
+        var client = Auth.CreateAuthenticatedClient();
+
+        var response = await client.PutAsJsonAsync(
+            $"api/Users/{EditingUserId}",
+            EditUser
+        );
+
+        if (response.IsSuccessStatusCode)
+        {
+            ShowEditUserForm = false;
+            await LoadUsers();
+        }
+        else
+        {
+            var error = await response.Content.ReadAsStringAsync();
+
+            EditUserMessage =
+                "ویرایش کاربر انجام نشد. " + error;
+        }
+    }
+    catch
+    {
+        EditUserMessage =
+            "ارتباط با سرور برقرار نشد.";
+    }
+}
+private async Task CreateUser()
+{
+    CreateUserMessage = null;
+
+    if (string.IsNullOrWhiteSpace(NewUser.FullName) ||
+        string.IsNullOrWhiteSpace(NewUser.Mobile) ||
+        string.IsNullOrWhiteSpace(NewUser.Username) ||
+        string.IsNullOrWhiteSpace(NewUser.Password))
+    {
+        CreateUserMessage = "لطفاً همه اطلاعات کاربر را وارد کنید.";
+        return;
+    }
+
+    try
+    {
+        var client = Auth.CreateAuthenticatedClient();
+
+        var response = await client.PostAsJsonAsync(
+            "api/Users",
+            NewUser
+        );
+
+        if (response.IsSuccessStatusCode)
+        {
+            ShowCreateUserForm = false;
+
+            await LoadUsers();
+        }
+        else
+        {
+            var error = await response.Content.ReadAsStringAsync();
+
+            CreateUserMessage =
+                "ایجاد کاربر انجام نشد. " + error;
+        }
+    }
+    catch
+    {
+        CreateUserMessage =
+            "ارتباط با سرور برقرار نشد.";
+    }
+}
+
+public class CreateUserModel
+{
+    public string FullName { get; set; } = string.Empty;
+
+    public string Mobile { get; set; } = string.Empty;
+
+    public string Username { get; set; } = string.Empty;
+
+    public string Password { get; set; } = string.Empty;
+
+    public string Role { get; set; } = "Student";
+}
     public class UserDto
     {
         public int Id { get; set; }
@@ -364,5 +700,40 @@
 
         public DateTime CreatedAt { get; set; }
     }
+    private bool ShowEditUserForm { get; set; }
 
+private string? EditUserMessage { get; set; }
+
+private EditUserModel EditUser { get; set; } = new();
+
+private int EditingUserId { get; set; }
+
+private void OpenEditUserForm(UserDto user)
+{
+    EditingUserId = user.Id;
+
+    EditUser = new EditUserModel
+    {
+        FullName = user.FullName ?? string.Empty,
+        Mobile = user.Mobile ?? string.Empty,
+        Username = user.Username
+    };
+
+    EditUserMessage = null;
+    ShowEditUserForm = true;
+}
+
+private void CloseEditUserForm()
+{
+    EditUserMessage = null;
+    ShowEditUserForm = false;
+}
+public class EditUserModel
+{
+    public string FullName { get; set; } = string.Empty;
+
+    public string Mobile { get; set; } = string.Empty;
+
+    public string Username { get; set; } = string.Empty;
+}
 }

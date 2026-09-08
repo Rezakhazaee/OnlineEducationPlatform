@@ -66,6 +66,33 @@ builder.Services.AddAuthorization();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+// =========================
+// Seed Main Admin
+// =========================
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    var adminExists = await db.Users.AnyAsync(u => u.Id == 1);
+
+    if (!adminExists)
+    {
+        var admin = new BackEnd.Models.User
+        {
+            FullName = "System Administrator",
+            Mobile = "09000000000",
+            Username = "admin",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@12345"),
+            Role = "Admin",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        db.Users.Add(admin);
+        await db.SaveChangesAsync();
+    }
+}
 
 // OpenAPI + Scalar
 if (app.Environment.IsDevelopment())

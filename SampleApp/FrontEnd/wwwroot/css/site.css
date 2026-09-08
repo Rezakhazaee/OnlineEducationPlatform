@@ -2109,3 +2109,117 @@ textarea {
     }
 
 }
+/* ================================
+   Admin Users
+   ================================ */
+
+.admin-form {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.admin-form h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.admin-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.admin-input:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+
+.users-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.users-table th,
+.users-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.users-table th {
+    background: #f9fafb;
+    font-weight: 600;
+}
+
+.users-count {
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.user-role,
+.user-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.user-role {
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.user-status {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+
+/* Responsive Admin Users */
+
+@media (max-width: 720px) {
+
+    .admin-form {
+        padding: 16px;
+    }
+
+    .users-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .users-table {
+        min-width: 700px;
+    }
+
+    .admin-input {
+        font-size: 16px;
+    }
+}
+/* Admin Users - Form Groups */
+
+.admin-form-group {
+    margin-bottom: 18px;
+}
+
+.admin-form-group label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: 600;
+    font-size: 14px;
+}
