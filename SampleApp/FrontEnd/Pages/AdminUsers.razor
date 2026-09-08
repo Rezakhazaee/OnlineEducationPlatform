@@ -247,7 +247,56 @@
                     </div>
                 </section>
             }
+      
+             @if (ShowRoleForm)
+{
+    <section class="admin-content-card">
+        <div class="admin-card-header">
+            <div>
+                <span>تغییر نقش</span>
+                <h2>تغییر نقش کاربر</h2>
+            </div>
 
+            <button class="admin-outline-btn" @onclick="CloseRoleForm">
+                انصراف
+            </button>
+        </div>
+
+        <div class="admin-form">
+
+            <div class="admin-form-group">
+                <label>نقش جدید</label>
+
+                <select
+                    class="admin-input"
+                    @bind="ChangeRole.Role">
+
+                    <option value="Student">دانشجو</option>
+                    <option value="Instructor">مدرس</option>
+                    <option value="Support">پشتیبان</option>
+                    <option value="Admin">مدیر</option>
+
+                </select>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(RoleMessage))
+            {
+                <div class="admin-error">
+                    @RoleMessage
+                </div>
+            }
+
+            <button
+                class="admin-primary-btn"
+                @onclick="UpdateUserRole">
+
+                ذخیره نقش
+
+            </button>
+
+        </div>
+    </section>
+}
         @if (IsLoading)
         {
             <div class="admin-loading">
@@ -469,6 +518,14 @@
 
                                                     <button
                                                         class="admin-outline-btn"
+                                                        @onclick="() => OpenRoleForm(user)">
+
+                                                        تغییر نقش
+
+                                                    </button>
+
+                                                    <button
+                                                        class="admin-outline-btn"
                                                         @onclick="() => ToggleUserStatus(user)">
 
                                                         @(user.IsActive ? "غیرفعال کردن" : "فعال کردن")
@@ -501,6 +558,11 @@
 
 @code {
      
+     public class ChangeUserRoleModel
+      {
+       public string Role { get; set; } = "Student";
+      }
+
     private List<UserDto> Users { get; set; } = new();
 
     private bool IsLoading { get; set; } = true;
@@ -513,7 +575,62 @@
         await LoadUsers();
     }
 
+     private bool ShowRoleForm { get; set; }
+private string? RoleMessage { get; set; }
+private int ChangingRoleUserId { get; set; }
 
+private ChangeUserRoleModel ChangeRole { get; set; } = new();
+
+private void OpenRoleForm(UserDto user)
+{
+    ChangingRoleUserId = user.Id;
+
+    ChangeRole = new ChangeUserRoleModel
+    {
+        Role = user.Role
+    };
+
+    RoleMessage = null;
+    ShowRoleForm = true;
+}
+
+private void CloseRoleForm()
+{
+    RoleMessage = null;
+    ShowRoleForm = false;
+}
+
+private async Task UpdateUserRole()
+{
+    RoleMessage = null;
+
+    try
+    {
+        var client = Auth.CreateAuthenticatedClient();
+
+        var response = await client.PutAsJsonAsync(
+            $"api/Users/{ChangingRoleUserId}/role",
+            ChangeRole
+        );
+
+        if (response.IsSuccessStatusCode)
+        {
+            ShowRoleForm = false;
+            await LoadUsers();
+        }
+        else
+        {
+            var error = await response.Content.ReadAsStringAsync();
+
+            RoleMessage =
+                "تغییر نقش کاربر انجام نشد. " + error;
+        }
+    }
+    catch
+    {
+        RoleMessage = "ارتباط با سرور برقرار نشد.";
+    }
+}
     private async Task LoadUsers()
     {
         IsLoading = true;
