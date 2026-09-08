@@ -1,0 +1,368 @@
+@page "/admin/users"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+
+<PageTitle>مدیریت کاربران | آموزش‌یار</PageTitle>
+
+<div class="admin-page">
+
+    <aside class="admin-sidebar">
+
+        <div class="admin-brand">
+            <div class="admin-brand-mark">آ</div>
+
+            <div>
+                <strong>آموزش‌یار</strong>
+                <small>پنل مدیریت</small>
+            </div>
+        </div>
+
+        <nav class="admin-menu">
+
+            <a href="/admin">
+                <span>⌂</span>
+                داشبورد
+            </a>
+
+            <a href="/admin/courses">
+                <span>▣</span>
+                دوره‌ها
+            </a>
+
+            <a href="/admin/users" class="active">
+                <span>♙</span>
+                کاربران
+            </a>
+
+            <a href="/admin/enrollments">
+                <span>✓</span>
+                ثبت‌نام‌ها
+            </a>
+
+            <a href="/admin/payments">
+                <span>₿</span>
+                پرداخت‌ها
+            </a>
+
+            <a href="/admin/reports">
+                <span>▤</span>
+                گزارش‌ها
+            </a>
+
+        </nav>
+
+        <div class="admin-sidebar-bottom">
+            <a href="/">
+                ← بازگشت به سایت
+            </a>
+        </div>
+
+    </aside>
+
+
+    <main class="admin-main">
+
+        <header class="admin-topbar">
+
+            <div>
+                <span class="admin-label">
+                    مدیریت سامانه
+                </span>
+
+                <h1>
+                    کاربران
+                </h1>
+            </div>
+
+            <div class="admin-user">
+
+                <div class="admin-avatar">
+                    ا
+                </div>
+
+                <div>
+                    <strong>
+                        @(Auth.FullName ?? "مدیر سیستم")
+                    </strong>
+
+                    <small>
+                        Administrator
+                    </small>
+                </div>
+
+            </div>
+
+        </header>
+
+
+        @if (IsLoading)
+        {
+            <div class="admin-loading">
+
+                <div class="admin-loading-icon">
+                    ↻
+                </div>
+
+                <h3>
+                    در حال دریافت کاربران...
+                </h3>
+
+                <p>
+                    اطلاعات کاربران از سرور دریافت می‌شود.
+                </p>
+
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="admin-error">
+
+                <strong>
+                    خطا در دریافت کاربران
+                </strong>
+
+                <p>
+                    @ErrorMessage
+                </p>
+
+                <button
+                    class="admin-outline-btn"
+                    @onclick="LoadUsers">
+
+                    تلاش مجدد
+
+                </button>
+
+            </div>
+        }
+        else
+        {
+            <section class="admin-content-card">
+
+                <div class="admin-card-header">
+
+                    <div>
+                        <span>
+                            مدیریت کاربران
+                        </span>
+
+                        <h2>
+                            فهرست کاربران
+                        </h2>
+                    </div>
+
+                    <div class="users-count">
+                        @Users.Count کاربر
+                    </div>
+
+                </div>
+
+
+                @if (Users.Count == 0)
+                {
+                    <div class="admin-empty-state">
+
+                        <div>
+                            ♙
+                        </div>
+
+                        <h3>
+                            کاربری پیدا نشد
+                        </h3>
+
+                        <p>
+                            هنوز کاربری در سیستم ثبت نشده است.
+                        </p>
+
+                    </div>
+                }
+                else
+                {
+                    <div class="users-table-wrapper">
+
+                        <table class="users-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        نام و نام خانوادگی
+                                    </th>
+
+                                    <th>
+                                        نام کاربری
+                                    </th>
+
+                                    <th>
+                                        موبایل
+                                    </th>
+
+                                    <th>
+                                        نقش
+                                    </th>
+
+                                    <th>
+                                        وضعیت
+                                    </th>
+
+                                    <th>
+                                        تاریخ ثبت
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                @foreach (var user in Users)
+                                {
+                                    <tr>
+
+                                        <td>
+                                            <strong>
+                                                @(user.FullName ?? "-")
+                                            </strong>
+                                        </td>
+
+                                        <td>
+                                            @user.Username
+                                        </td>
+
+                                        <td>
+                                            @user.Mobile
+                                        </td>
+
+                                        <td>
+
+                                            @if (user.Role == "Admin")
+                                            {
+                                                <span class="user-role admin">
+                                                    مدیر
+                                                </span>
+                                            }
+                                            else if (user.Role == "Instructor")
+                                            {
+                                                <span class="user-role instructor">
+                                                    مدرس
+                                                </span>
+                                            }
+                                            else if (user.Role == "Support")
+                                            {
+                                                <span class="user-role support">
+                                                    پشتیبان
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="user-role student">
+                                                    دانشجو
+                                                </span>
+                                            }
+
+                                        </td>
+
+                                        <td>
+
+                                            @if (user.IsActive)
+                                            {
+                                                <span class="user-status active">
+                                                    فعال
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="user-status inactive">
+                                                    غیرفعال
+                                                </span>
+                                            }
+
+                                        </td>
+
+                                        <td>
+                                            @user.CreatedAt.ToString("yyyy/MM/dd")
+                                        </td>
+
+                                    </tr>
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+                }
+
+            </section>
+        }
+
+    </main>
+
+</div>
+
+
+@code {
+
+    private List<UserDto> Users { get; set; } = new();
+
+    private bool IsLoading { get; set; } = true;
+
+    private string? ErrorMessage { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+
+    private async Task LoadUsers()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var result =
+                await client.GetFromJsonAsync<List<UserDto>>(
+                    "api/Users"
+                );
+
+            Users = result ?? new List<UserDto>();
+        }
+        catch
+        {
+            ErrorMessage =
+                "ارتباط با سرور برقرار نشد. لطفاً مطمئن شوید Backend در حال اجرا است و با حساب Admin وارد شده‌اید.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+
+    public class UserDto
+    {
+        public int Id { get; set; }
+
+        public string? FullName { get; set; }
+
+        public string? Mobile { get; set; }
+
+        public string Username { get; set; } = string.Empty;
+
+        public string Role { get; set; } = string.Empty;
+
+        public bool IsActive { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+    }
+
+}
