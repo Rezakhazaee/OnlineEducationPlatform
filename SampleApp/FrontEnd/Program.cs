@@ -12,6 +12,7 @@ builder.Services.AddServerSideBlazor();
 // =========================
 
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<ThemeService>();
 
 
 // =========================

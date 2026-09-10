@@ -66,6 +66,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
 // =========================
 // Seed Main Admin
 // =========================

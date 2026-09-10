@@ -59,37 +59,67 @@
     <main class="admin-main">
 
         <div class="admin-page-header">
+
             <div>
                 <span>مدیریت</span>
                 <h1>گزارش‌ها</h1>
                 <p>خلاصه وضعیت دانشجویان، دوره‌ها، ثبت‌نام‌ها و پرداخت‌ها</p>
             </div>
 
-            <button class="admin-primary-btn" @onclick="LoadReport">
-                به‌روزرسانی گزارش
-            </button>
-            @if (LastUpdated.HasValue)
-            {
-                <span style="margin-right: 12px;">
-                    آخرین بروزرسانی: @LastUpdated.Value.ToString("HH:mm:ss")
-                </span>
-            }
+            <div class="admin-page-header-actions">
+
+                <button class="admin-primary-btn"
+                        @onclick="LoadReport"
+                        disabled="@IsLoading">
+
+                    @if (IsLoading)
+                    {
+                        <span>در حال بروزرسانی...</span>
+                    }
+                    else
+                    {
+                        <span>به‌روزرسانی گزارش</span>
+                    }
+
+                </button>
+
+                @if (LastUpdated.HasValue)
+                {
+                    <span class="admin-last-updated">
+                        آخرین بروزرسانی:
+                        @LastUpdated.Value.ToString("HH:mm:ss")
+                    </span>
+                }
+
+            </div>
+
         </div>
 
         @if (IsLoading)
         {
             <section class="admin-content-card">
+
                 <div class="admin-empty-state">
                     در حال دریافت گزارش‌ها...
                 </div>
+
             </section>
         }
         else if (!string.IsNullOrWhiteSpace(ErrorMessage))
         {
             <section class="admin-content-card">
+
                 <div class="admin-error">
                     @ErrorMessage
                 </div>
+
+                <div style="margin-top: 16px; text-align: center;">
+                    <button class="admin-primary-btn"
+                            @onclick="LoadReport">
+                        تلاش مجدد
+                    </button>
+                </div>
+
             </section>
         }
         else
@@ -97,33 +127,66 @@
             <div class="admin-stats-grid">
 
                 <div class="admin-stat-card">
-                    <div class="admin-stat-label">دانشجویان</div>
-                    <div class="admin-stat-value">@Report.TotalStudents</div>
+                    <div class="admin-stat-label">
+                        دانشجویان
+                    </div>
+
+                    <div class="admin-stat-value">
+                        @Report.TotalStudents
+                    </div>
                 </div>
 
                 <div class="admin-stat-card">
-                    <div class="admin-stat-label">دوره‌ها</div>
-                    <div class="admin-stat-value">@Report.TotalCourses</div>
+                    <div class="admin-stat-label">
+                        دوره‌ها
+                    </div>
+
+                    <div class="admin-stat-value">
+                        @Report.TotalCourses
+                    </div>
                 </div>
 
                 <div class="admin-stat-card">
-                    <div class="admin-stat-label">ثبت‌نام‌ها</div>
-                    <div class="admin-stat-value">@Report.TotalEnrollments</div>
+                    <div class="admin-stat-label">
+                        ثبت‌نام‌ها
+                    </div>
+
+                    <div class="admin-stat-value">
+                        @Report.TotalEnrollments
+                    </div>
                 </div>
 
                 <div class="admin-stat-card">
-                    <div class="admin-stat-label">پرداخت‌شده</div>
-                    <div class="admin-stat-value">@Report.TotalPaid.ToString("N0")</div>
+                    <div class="admin-stat-label">
+                        پرداخت‌شده
+                    </div>
+
+                    <div class="admin-stat-value">
+                        @Report.TotalPaid.ToString("N0")
+                        <small>تومان</small>
+                    </div>
                 </div>
 
                 <div class="admin-stat-card">
-                    <div class="admin-stat-label">در انتظار پرداخت</div>
-                    <div class="admin-stat-value">@Report.TotalPending.ToString("N0")</div>
+                    <div class="admin-stat-label">
+                        در انتظار پرداخت
+                    </div>
+
+                    <div class="admin-stat-value">
+                        @Report.TotalPending.ToString("N0")
+                        <small>تومان</small>
+                    </div>
                 </div>
 
                 <div class="admin-stat-card">
-                    <div class="admin-stat-label">لغوشده</div>
-                    <div class="admin-stat-value">@Report.TotalCancelled.ToString("N0")</div>
+                    <div class="admin-stat-label">
+                        لغوشده
+                    </div>
+
+                    <div class="admin-stat-value">
+                        @Report.TotalCancelled.ToString("N0")
+                        <small>تومان</small>
+                    </div>
                 </div>
 
             </div>
@@ -148,41 +211,42 @@
         await LoadReport();
     }
 
-private async Task LoadReport()
-{
-    IsLoading = true;
-    ErrorMessage = null;
-
-    try
+    private async Task LoadReport()
     {
-        var client = Auth.CreateAuthenticatedClient();
+        IsLoading = true;
+        ErrorMessage = null;
 
-        var response = await client.GetAsync("api/Reports/summary");
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
 
-        if (!response.IsSuccessStatusCode)
+            var response = await client.GetAsync("api/Reports/summary");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage =
+                    $"دریافت گزارش‌ها با خطای {(int)response.StatusCode} ({response.StatusCode}) مواجه شد.";
+
+                return;
+            }
+
+            var result =
+                await response.Content.ReadFromJsonAsync<ReportsSummaryDto>();
+
+            Report = result ?? new ReportsSummaryDto();
+
+            LastUpdated = DateTime.Now;
+        }
+        catch (Exception ex)
         {
             ErrorMessage =
-                $"دریافت گزارش‌ها با خطای {(int)response.StatusCode} ({response.StatusCode}) مواجه شد.";
-
-            return;
+                $"خطا در دریافت گزارش‌ها: {ex.Message}";
         }
-
-        var result =
-            await response.Content.ReadFromJsonAsync<ReportsSummaryDto>();
-
-        Report = result ?? new ReportsSummaryDto();
-        
+        finally
+        {
+            IsLoading = false;
+        }
     }
-    catch (Exception ex)
-    {
-        ErrorMessage =
-            $"خطا در دریافت گزارش‌ها: {ex.Message}";
-    }
-    finally
-    {
-        IsLoading = false;
-    }
-}
 
     public class ReportsSummaryDto
     {

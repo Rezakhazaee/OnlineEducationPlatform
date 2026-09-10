@@ -1,10 +1,12 @@
 ﻿@inherits LayoutComponentBase
+@using FrontEnd.Services
+@inject ThemeService ThemeService
+@inject NavigationManager NavigationManager
 
 <PageTitle>سامانه آموزش آنلاین</PageTitle>
 
-<div class="app-shell">
+<div class="app-shell" style="@ThemeStyle">
 
-```
 <header class="app-header">
 
     <div class="header-inner">
@@ -18,7 +20,6 @@
             </span>
         </a>
 
-
         <nav class="main-nav">
 
             <a href="/">خانه</a>
@@ -30,7 +31,6 @@
             <a href="/about">درباره ما</a>
 
         </nav>
-
 
         <div class="header-actions">
 
@@ -48,11 +48,9 @@
 
 </header>
 
-
 <main class="main-content">
     @Body
 </main>
-
 
 <footer class="app-footer">
 
@@ -62,6 +60,27 @@
     </div>
 
 </footer>
-```
 
 </div>
+
+@code {
+
+private bool IsAdminPage =>
+    NavigationManager.Uri
+        .Contains("/admin", StringComparison.OrdinalIgnoreCase);
+
+private string ThemeStyle =>
+    IsAdminPage
+        ? string.Empty
+        : $"--theme-primary: {ThemeService.PrimaryColor}; " +
+          $"--theme-secondary: {ThemeService.SecondaryColor};";
+
+protected override async Task OnInitializedAsync()
+{
+    if (!IsAdminPage)
+    {
+        await ThemeService.LoadThemeAsync();
+    }
+}
+
+}

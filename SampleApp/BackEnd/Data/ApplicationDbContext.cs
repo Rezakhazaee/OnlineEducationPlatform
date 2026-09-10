@@ -17,6 +17,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Course> Courses { get; set; }
 
     public DbSet<Organization> Organizations { get; set; }
+    public DbSet<OrganizationTheme> OrganizationThemes { get; set; }
 
     public DbSet<Enrollment> Enrollments { get; set; }
 
@@ -49,6 +50,17 @@ public class ApplicationDbContext : DbContext
             .WithMany()
             .HasForeignKey(s => s.OrganizationId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // =========================
+        // Organization -> Theme
+        // =========================
+
+        modelBuilder.Entity<Organization>()
+            .HasOne<OrganizationTheme>()
+            .WithOne(t => t.Organization)
+            .HasForeignKey<OrganizationTheme>(t => t.OrganizationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
 
 
         // =========================
