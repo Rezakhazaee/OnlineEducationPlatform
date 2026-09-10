@@ -1,4 +1,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap');
+/* ================================
+   Site Theme
+   ================================ */
+:root {
+    --theme-primary: #568fa8;
+    --theme-primary-dark: #477f99;
+    --theme-primary-light: #70abc0;
+    --theme-primary-soft: #edf5f8;
+
+    --theme-text: #263d4a;
+    --theme-muted-text: #7b8b95;
+    --theme-border: #dce7ec;
+    --theme-surface: #ffffff;
+    --theme-page-background: #f3f7fa;
+    --theme-header-border: #d3e2e9;
+    --theme-secondary-text: #607581;
+    --theme-subtle-text: #8a9ba4;
+    --theme-card-background: #f1f6f8;
+    --theme-card-border-hover: #bdd4df;
+    --theme-cta-background: #dcebf1;
+
+}
+
 
 html,
 body {
@@ -251,141 +274,6 @@ textarea {
 /* =========================
    Hero
 ========================= */
-<section class="luxury-hero">
-
-<div class="hero-content">
-
-    <div class="hero-eyebrow">
-        یادگیری آنلاین، ساده و حرفه‌ای
-    </div>
-
-    <h1>
-        مهارت‌هایی که
-        <span>آینده‌ات را می‌سازند</span>
-    </h1>
-
-    <p>
-        دوره‌های کاربردی و آموزشی را پیدا کن،
-        مهارت جدید یاد بگیر و مسیر پیشرفت خودت را
-        با یک تجربه ساده و منظم ادامه بده.
-    </p>
-
-    <div class="hero-actions">
-
-        <a href="/courses" class="btn-primary">
-            مشاهده دوره‌ها
-            <span>←</span>
-        </a>
-
-        <a href="/register" class="btn-secondary">
-            شروع رایگان
-        </a>
-
-    </div>
-
-    <div class="hero-trust">
-
-        <div>
-            <strong>+۱۰۰</strong>
-            <span>دوره آموزشی</span>
-        </div>
-
-        <div class="trust-divider"></div>
-
-        <div>
-            <strong>+۱۰۰۰</strong>
-            <span>دانشجو</span>
-        </div>
-
-        <div class="trust-divider"></div>
-
-        <div>
-            <strong>۲۴/۷</strong>
-            <span>دسترسی آنلاین</span>
-        </div>
-
-    </div>
-
-</div>
-
-
-<div class="hero-card-area">
-
-    <div class="hero-glow"></div>
-
-    <div class="metal-card">
-
-        <div class="metal-card-top">
-            <span>داشبورد یادگیری</span>
-
-            <span class="status-badge">
-                فعال
-            </span>
-        </div>
-
-
-        <div class="learning-title">
-            <small>دوره در حال یادگیری</small>
-
-            <strong>
-                مهارت‌های کاربردی
-            </strong>
-        </div>
-
-
-        <div class="learning-progress">
-
-            <div class="progress-circle">
-
-                <div>
-                    <strong>۷۵٪</strong>
-                    <small>پیشرفت</small>
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="course-info">
-
-            <div class="course-icon">
-                ✓
-            </div>
-
-            <div>
-                <strong>
-                    مسیر یادگیری شما
-                </strong>
-
-                <small>
-                    ادامه آموزش از آخرین مرحله
-                </small>
-            </div>
-
-        </div>
-
-
-        <div class="card-line"></div>
-
-
-        <div class="card-footer">
-
-            <span>
-                ادامه دوره
-            </span>
-
-            <span class="card-arrow">
-                ←
-            </span>
-
-        </div>
-
-    </div>
-
-</div>
-
-</section>
 
 
 /* =========================
