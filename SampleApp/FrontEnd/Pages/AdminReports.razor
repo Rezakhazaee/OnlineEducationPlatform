@@ -2,82 +2,134 @@
 
 @using System.Net.Http.Json
 @using FrontEnd.Services
+
 @inject AuthService Auth
 
-<PageTitle>گزارش‌ها</PageTitle>
+<PageTitle>گزارش‌ها | آموزش‌یار</PageTitle>
 
 <div class="admin-page">
 
- <div class="admin-page-header">
-    <div>
-        <span>مدیریت</span>
-        <h1>گزارش‌ها</h1>
-        <p>خلاصه وضعیت دانشجویان، دوره‌ها، ثبت‌نام‌ها و پرداخت‌ها</p>
-    </div>
+    <aside class="admin-sidebar">
 
-    <button class="admin-primary-btn" @onclick="LoadReport">
-        به‌روزرسانی گزارش
-    </button>
-</div>
+        <div class="admin-brand">
+            <div class="admin-brand-mark">آ</div>
 
-    @if (IsLoading)
-    {
-        <section class="admin-content-card">
-            <div class="admin-empty-state">
-                در حال دریافت گزارش‌ها...
+            <div>
+                <strong>آموزش‌یار</strong>
+                <small>پنل مدیریت</small>
             </div>
-        </section>
-    }
-    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
-    {
-        <section class="admin-content-card">
-            <div class="admin-error">
-                @ErrorMessage
-            </div>
-        </section>
-    }
-    else
-    {
-        <div class="admin-stats-grid">
-
-            <div class="admin-stat-card">
-                <div class="admin-stat-label">دانشجویان</div>
-                <div class="admin-stat-value">@Report.TotalStudents</div>
-            </div>
-
-            <div class="admin-stat-card">
-                <div class="admin-stat-label">دوره‌ها</div>
-                <div class="admin-stat-value">@Report.TotalCourses</div>
-            </div>
-
-            <div class="admin-stat-card">
-                <div class="admin-stat-label">ثبت‌نام‌ها</div>
-                <div class="admin-stat-value">@Report.TotalEnrollments</div>
-            </div>
-
-            <div class="admin-stat-card">
-                <div class="admin-stat-label">پرداخت‌شده</div>
-                <div class="admin-stat-value">
-                    @Report.TotalPaid.ToString("N0")
-                </div>
-            </div>
-
-            <div class="admin-stat-card">
-                <div class="admin-stat-label">در انتظار پرداخت</div>
-                <div class="admin-stat-value">
-                    @Report.TotalPending.ToString("N0")
-                </div>
-            </div>
-
-            <div class="admin-stat-card">
-                <div class="admin-stat-label">لغوشده</div>
-                <div class="admin-stat-value">
-                    @Report.TotalCancelled.ToString("N0")
-                </div>
-            </div>
-
         </div>
-    }
+
+        <nav class="admin-menu">
+
+            <a href="/admin">
+                <span>⌂</span>
+                داشبورد
+            </a>
+
+            <a href="/admin/courses">
+                <span>▣</span>
+                دوره‌ها
+            </a>
+
+            <a href="/admin/users">
+                <span>♙</span>
+                کاربران
+            </a>
+
+            <a href="/admin/enrollments">
+                <span>✓</span>
+                ثبت‌نام‌ها
+            </a>
+
+            <a href="/admin/payments">
+                <span>₿</span>
+                پرداخت‌ها
+            </a>
+
+            <a href="/admin/reports" class="active">
+                <span>▤</span>
+                گزارش‌ها
+            </a>
+
+        </nav>
+
+    </aside>
+
+    <main class="admin-main">
+
+        <div class="admin-page-header">
+            <div>
+                <span>مدیریت</span>
+                <h1>گزارش‌ها</h1>
+                <p>خلاصه وضعیت دانشجویان، دوره‌ها، ثبت‌نام‌ها و پرداخت‌ها</p>
+            </div>
+
+            <button class="admin-primary-btn" @onclick="LoadReport">
+                به‌روزرسانی گزارش
+            </button>
+            @if (LastUpdated.HasValue)
+            {
+                <span style="margin-right: 12px;">
+                    آخرین بروزرسانی: @LastUpdated.Value.ToString("HH:mm:ss")
+                </span>
+            }
+        </div>
+
+        @if (IsLoading)
+        {
+            <section class="admin-content-card">
+                <div class="admin-empty-state">
+                    در حال دریافت گزارش‌ها...
+                </div>
+            </section>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <section class="admin-content-card">
+                <div class="admin-error">
+                    @ErrorMessage
+                </div>
+            </section>
+        }
+        else
+        {
+            <div class="admin-stats-grid">
+
+                <div class="admin-stat-card">
+                    <div class="admin-stat-label">دانشجویان</div>
+                    <div class="admin-stat-value">@Report.TotalStudents</div>
+                </div>
+
+                <div class="admin-stat-card">
+                    <div class="admin-stat-label">دوره‌ها</div>
+                    <div class="admin-stat-value">@Report.TotalCourses</div>
+                </div>
+
+                <div class="admin-stat-card">
+                    <div class="admin-stat-label">ثبت‌نام‌ها</div>
+                    <div class="admin-stat-value">@Report.TotalEnrollments</div>
+                </div>
+
+                <div class="admin-stat-card">
+                    <div class="admin-stat-label">پرداخت‌شده</div>
+                    <div class="admin-stat-value">@Report.TotalPaid.ToString("N0")</div>
+                </div>
+
+                <div class="admin-stat-card">
+                    <div class="admin-stat-label">در انتظار پرداخت</div>
+                    <div class="admin-stat-value">@Report.TotalPending.ToString("N0")</div>
+                </div>
+
+                <div class="admin-stat-card">
+                    <div class="admin-stat-label">لغوشده</div>
+                    <div class="admin-stat-value">@Report.TotalCancelled.ToString("N0")</div>
+                </div>
+
+            </div>
+        }
+
+    </main>
 
 </div>
 
@@ -89,37 +141,48 @@
 
     private ReportsSummaryDto Report { get; set; } = new();
 
+    private DateTime? LastUpdated { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         await LoadReport();
     }
 
-    private async Task LoadReport()
+private async Task LoadReport()
+{
+    IsLoading = true;
+    ErrorMessage = null;
+
+    try
     {
-        IsLoading = true;
-        ErrorMessage = null;
+        var client = Auth.CreateAuthenticatedClient();
 
-        try
-        {
-            var client = Auth.CreateAuthenticatedClient();
+        var response = await client.GetAsync("api/Reports/summary");
 
-            var result =
-                await client.GetFromJsonAsync<ReportsSummaryDto>(
-                    "api/Reports/summary"
-                );
-
-            Report = result ?? new ReportsSummaryDto();
-        }
-        catch
+        if (!response.IsSuccessStatusCode)
         {
             ErrorMessage =
-                "دریافت گزارش‌ها انجام نشد. لطفاً مطمئن شوید با حساب Admin وارد شده‌اید و Backend در حال اجرا است.";
+                $"دریافت گزارش‌ها با خطای {(int)response.StatusCode} ({response.StatusCode}) مواجه شد.";
+
+            return;
         }
-        finally
-        {
-            IsLoading = false;
-        }
+
+        var result =
+            await response.Content.ReadFromJsonAsync<ReportsSummaryDto>();
+
+        Report = result ?? new ReportsSummaryDto();
+        
     }
+    catch (Exception ex)
+    {
+        ErrorMessage =
+            $"خطا در دریافت گزارش‌ها: {ex.Message}";
+    }
+    finally
+    {
+        IsLoading = false;
+    }
+}
 
     public class ReportsSummaryDto
     {
