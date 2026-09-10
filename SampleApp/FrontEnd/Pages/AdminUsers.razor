@@ -297,6 +297,51 @@
         </div>
     </section>
 }
+
+@if (ShowPasswordForm)
+{
+    <section class="admin-content-card">
+        <div class="admin-card-header">
+            <div>
+                <span>تغییر رمز عبور</span>
+                <h2>تغییر رمز عبور کاربر</h2>
+            </div>
+
+            <button class="admin-outline-btn" @onclick="ClosePasswordForm">
+                انصراف
+            </button>
+        </div>
+
+        <div class="admin-form">
+
+            <div class="admin-form-group">
+                <label>رمز عبور جدید</label>
+
+                <input
+                    type="password"
+                    class="admin-input"
+                    @bind="ChangePassword.NewPassword"
+                    placeholder="حداقل ۶ کاراکتر" />
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(PasswordMessage))
+            {
+                <div class="admin-error">
+                    @PasswordMessage
+                </div>
+            }
+
+            <button
+                class="admin-primary-btn"
+                @onclick="UpdateUserPassword">
+
+                ذخیره رمز عبور
+
+            </button>
+
+        </div>
+    </section>
+}
         @if (IsLoading)
         {
             <div class="admin-loading">
@@ -505,35 +550,43 @@
                                                 </span>
                                             }
                                             else
-                                            {
-                                                <div class="admin-user-actions">
+{
+    <div class="admin-user-actions">
 
-                                                    <button
-                                                        class="admin-outline-btn"
-                                                        @onclick="() => OpenEditUserForm(user)">
+        <button
+            class="admin-outline-btn"
+            @onclick="() => OpenEditUserForm(user)">
 
-                                                        ویرایش
+            ویرایش
 
-                                                    </button>
+        </button>
 
-                                                    <button
-                                                        class="admin-outline-btn"
-                                                        @onclick="() => OpenRoleForm(user)">
+        <button
+            class="admin-outline-btn"
+            @onclick="() => OpenRoleForm(user)">
 
-                                                        تغییر نقش
+            تغییر نقش
 
-                                                    </button>
+        </button>
 
-                                                    <button
-                                                        class="admin-outline-btn"
-                                                        @onclick="() => ToggleUserStatus(user)">
+        <button
+            class="admin-outline-btn"
+            @onclick="() => OpenPasswordForm(user)">
 
-                                                        @(user.IsActive ? "غیرفعال کردن" : "فعال کردن")
+            تغییر رمز
 
-                                                    </button>
+        </button>
 
-                                                </div>
-                                            }
+        <button
+            class="admin-outline-btn"
+            @onclick="() => ToggleUserStatus(user)">
+
+            @(user.IsActive ? "غیرفعال کردن" : "فعال کردن")
+
+        </button>
+
+    </div>
+}
                
 
                                         </td>
@@ -558,6 +611,10 @@
 
 @code {
      
+     public class ChangeUserPasswordModel
+     {
+      public string NewPassword { get; set; } = string.Empty;
+     }
      public class ChangeUserRoleModel
       {
        public string Role { get; set; } = "Student";
@@ -575,6 +632,70 @@
         await LoadUsers();
     }
 
+     private bool ShowPasswordForm { get; set; }
+private string? PasswordMessage { get; set; }
+private int ChangingPasswordUserId { get; set; }
+
+private ChangeUserPasswordModel ChangePassword { get; set; } = new();
+
+private void OpenPasswordForm(UserDto user)
+{
+    ChangingPasswordUserId = user.Id;
+
+    ChangePassword = new ChangeUserPasswordModel();
+
+    PasswordMessage = null;
+    ShowPasswordForm = true;
+}
+
+private void ClosePasswordForm()
+{
+    PasswordMessage = null;
+    ShowPasswordForm = false;
+}
+
+private async Task UpdateUserPassword()
+{
+    PasswordMessage = null;
+
+    if (string.IsNullOrWhiteSpace(ChangePassword.NewPassword))
+    {
+        PasswordMessage = "لطفاً رمز عبور جدید را وارد کنید.";
+        return;
+    }
+
+    if (ChangePassword.NewPassword.Length < 6)
+    {
+        PasswordMessage = "رمز عبور باید حداقل ۶ کاراکتر باشد.";
+        return;
+    }
+
+    try
+    {
+        var client = Auth.CreateAuthenticatedClient();
+
+        var response = await client.PutAsJsonAsync(
+            $"api/Users/{ChangingPasswordUserId}/password",
+            ChangePassword
+        );
+
+        if (response.IsSuccessStatusCode)
+        {
+            ShowPasswordForm = false;
+        }
+        else
+        {
+            var error = await response.Content.ReadAsStringAsync();
+
+            PasswordMessage =
+                "تغییر رمز عبور انجام نشد. " + error;
+        }
+    }
+    catch
+    {
+        PasswordMessage = "ارتباط با سرور برقرار نشد.";
+    }
+}
      private bool ShowRoleForm { get; set; }
 private string? RoleMessage { get; set; }
 private int ChangingRoleUserId { get; set; }
