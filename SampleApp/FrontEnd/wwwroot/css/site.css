@@ -142,6 +142,14 @@ textarea {
     font-weight: 500;
 }
 
+.main-nav a.active {
+    color: var(--theme-primary);
+    font-weight: 700;
+}
+
+.main-nav a.active::after {
+    width: 100%;
+}
 
 /* Navigation */
 
@@ -297,7 +305,7 @@ textarea {
 }
 
 .section-title > span {
-    color: #6299ae;
+    color: var(--theme-primary);
 
     font-size: 0.75rem;
     font-weight: 700;
@@ -306,7 +314,7 @@ textarea {
 .section-title h2 {
     margin: 12px 0 16px;
 
-    color: #1c2b38;
+    color: var(--theme-secondary);
 
     font-size: 2rem;
     font-weight: 800;
@@ -362,7 +370,7 @@ textarea {
 }
 
 .feature-number {
-    color: #78aabd;
+    color: var(--theme-primary);
 
     font-size: 0.72rem;
     font-weight: 800;
@@ -372,6 +380,8 @@ textarea {
 
 .feature-card h3 {
     margin: 0 0 12px;
+
+    color: var(--theme-secondary);
 
     font-size: 1rem;
 }
@@ -419,7 +429,7 @@ textarea {
 }
 
 .final-cta > div span {
-    color: #6995a7;
+    color: var(--theme-primary);
 
     font-size: 0.72rem;
     font-weight: 700;
@@ -428,7 +438,7 @@ textarea {
 .final-cta h2 {
     margin: 9px 0 0;
 
-    color: #294353;
+    color: var(--theme-secondary);
 
     font-size: 1.3rem;
 }
