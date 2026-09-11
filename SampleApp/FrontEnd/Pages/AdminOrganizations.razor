@@ -222,48 +222,56 @@
                         <div class="organization-theme-layout">
 
                             <div class="organization-theme-form">
+                              
+                              <div class="theme-color-field">
 
-                                <div class="theme-color-field">
+                                <label>
+                                    رنگ اصلی
+                                </label>
 
-                                    <label>
-                                        رنگ اصلی
-                                    </label>
+                                <div class="theme-color-description">
+                                    دکمه‌ها، لینک‌های مهم، منوی فعال، لوگو و عناصر تأکیدی سایت
+                                </div>
 
-                                    <div class="theme-color-control">
+                                <div class="theme-color-control">
 
-                                        <input
-                                            type="color"
-                                            value="@PrimaryColor"
-                                            @onchange="OnPrimaryColorChanged" />
+                                    <input
+                                        type="color"
+                                        value="@PrimaryColor"
+                                        @onchange="OnPrimaryColorChanged" />
 
-                                        <span>
-                                            @PrimaryColor
-                                        </span>
-
-                                    </div>
+                                    <span class="theme-color-value">
+                                        @PrimaryColor
+                                    </span>
 
                                 </div>
 
+                            </div>
+
                                 <div class="theme-color-field">
 
-                                    <label>
-                                        رنگ ثانویه
-                                    </label>
+                                <label>
+                                    رنگ ثانویه
+                                </label>
 
-                                    <div class="theme-color-control">
+                                <div class="theme-color-description">
+                                    عنوان‌ها، متن‌های اصلی، متن‌های توضیحی و عناصر ثانویه سایت
+                                </div>
 
-                                        <input
-                                            type="color"
-                                            value="@SecondaryColor"
-                                            @onchange="OnSecondaryColorChanged" />
+                                <div class="theme-color-control">
 
-                                        <span>
-                                            @SecondaryColor
-                                        </span>
+                                    <input
+                                        type="color"
+                                        value="@SecondaryColor"
+                                        @onchange="OnSecondaryColorChanged" />
 
-                                    </div>
+                                    <span class="theme-color-value">
+                                        @SecondaryColor
+                                    </span>
 
                                 </div>
+
+                            </div>
 
                                 <div class="theme-active-field">
 

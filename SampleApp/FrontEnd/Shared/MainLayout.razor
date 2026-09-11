@@ -7,80 +7,83 @@
 
 <div class="app-shell" style="@ThemeStyle">
 
-<header class="app-header">
+    <header class="app-header">
 
-    <div class="header-inner">
+        <div class="header-inner">
 
-        <a href="/" class="brand">
-            <span class="brand-mark">آ</span>
+            <a href="/" class="brand">
+                <span class="brand-mark">آ</span>
 
-            <span class="brand-text">
-                <strong>آموزش‌یار</strong>
-                <small>سامانه آموزش آنلاین</small>
-            </span>
-        </a>
-
-        <nav class="main-nav">
-
-            <a href="/">خانه</a>
-
-            <a href="/courses">دوره‌ها</a>
-
-            <a href="/courses">دسته‌بندی‌ها</a>
-
-            <a href="/about">درباره ما</a>
-
-        </nav>
-
-        <div class="header-actions">
-
-            <a href="/login" class="login-link">
-                ورود
+                <span class="brand-text">
+                    <strong>آموزش‌یار</strong>
+                    <small>سامانه آموزش آنلاین</small>
+                </span>
             </a>
 
-            <a href="/register" class="register-btn">
-                ثبت‌نام
-            </a>
+            <nav class="main-nav">
+
+                <a href="/">خانه</a>
+
+                <a href="/courses">دوره‌ها</a>
+
+                <a href="/courses">دسته‌بندی‌ها</a>
+
+                <a href="/about">درباره ما</a>
+
+            </nav>
+
+            <div class="header-actions">
+
+                <a href="/login" class="login-link">
+                    ورود
+                </a>
+
+                <a href="/register" class="register-btn">
+                    ثبت‌نام
+                </a>
+
+            </div>
 
         </div>
 
-    </div>
+    </header>
 
-</header>
+    <main class="main-content">
+        @Body
+    </main>
 
-<main class="main-content">
-    @Body
-</main>
+    <footer class="app-footer">
 
-<footer class="app-footer">
+        <div>
+            <strong>آموزش‌یار</strong>
+            <span>مسیر ساده‌تر برای یادگیری</span>
+        </div>
 
-    <div>
-        <strong>آموزش‌یار</strong>
-        <span>مسیر ساده‌تر برای یادگیری</span>
-    </div>
-
-</footer>
+    </footer>
 
 </div>
 
 @code {
 
-private bool IsAdminPage =>
-    NavigationManager.Uri
-        .Contains("/admin", StringComparison.OrdinalIgnoreCase);
+    private bool IsAdminPage =>
+        NavigationManager.Uri
+            .Contains("/admin", StringComparison.OrdinalIgnoreCase);
 
-private string ThemeStyle =>
-    IsAdminPage
-        ? string.Empty
-        : $"--theme-primary: {ThemeService.PrimaryColor}; " +
-          $"--theme-secondary: {ThemeService.SecondaryColor};";
+    private string ThemeStyle =>
+        IsAdminPage
+            ? string.Empty
+            : $"--theme-primary: {ThemeService.PrimaryColor}; " +
+              $"--theme-primary-light: {ThemeService.PrimaryColor}; " +
+              $"--theme-primary-dark: {ThemeService.PrimaryColor}; " +
+              $"--theme-secondary: {ThemeService.SecondaryColor}; " +
+              $"--theme-text: {ThemeService.SecondaryColor};";
 
-protected override async Task OnInitializedAsync()
-{
-    if (!IsAdminPage)
+    protected override async Task OnInitializedAsync()
     {
-        await ThemeService.LoadThemeAsync();
+        if (!IsAdminPage)
+        {
+            await ThemeService.LoadThemeAsync();
+        }
     }
-}
 
 }
