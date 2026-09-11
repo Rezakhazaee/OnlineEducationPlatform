@@ -20,8 +20,6 @@ public class StudentDto
 
     public string? GuardianMobile { get; set; }
 
-    public int? OrganizationId { get; set; }
-
     public int? MarketingUserId { get; set; }
 
     public int? SupportUserId { get; set; }

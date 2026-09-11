@@ -27,12 +27,6 @@ public class Student
     public string? GuardianMobile { get; set; }
 
 
-    // سازمان
-    public int? OrganizationId { get; set; }
-
-    public Organization? Organization { get; set; }
-
-
     // کاربر بازاریابی
     public int? MarketingUserId { get; set; }
 

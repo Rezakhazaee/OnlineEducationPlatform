@@ -3,6 +3,7 @@ using System;
 using BackEnd.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackEnd.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260911141846_RefactorOrganizationToSettings")]
+    partial class RefactorOrganizationToSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
@@ -146,45 +149,6 @@ namespace BackEnd.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("OrganizationSettings");
-                });
-
-            modelBuilder.Entity("BackEnd.Models.PartnerOrganization", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ContactMobile")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ContactPerson")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("ContractEndDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ContractNumber")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("ContractStartDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PartnerOrganizations");
                 });
 
             modelBuilder.Entity("BackEnd.Models.Payment", b =>

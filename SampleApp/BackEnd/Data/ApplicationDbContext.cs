@@ -17,7 +17,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<Course> Courses { get; set; }
 
     public DbSet<Organization> Organizations { get; set; }
-    public DbSet<OrganizationTheme> OrganizationThemes { get; set; }
+
+
+    public DbSet<OrganizationSettings> OrganizationSettings { get; set; }
+    public DbSet<PartnerOrganization> PartnerOrganizations { get; set; }
 
     public DbSet<Enrollment> Enrollments { get; set; }
 
@@ -29,38 +32,17 @@ public class ApplicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
-// =========================
-// User -> Student
-// =========================
-
-    modelBuilder.Entity<Student>()
-    .HasOne(s => s.User)
-    .WithMany()
-    .HasForeignKey(s => s.UserId)
-    .OnDelete(DeleteBehavior.Restrict);
 
 
         // =========================
-        // Student -> Organization
+        // User -> Student
         // =========================
 
         modelBuilder.Entity<Student>()
-            .HasOne(s => s.Organization)
+            .HasOne(s => s.User)
             .WithMany()
-            .HasForeignKey(s => s.OrganizationId)
+            .HasForeignKey(s => s.UserId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        // =========================
-        // Organization -> Theme
-        // =========================
-
-        modelBuilder.Entity<Organization>()
-            .HasOne<OrganizationTheme>()
-            .WithOne(t => t.Organization)
-            .HasForeignKey<OrganizationTheme>(t => t.OrganizationId)
-            .OnDelete(DeleteBehavior.Cascade);
-
 
 
         // =========================
@@ -149,27 +131,29 @@ public class ApplicationDbContext : DbContext
             .WithMany()
             .HasForeignKey(e => e.InstructorId)
             .OnDelete(DeleteBehavior.Restrict);
-         
-         // =========================
-// StudentFollowUp -> Student
-// =========================
-
-modelBuilder.Entity<StudentFollowUp>()
-    .HasOne(f => f.Student)
-    .WithMany()
-    .HasForeignKey(f => f.StudentId)
-    .OnDelete(DeleteBehavior.Restrict);
 
 
-// =========================
-// StudentFollowUp -> Support User
-// =========================
+        // =========================
+        // StudentFollowUp -> Student
+        // =========================
 
-modelBuilder.Entity<StudentFollowUp>()
-    .HasOne(f => f.SupportUser)
-    .WithMany()
-    .HasForeignKey(f => f.SupportUserId)
-    .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<StudentFollowUp>()
+            .HasOne(f => f.Student)
+            .WithMany()
+            .HasForeignKey(f => f.StudentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // StudentFollowUp -> Support User
+        // =========================
+
+        modelBuilder.Entity<StudentFollowUp>()
+            .HasOne(f => f.SupportUser)
+            .WithMany()
+            .HasForeignKey(f => f.SupportUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
 
         // =========================
         // Payment -> Enrollment
@@ -180,5 +164,35 @@ modelBuilder.Entity<StudentFollowUp>()
             .WithMany()
             .HasForeignKey(p => p.EnrollmentId)
             .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Organization Settings
+        // =========================
+        //
+        // هر نصب آموزش‌یار فقط یک تنظیمات سازمانی دارد.
+        // در این مرحله محدودیت تک‌رکوردی را در دیتابیس
+        // اعمال نمی‌کنیم؛ بعداً Migration آن را مدیریت می‌کند.
+        //
+
+        modelBuilder.Entity<OrganizationSettings>()
+            .Property(s => s.Name)
+            .IsRequired();
+
+        modelBuilder.Entity<OrganizationSettings>()
+            .Property(s => s.PrimaryColor)
+            .HasDefaultValue("#568fa8");
+
+        modelBuilder.Entity<OrganizationSettings>()
+            .Property(s => s.SecondaryColor)
+            .HasDefaultValue("#263d4a");
+
+        modelBuilder.Entity<OrganizationSettings>()
+            .Property(s => s.IsActive)
+            .HasDefaultValue(true);
+
+        modelBuilder.Entity<OrganizationSettings>()
+            .Property(s => s.ThemeIsActive)
+            .HasDefaultValue(true);
     }
 }

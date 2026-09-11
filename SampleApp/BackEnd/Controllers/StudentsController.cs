@@ -21,58 +21,57 @@ public class StudentsController : ControllerBase
 
 
     // Student - مشاهده پروفایل خودش
-[Authorize(Roles = "Student")]
-[HttpGet("me")]
-public async Task<ActionResult<StudentDto>> GetMyProfile()
-{
-    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-
-    if (userIdClaim == null)
+    [Authorize(Roles = "Student")]
+    [HttpGet("me")]
+    public async Task<ActionResult<StudentDto>> GetMyProfile()
     {
-        return Unauthorized(new
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+        if (userIdClaim == null)
         {
-            message = "شناسه کاربر در توکن پیدا نشد"
-        });
-    }
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر در توکن پیدا نشد"
+            });
+        }
 
-    if (!int.TryParse(userIdClaim.Value, out var userId))
-    {
-        return Unauthorized(new
+        if (!int.TryParse(userIdClaim.Value, out var userId))
         {
-            message = "شناسه کاربر معتبر نیست"
-        });
-    }
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
 
-    var student = await _context.Students
-        .FirstOrDefaultAsync(s => s.UserId == userId);
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
 
-    if (student == null)
-    {
-        return NotFound(new
+        if (student == null)
         {
-            message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
-        });
+            return NotFound(new
+            {
+                message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
+            });
+        }
+
+        var result = new StudentDto
+        {
+            Id = student.Id,
+            FirstName = student.FirstName,
+            LastName = student.LastName,
+            NationalCode = student.NationalCode,
+            BirthDate = student.BirthDate,
+            Mobile = student.Mobile,
+            Address = student.Address,
+            GuardianName = student.GuardianName,
+            GuardianMobile = student.GuardianMobile,
+            MarketingUserId = student.MarketingUserId,
+            SupportUserId = student.SupportUserId,
+            CreatedDate = student.CreatedDate
+        };
+
+        return Ok(result);
     }
-
-    var result = new StudentDto
-    {
-        Id = student.Id,
-        FirstName = student.FirstName,
-        LastName = student.LastName,
-        NationalCode = student.NationalCode,
-        BirthDate = student.BirthDate,
-        Mobile = student.Mobile,
-        Address = student.Address,
-        GuardianName = student.GuardianName,
-        GuardianMobile = student.GuardianMobile,
-        OrganizationId = student.OrganizationId,
-        MarketingUserId = student.MarketingUserId,
-        SupportUserId = student.SupportUserId,
-        CreatedDate = student.CreatedDate
-    };
-
-    return Ok(result);
-}
 
 
     // دریافت لیست دانشجویان
@@ -132,7 +131,6 @@ public async Task<ActionResult<StudentDto>> GetMyProfile()
                 Address = s.Address,
                 GuardianName = s.GuardianName,
                 GuardianMobile = s.GuardianMobile,
-                OrganizationId = s.OrganizationId,
                 MarketingUserId = s.MarketingUserId,
                 SupportUserId = s.SupportUserId,
                 CreatedDate = s.CreatedDate
@@ -141,6 +139,7 @@ public async Task<ActionResult<StudentDto>> GetMyProfile()
 
         return Ok(students);
     }
+
 
     // ثبت دانشجوی جدید
     [Authorize(Roles = "Admin")]
@@ -187,7 +186,6 @@ public async Task<ActionResult<StudentDto>> GetMyProfile()
             Address = dto.Address,
             GuardianName = dto.GuardianName,
             GuardianMobile = dto.GuardianMobile,
-            OrganizationId = dto.OrganizationId,
             MarketingUserId = dto.MarketingUserId,
             SupportUserId = dto.SupportUserId
         };
@@ -207,7 +205,6 @@ public async Task<ActionResult<StudentDto>> GetMyProfile()
             Address = student.Address,
             GuardianName = student.GuardianName,
             GuardianMobile = student.GuardianMobile,
-            OrganizationId = student.OrganizationId,
             MarketingUserId = student.MarketingUserId,
             SupportUserId = student.SupportUserId,
             CreatedDate = student.CreatedDate
@@ -215,6 +212,7 @@ public async Task<ActionResult<StudentDto>> GetMyProfile()
 
         return Ok(result);
     }
+
 
     // اختصاص دانشجو به کارشناس پشتیبانی
     [HttpPut("{studentId}/assign-support")]

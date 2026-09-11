@@ -2350,4 +2350,323 @@ textarea {
     }
 
 }
+/* =========================
+   Organization Management
+   ========================= */
 
+.organization-management-header {
+    align-items: center;
+}
+
+.organization-management-form {
+    margin: 0 27px 22px;
+    padding: 22px;
+    background: #f7fafb;
+    border: 1px solid #dce7ec;
+    border-radius: 14px;
+}
+
+.organization-form-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.organization-form-title span {
+    display: block;
+    margin-bottom: 5px;
+    color: #8298a2;
+    font-size: 0.7rem;
+    font-weight: 800;
+}
+
+.organization-form-title h3 {
+    margin: 0;
+    color: #304b58;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.organization-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    gap: 16px;
+}
+
+.organization-description-field {
+    margin-top: 16px;
+}
+
+.organization-textarea {
+    min-height: 95px;
+    resize: vertical;
+}
+
+.organization-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.organizations-list {
+    padding: 0 27px 27px;
+}
+
+.organization-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 18px;
+    padding: 17px 18px;
+    margin-bottom: 10px;
+    background: #ffffff;
+    border: 1px solid #dfe9ed;
+    border-radius: 13px;
+    transition: 0.2s ease;
+}
+
+.organization-row:hover {
+    border-color: #c5d9e1;
+    box-shadow: 0 5px 18px rgba(55, 90, 110, 0.07);
+}
+
+.organization-row.selected {
+    border-color: #9dbdca;
+    background: #f8fbfc;
+}
+
+.organization-row-main {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-width: 0;
+}
+
+.organization-row-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 43px;
+    height: 43px;
+    flex: 0 0 43px;
+    border-radius: 11px;
+    background: #edf4f7;
+    color: #3e6879;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.organization-row-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 5px;
+}
+
+.organization-row-info strong {
+    overflow: hidden;
+    color: #304b58;
+    font-size: 0.84rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.organization-row-info span {
+    overflow: hidden;
+    color: #7a8d97;
+    font-size: 0.7rem;
+    line-height: 1.7;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.organization-row-status {
+    white-space: nowrap;
+}
+
+.organization-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 58px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 800;
+}
+
+.organization-status.active {
+    background: #e9f6ee;
+    color: #267348;
+}
+
+.organization-status.inactive {
+    background: #f2f3f4;
+    color: #7a858b;
+}
+
+.organization-row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+/* دکمه‌های کوچک مدیریت سازمان */
+
+.admin-small-btn {
+    min-height: 34px;
+    padding: 0 12px;
+    border: 1px solid #d4e1e6;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #49616d;
+    font-family: inherit;
+    font-size: 0.68rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+}
+
+.admin-small-btn:hover {
+    background: #f4f8fa;
+    border-color: #a9c4cf;
+    color: #304b58;
+    transform: translateY(-1px);
+}
+
+.admin-small-btn:active {
+    transform: translateY(0);
+}
+
+.admin-small-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ویرایش */
+
+.admin-small-btn:not(.danger):not(.success):not(.theme) {
+    background: #f7fafb;
+}
+
+/* غیرفعال کردن */
+
+.admin-small-btn.danger {
+    border-color: #e6c8c8;
+    background: #fff8f8;
+    color: #a24d4d;
+}
+
+.admin-small-btn.danger:hover {
+    border-color: #d99d9d;
+    background: #fff1f1;
+    color: #8f3535;
+}
+
+/* فعال کردن */
+
+.admin-small-btn.success {
+    border-color: #c8dfd0;
+    background: #f5fbf7;
+    color: #3f7b52;
+}
+
+.admin-small-btn.success:hover {
+    border-color: #9fc7ac;
+    background: #edf8f1;
+    color: #28643c;
+}
+
+/* ظاهر */
+
+.admin-small-btn.theme {
+    border-color: #c7d9e1;
+    background: #f2f7f9;
+    color: #3e6879;
+}
+
+.admin-small-btn.theme:hover {
+    border-color: #9ebbc7;
+    background: #e8f2f5;
+    color: #2e596c;
+}
+
+/* پیام‌های مدیریت سازمان */
+
+.organization-message {
+    margin: 0 27px 18px;
+}
+
+/* واکنش‌گرا */
+
+@media (max-width: 1050px) {
+
+    .organization-row {
+        grid-template-columns: 1fr;
+        gap: 13px;
+    }
+
+    .organization-row-status {
+        justify-self: start;
+    }
+
+    .organization-row-actions {
+        justify-content: flex-start;
+    }
+
+}
+
+@media (max-width: 700px) {
+
+    .organization-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .organization-management-form {
+        margin: 0 18px 18px;
+        padding: 18px;
+    }
+
+    .organizations-list {
+        padding: 0 18px 18px;
+    }
+
+    .organization-row {
+        padding: 15px;
+    }
+
+    .organization-row-actions {
+        width: 100%;
+    }
+
+    .admin-small-btn {
+        flex: 1;
+    }
+
+}
+
+@media (max-width: 480px) {
+
+    .organization-form-title {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .organization-form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .organization-form-actions button {
+        width: 100%;
+    }
+
+}
