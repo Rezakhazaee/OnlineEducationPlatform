@@ -21,6 +21,7 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<OrganizationSettings> OrganizationSettings { get; set; }
     public DbSet<PartnerOrganization> PartnerOrganizations { get; set; }
+    public DbSet<CoursePartnerOrganization> CoursePartnerOrganizations { get; set; }
 
     public DbSet<Enrollment> Enrollments { get; set; }
 
@@ -35,7 +36,161 @@ public class ApplicationDbContext : DbContext
 
 
         // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
         // User -> Student
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
         // =========================
 
         modelBuilder.Entity<Student>()
@@ -46,7 +201,161 @@ public class ApplicationDbContext : DbContext
 
 
         // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
         // Student -> Marketing User
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
         // =========================
 
         modelBuilder.Entity<Student>()
@@ -57,7 +366,161 @@ public class ApplicationDbContext : DbContext
 
 
         // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
         // Student -> Created By User
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
         // =========================
 
         modelBuilder.Entity<Student>()
@@ -68,7 +531,161 @@ public class ApplicationDbContext : DbContext
 
 
         // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
         // Student -> Support User
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
         // =========================
 
         modelBuilder.Entity<Student>()
@@ -79,7 +696,161 @@ public class ApplicationDbContext : DbContext
 
 
         // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
         // Course -> Instructor
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
         // =========================
 
         modelBuilder.Entity<Course>()
@@ -90,7 +861,161 @@ public class ApplicationDbContext : DbContext
 
 
         // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
         // Enrollment -> Student
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
         // =========================
 
         modelBuilder.Entity<Enrollment>()
@@ -101,7 +1026,161 @@ public class ApplicationDbContext : DbContext
 
 
         // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
         // Enrollment -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
         // =========================
 
         modelBuilder.Entity<Enrollment>()
@@ -112,7 +1191,161 @@ public class ApplicationDbContext : DbContext
 
 
         // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
         // Enrollment -> Support User
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
         // =========================
 
         modelBuilder.Entity<Enrollment>()
@@ -123,7 +1356,161 @@ public class ApplicationDbContext : DbContext
 
 
         // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
         // Enrollment -> Instructor User
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
         // =========================
 
         modelBuilder.Entity<Enrollment>()
@@ -134,7 +1521,161 @@ public class ApplicationDbContext : DbContext
 
 
         // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
         // StudentFollowUp -> Student
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
         // =========================
 
         modelBuilder.Entity<StudentFollowUp>()
@@ -145,7 +1686,161 @@ public class ApplicationDbContext : DbContext
 
 
         // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
         // StudentFollowUp -> Support User
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
         // =========================
 
         modelBuilder.Entity<StudentFollowUp>()
@@ -156,7 +1851,161 @@ public class ApplicationDbContext : DbContext
 
 
         // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
         // Payment -> Enrollment
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
         // =========================
 
         modelBuilder.Entity<Payment>()
@@ -167,7 +2016,161 @@ public class ApplicationDbContext : DbContext
 
 
         // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
         // Organization Settings
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Course
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.Course)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // CoursePartnerOrganization -> Partner Organization
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+
+        modelBuilder.Entity<CoursePartnerOrganization>()
+            .HasOne(cpo => cpo.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(cpo => cpo.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
+        // =========================
+        // Enrollment -> CoursePartnerOrganization
+        // =========================
+
+        modelBuilder.Entity<Enrollment>()
+            .HasOne(e => e.CoursePartnerOrganization)
+            .WithMany()
+            .HasForeignKey(e => e.CoursePartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
         // =========================
         //
         // هر نصب آموزش‌یار فقط یک تنظیمات سازمانی دارد.

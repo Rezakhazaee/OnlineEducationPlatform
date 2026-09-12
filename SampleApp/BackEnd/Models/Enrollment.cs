@@ -10,6 +10,10 @@ public class Enrollment
 
     public int CourseId { get; set; }
 
+    public int? CoursePartnerOrganizationId { get; set; }
+
+    public CoursePartnerOrganization? CoursePartnerOrganization { get; set; }
+
     public Course? Course { get; set; }
 
     public int? SupportUserId { get; set; }

@@ -111,6 +111,7 @@ public async Task<ActionResult<EnrollmentFinancialDto>> GetMyFinancial(int id)
     var enrollment = await _context.Enrollments
         .Include(e => e.Student)
         .Include(e => e.Course)
+        .Include(e => e.CoursePartnerOrganization)
         .FirstOrDefaultAsync(e =>
             e.Id == id &&
             e.StudentId == student.Id);
@@ -137,7 +138,7 @@ public async Task<ActionResult<EnrollmentFinancialDto>> GetMyFinancial(int id)
             p.Status == "Paid")
         .SumAsync(p => (decimal?)p.Amount) ?? 0;
 
-    var coursePrice = enrollment.Course.Price;
+    var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
     var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
 
     string paymentStatus;
@@ -203,6 +204,7 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetMyFinancialDeta
 
     var enrollment = await _context.Enrollments
         .Include(e => e.Student)
+        .Include(e => e.CoursePartnerOrganization)
         .Include(e => e.Course)
         .FirstOrDefaultAsync(e =>
             e.Id == id &&
@@ -242,7 +244,7 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetMyFinancialDeta
         .Where(p => p.Status == "Paid")
         .Sum(p => p.Amount);
 
-    var coursePrice = enrollment.Course.Price;
+    var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
 
     var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
 
@@ -435,6 +437,7 @@ public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
 public async Task<ActionResult<EnrollmentFinancialDto>> GetFinancial(int id)
 {
     var enrollment = await _context.Enrollments
+        .Include(e => e.CoursePartnerOrganization)
         .Include(e => e.Student)
         .Include(e => e.Course)
         .FirstOrDefaultAsync(e => e.Id == id);
@@ -517,7 +520,7 @@ public async Task<ActionResult<EnrollmentFinancialDto>> GetFinancial(int id)
             p.Status == "Paid")
         .SumAsync(p => (decimal?)p.Amount) ?? 0;
 
-    var coursePrice = enrollment.Course.Price;
+    var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
     var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
 
     string paymentStatus;
@@ -563,6 +566,7 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
     var enrollment = await _context.Enrollments
         .Include(e => e.Student)
         .Include(e => e.Course)
+        .Include(e => e.CoursePartnerOrganization)
         .FirstOrDefaultAsync(e => e.Id == id);
 
     if (enrollment == null)
@@ -655,7 +659,7 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         .Where(p => p.Status == "Paid")
         .Sum(p => p.Amount);
 
-    var coursePrice = enrollment.Course.Price;
+    var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
     var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
 
     string paymentStatus;
@@ -769,9 +773,26 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
                 message = "این دانشجو قبلاً در این دوره ثبت نام کرده است"
             });
         }
+        // بررسی قرارداد سازمانی، در صورت ارسال
+        if (dto.CoursePartnerOrganizationId.HasValue)
+        {
+            var coursePartnerOrganization = await _context.CoursePartnerOrganizations
+                .FirstOrDefaultAsync(x => x.Id == dto.CoursePartnerOrganizationId.Value);
 
+            if (coursePartnerOrganization == null)
+            {
+                return BadRequest(new { message = "ارتباط دوره و سازمان طرف قرارداد پیدا نشد." });
+            }
 
-        // بررسی وجود پشتیبان آموزشی، در صورت ارسال
+            if (coursePartnerOrganization.CourseId != dto.CourseId)
+            {
+                return BadRequest(new { message = "سازمان طرف قرارداد مربوط به این دوره نیست." });
+            }
+            if (!coursePartnerOrganization.IsActive)
+            {
+                return BadRequest(new { message = "قرارداد سازمانی این دوره غیرفعال است." });
+            }
+        }
         if (dto.SupportUserId.HasValue)
         {
             var supportExists = await _context.Users
@@ -807,6 +828,7 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         var enrollment = new Enrollment
         {
             StudentId = dto.StudentId,
+            CoursePartnerOrganizationId = dto.CoursePartnerOrganizationId,
             CourseId = dto.CourseId,
             SupportUserId = dto.SupportUserId,
             InstructorId = dto.InstructorId,
