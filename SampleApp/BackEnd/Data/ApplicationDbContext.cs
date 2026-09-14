@@ -16,7 +16,6 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<Course> Courses { get; set; }
 
-    public DbSet<Organization> Organizations { get; set; }
 
 
     public DbSet<OrganizationSettings> OrganizationSettings { get; set; }

@@ -169,7 +169,9 @@
                             </span>
 
                             <h3>
-                                ایجاد ثبت‌نام جدید
+                                @(IsEditMode
+                                 ? "ویرایش ثبت‌نام"
+                                 : "ایجاد ثبت‌نام جدید")
                             </h3>
                         </div>
 
@@ -381,8 +383,12 @@
                                     فعال
                                 </option>
 
-                                <option value="Pending">
-                                    در انتظار
+                                <option value="Completed">
+                                    تکمیل‌شده
+                                </option>
+
+                                <option value="Suspended">
+                                    تعلیق‌شده
                                 </option>
 
                                 <option value="Cancelled">
@@ -418,20 +424,36 @@
                     }
 
 
-                    <div class="course-form-actions">
+                     <div class="course-form-actions">
 
-                        <button
-                            class="admin-primary-btn"
-                            @onclick="SaveEnrollment"
-                            disabled="@IsSaving">
+    <button
+        class="admin-primary-btn"
+        @onclick="SaveEnrollment"
+        disabled="@IsSaving">
 
-                            @(IsSaving
-                                ? "در حال ذخیره..."
-                                : "ثبت‌نام دانشجو")
+        @(IsSaving
+            ? "در حال ذخیره..."
+            : IsEditMode
+                ? "ذخیره تغییرات"
+                : "ثبت‌نام دانشجو")
 
-                        </button>
+    </button>
 
-                    </div>
+
+    @if (IsEditMode)
+    {
+        <button
+            type="button"
+            class="admin-secondary-btn"
+            @onclick="CancelEdit"
+            disabled="@IsSaving">
+
+            انصراف
+
+        </button>
+    }
+
+</div>
 
                 </div>
 
@@ -510,6 +532,9 @@
                                     <th>
                                         وضعیت
                                     </th>
+                                    <th>
+                                        عملیات
+                                    </th>
 
                                 </tr>
 
@@ -553,24 +578,47 @@
                                         <td>
 
                                             @if (enrollment.Status == "Active")
-                                            {
-                                                <span class="course-status active">
-                                                    فعال
-                                                </span>
-                                            }
-                                            else if (enrollment.Status == "Cancelled")
-                                            {
-                                                <span class="course-status inactive">
-                                                    لغوشده
-                                                </span>
-                                            }
-                                            else
-                                            {
-                                                <span class="course-status">
-                                                    @enrollment.Status
-                                                </span>
-                                            }
+{
+    <span class="course-status active">
+        فعال
+    </span>
+}
+else if (enrollment.Status == "Completed")
+{
+    <span class="course-status">
+        تکمیل‌شده
+    </span>
+}
+else if (enrollment.Status == "Suspended")
+{
+    <span class="course-status">
+        تعلیق‌شده
+    </span>
+}
+else if (enrollment.Status == "Cancelled")
+{
+    <span class="course-status inactive">
+        لغوشده
+    </span>
+}
+else
+{
+    <span class="course-status">
+        @enrollment.Status
+    </span>
+}
 
+                                        </td>
+
+                                        <td>
+                                        <button
+                                            type="button"
+                                            class="admin-secondary-btn"
+                                            @onclick="() => BeginEditEnrollment(enrollment)">
+
+                                            ویرایش
+
+                                        </button>
                                         </td>
 
                                     </tr>
@@ -606,6 +654,9 @@
     private bool IsLoadingContracts { get; set; }
 
     private bool IsSaving { get; set; }
+    private bool IsEditMode { get; set; }
+
+    private int EditingEnrollmentId { get; set; }
 
     private string? ErrorMessage { get; set; }
 
@@ -705,7 +756,29 @@
             IsLoading = false;
         }
     }
+    
+   private async Task BeginEditEnrollment(EnrollmentDto enrollment)
+{
+    FormError = null;
 
+    IsEditMode = true;
+    EditingEnrollmentId = enrollment.Id;
+
+    FormStudentId = enrollment.StudentId.ToString();
+    FormCourseId = enrollment.CourseId.ToString();
+
+    FormStartDate = enrollment.StartDate;
+    FormStatus = enrollment.Status;
+    FormDescription = enrollment.Description ?? string.Empty;
+
+    CoursePartnerOrganizations.Clear();
+
+    await LoadCoursePartnerOrganizations();
+
+    FormCoursePartnerOrganizationId =
+        enrollment.CoursePartnerOrganization?.Id.ToString()
+        ?? string.Empty;
+}
 
     private async Task OnCourseChanged(ChangeEventArgs e)
     {
@@ -721,7 +794,14 @@
 
         await LoadCoursePartnerOrganizations();
     }
+    
+    private void CancelEdit()
+{
+    IsEditMode = false;
+    EditingEnrollmentId = 0;
 
+    ResetForm();
+}
 
     private async Task LoadCoursePartnerOrganizations()
     {
@@ -758,53 +838,90 @@
     }
 
 
-    private async Task SaveEnrollment()
+private async Task SaveEnrollment()
+{
+    FormError = null;
+
+    if (!int.TryParse(FormStudentId, out var studentId))
     {
-        FormError = null;
+        FormError = "لطفاً دانشجو را انتخاب کنید.";
+        return;
+    }
 
-        if (!int.TryParse(FormStudentId, out var studentId))
+    if (!int.TryParse(FormCourseId, out var courseId))
+    {
+        FormError = "لطفاً دوره را انتخاب کنید.";
+        return;
+    }
+
+    if (SelectedContract != null &&
+        !SelectedContract.AgreedPrice.HasValue)
+    {
+        FormError =
+            "برای قرارداد انتخاب‌شده قیمت توافقی تعیین نشده است.";
+        return;
+    }
+
+    IsSaving = true;
+
+    try
+    {
+        var client = Auth.CreateAuthenticatedClient();
+
+        int? coursePartnerOrganizationId = null;
+
+        if (int.TryParse(
+            FormCoursePartnerOrganizationId,
+            out var parsedContractId))
         {
-            FormError = "لطفاً دانشجو را انتخاب کنید.";
-            return;
+            coursePartnerOrganizationId = parsedContractId;
         }
 
-        if (!int.TryParse(FormCourseId, out var courseId))
+        if (IsEditMode)
         {
-            FormError = "لطفاً دوره را انتخاب کنید.";
-            return;
-        }
-
-        if (SelectedContract != null &&
-            !SelectedContract.AgreedPrice.HasValue)
-        {
-            FormError =
-                "برای قرارداد انتخاب‌شده قیمت توافقی تعیین نشده است.";
-            return;
-        }
-
-        IsSaving = true;
-
-        try
-        {
-            var client = Auth.CreateAuthenticatedClient();
-
-            int? coursePartnerOrganizationId = null;
-
-            if (int.TryParse(
-                FormCoursePartnerOrganizationId,
-                out var parsedContractId))
+            var updateRequest = new UpdateEnrollmentDto
             {
-                coursePartnerOrganizationId = parsedContractId;
-            }
+                CoursePartnerOrganizationId =
+                    coursePartnerOrganizationId,
 
+                StartDate = FormStartDate,
+
+                Status = FormStatus,
+
+                Description =
+                    string.IsNullOrWhiteSpace(FormDescription)
+                        ? null
+                        : FormDescription.Trim()
+            };
+
+            var response =
+                await client.PutAsJsonAsync(
+                    $"api/Enrollments/{EditingEnrollmentId}",
+                    updateRequest);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                FormError =
+                    await GetErrorMessage(response);
+
+                return;
+            }
+        }
+        else
+        {
             var request = new CreateEnrollmentDto
             {
                 StudentId = studentId,
+
                 CourseId = courseId,
+
                 CoursePartnerOrganizationId =
                     coursePartnerOrganizationId,
+
                 StartDate = FormStartDate,
+
                 Status = FormStatus,
+
                 Description =
                     string.IsNullOrWhiteSpace(FormDescription)
                         ? null
@@ -823,21 +940,25 @@
 
                 return;
             }
+        }
 
-            ResetForm();
+        ResetForm();
 
-            await LoadData();
-        }
-        catch
-        {
-            FormError =
-                "ارتباط با سرور برقرار نشد.";
-        }
-        finally
-        {
-            IsSaving = false;
-        }
+        IsEditMode = false;
+        EditingEnrollmentId = 0;
+
+        await LoadData();
     }
+    catch
+    {
+        FormError =
+            "ارتباط با سرور برقرار نشد.";
+    }
+    finally
+    {
+        IsSaving = false;
+    }
+}
 
 
     private void ResetForm()
@@ -970,6 +1091,21 @@
 
         public string? Description { get; set; }
     }
+
+    public class UpdateEnrollmentDto
+{
+    public int? CoursePartnerOrganizationId { get; set; }
+
+    public int? SupportUserId { get; set; }
+
+    public int? InstructorId { get; set; }
+
+    public DateTime StartDate { get; set; }
+
+    public string Status { get; set; } = "Active";
+
+    public string? Description { get; set; }
+}
 
 
     public class ApiError
