@@ -167,6 +167,7 @@ public class PaymentsController : ControllerBase
 
         var enrollment = await _context.Enrollments
             .Include(e => e.Course)
+            .Include(e => e.CoursePartnerOrganization)
             .Include(e => e.Student)
             .FirstOrDefaultAsync(e => e.Id == dto.EnrollmentId);
 
@@ -284,7 +285,7 @@ public class PaymentsController : ControllerBase
             .SumAsync(p => (decimal?)p.Amount) ?? 0;
 
 
-        var coursePrice = enrollment.Course.Price;
+        var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
 
         var totalAfterPayment = totalPaid + dto.Amount;
 
@@ -405,6 +406,8 @@ public async Task<IActionResult> Pay(int id)
     var payment = await _context.Payments
         .Include(p => p.Enrollment)
         .ThenInclude(e => e!.Course)
+        .Include(p => p.Enrollment)
+        .ThenInclude(e => e!.CoursePartnerOrganization)
         .FirstOrDefaultAsync(p => p.Id == id);
 
     if (payment == null)
@@ -501,7 +504,7 @@ public async Task<IActionResult> Pay(int id)
             p.Status == "Paid")
         .SumAsync(p => (decimal?)p.Amount) ?? 0;
 
-    var coursePrice = payment.Enrollment.Course.Price;
+    var coursePrice = payment.Enrollment.CoursePartnerOrganization?.AgreedPrice ?? payment.Enrollment.Course.Price;
 
     var totalAfterPayment = totalPaid + payment.Amount;
 
