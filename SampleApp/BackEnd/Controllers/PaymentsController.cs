@@ -179,7 +179,20 @@ public class PaymentsController : ControllerBase
             });
         }
 
+        // ----------------------------------------
+// 3.5 بررسی وضعیت ثبت نام
+// ----------------------------------------
 
+if (enrollment.Status == "Cancelled" ||
+    enrollment.Status == "Suspended")
+{
+    return BadRequest(new
+    {
+        message = "برای ثبت نام لغوشده یا تعلیق‌شده، امکان ثبت پرداخت وجود ندارد",
+        enrollmentStatus = enrollment.Status
+    });
+}
+        
         // ----------------------------------------
         // 4. بررسی وجود Course
         // ----------------------------------------
@@ -434,6 +447,16 @@ public async Task<IActionResult> Pay(int id)
             message = "ثبت نام مربوط به این پرداخت پیدا نشد"
         });
     }
+
+    if (payment.Enrollment.Status == "Cancelled" ||
+    payment.Enrollment.Status == "Suspended")
+{
+    return BadRequest(new
+    {
+        message = "برای ثبت نام لغوشده یا تعلیق‌شده، امکان تأیید پرداخت وجود ندارد",
+        enrollmentStatus = payment.Enrollment.Status
+    });
+}
 
     if (payment.Enrollment.Course == null)
     {

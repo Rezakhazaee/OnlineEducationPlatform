@@ -355,7 +355,9 @@ public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
         .Include(e => e.Course)
         .Include(e => e.SupportUser)
         .Include(e => e.Instructor)
-        .AsQueryable();
+        .Include(e => e.CoursePartnerOrganization)
+         .ThenInclude(cpo => cpo!.PartnerOrganization)
+      .AsQueryable();
 
     // Student → فقط ثبت‌نام‌های خودش
     if (User.IsInRole("Student"))
@@ -424,7 +426,29 @@ public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
                 : null,
             StartDate = e.StartDate,
             Status = e.Status,
-            Description = e.Description
+            Description = e.Description,
+            CoursePartnerOrganization = e.CoursePartnerOrganization == null
+    ? null
+    : new CoursePartnerOrganizationDto
+    {
+        Id = e.CoursePartnerOrganization.Id,
+        CourseId = e.CoursePartnerOrganization.CourseId,
+        PartnerOrganizationId = e.CoursePartnerOrganization.PartnerOrganizationId,
+        ContractNumber = e.CoursePartnerOrganization.ContractNumber,
+        AgreedPrice = e.CoursePartnerOrganization.AgreedPrice,
+        StartDate = e.CoursePartnerOrganization.StartDate,
+        EndDate = e.CoursePartnerOrganization.EndDate,
+        IsActive = e.CoursePartnerOrganization.IsActive,
+        Description = e.CoursePartnerOrganization.Description,
+        PartnerOrganization =
+            e.CoursePartnerOrganization.PartnerOrganization == null
+                ? null
+                : new PartnerOrganizationDto
+                {
+                    Id = e.CoursePartnerOrganization.PartnerOrganization.Id,
+                    Name = e.CoursePartnerOrganization.PartnerOrganization.Name
+                }
+    }
         })
         .ToListAsync();
 
@@ -810,9 +834,12 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
 
         // بررسی وجود استاد، در صورت ارسال
         if (dto.InstructorId.HasValue)
-        {
-            var instructorExists = await _context.Users
-                .AnyAsync(u => u.Id == dto.InstructorId.Value);
+{
+    var instructorExists = await _context.Users
+        .AnyAsync(u =>
+            u.Id == dto.InstructorId.Value &&
+            u.IsActive &&
+            u.Role == "Instructor");
 
             if (!instructorExists)
             {
@@ -858,5 +885,231 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
 
 
         return result;
+        
+    }
+        // ویرایش ثبت نام
+    [Authorize(Roles = "Admin,Support")]
+    [HttpPut("{id}")]
+    public async Task<ActionResult<EnrollmentDto>> Update(
+        int id,
+        UpdateEnrollmentDto dto)
+    {
+        // پیدا کردن ثبت نام
+        var enrollment = await _context.Enrollments
+            .Include(e => e.Student)
+            .Include(e => e.Course)
+            .Include(e => e.CoursePartnerOrganization)
+                .ThenInclude(cpo => cpo!.PartnerOrganization)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (enrollment == null)
+        {
+            return NotFound(new
+            {
+                message = "ثبت نام مورد نظر پیدا نشد"
+            });
+        }
+
+        // وضعیت های مجاز ثبت نام
+        var allowedStatuses = new[]
+        {
+            "Active",
+            "Completed",
+            "Cancelled",
+            "Suspended"
+        };
+
+        if (!allowedStatuses.Contains(dto.Status))
+        {
+            return BadRequest(new
+            {
+                message = "وضعیت ثبت نام نامعتبر است"
+            });
+        }
+
+        // بررسی وجود پشتیبان
+        if (dto.SupportUserId.HasValue)
+{
+    var supportExists = await _context.Users
+        .AnyAsync(u =>
+            u.Id == dto.SupportUserId.Value &&
+            u.IsActive &&
+            u.Role == "Support");
+
+            if (!supportExists)
+            {
+                return BadRequest(new
+                {
+                    message = "پشتیبان آموزشی مورد نظر وجود ندارد یا غیرفعال است"
+                });
+            }
+        }
+
+        // بررسی وجود استاد
+        if (dto.InstructorId.HasValue)
+        {
+            var instructorExists = await _context.Users
+                .AnyAsync(u =>
+                    u.Id == dto.InstructorId.Value &&
+                    u.IsActive);
+
+            if (!instructorExists)
+            {
+                return BadRequest(new
+                {
+                    message = "استاد مورد نظر وجود ندارد یا غیرفعال است"
+                });
+            }
+        }
+
+        // بررسی تغییر قرارداد سازمانی
+        if (dto.CoursePartnerOrganizationId !=
+            enrollment.CoursePartnerOrganizationId)
+        {
+            // آیا برای این ثبت نام پرداختی انجام شده؟
+            var hasPaidPayment = await _context.Payments
+                .AnyAsync(p =>
+                    p.EnrollmentId == enrollment.Id &&
+                    p.Status == "Paid");
+
+            if (hasPaidPayment)
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "پس از ثبت پرداخت، تغییر قرارداد سازمانی ثبت نام مجاز نیست."
+                });
+            }
+
+            // اگر قرارداد جدید انتخاب شده، اعتبار آن بررسی شود
+            if (dto.CoursePartnerOrganizationId.HasValue)
+            {
+                var coursePartnerOrganization =
+                    await _context.CoursePartnerOrganizations
+                        .FirstOrDefaultAsync(x =>
+                            x.Id == dto.CoursePartnerOrganizationId.Value);
+
+                if (coursePartnerOrganization == null)
+                {
+                    return BadRequest(new
+                    {
+                        message =
+                            "ارتباط دوره و سازمان طرف قرارداد پیدا نشد."
+                    });
+                }
+
+                if (coursePartnerOrganization.CourseId !=
+                    enrollment.CourseId)
+                {
+                    return BadRequest(new
+                    {
+                        message =
+                            "سازمان طرف قرارداد مربوط به این دوره نیست."
+                    });
+                }
+
+                if (!coursePartnerOrganization.IsActive)
+                {
+                    return BadRequest(new
+                    {
+                        message =
+                            "قرارداد سازمانی این دوره غیرفعال است."
+                    });
+                }
+
+                if (!coursePartnerOrganization.AgreedPrice.HasValue)
+                {
+                    return BadRequest(new
+                    {
+                        message =
+                            "برای قرارداد انتخاب‌شده قیمت توافقی تعیین نشده است."
+                    });
+                }
+            }
+
+            enrollment.CoursePartnerOrganizationId =
+                dto.CoursePartnerOrganizationId;
+        }
+
+        // به روز رسانی اطلاعات ثبت نام
+        if (dto.SupportUserId.HasValue)
+{
+    enrollment.SupportUserId = dto.SupportUserId;
+}
+
+if (dto.InstructorId.HasValue)
+{
+    enrollment.InstructorId = dto.InstructorId;
+}
+        enrollment.StartDate = dto.StartDate;
+        enrollment.Status = dto.Status;
+        enrollment.Description =
+            string.IsNullOrWhiteSpace(dto.Description)
+                ? null
+                : dto.Description.Trim();
+
+        await _context.SaveChangesAsync();
+
+        // ساخت نتیجه
+        var result = new EnrollmentDto
+        {
+            Id = enrollment.Id,
+            StudentId = enrollment.StudentId,
+            StudentName = enrollment.Student != null
+                ? enrollment.Student.FirstName + " " +
+                  enrollment.Student.LastName
+                : string.Empty,
+            CourseId = enrollment.CourseId,
+            CourseTitle = enrollment.Course?.Title,
+            SupportUserId = enrollment.SupportUserId,
+            InstructorId = enrollment.InstructorId,
+            StartDate = enrollment.StartDate,
+            Status = enrollment.Status,
+            Description = enrollment.Description,
+
+            CoursePartnerOrganization =
+                enrollment.CoursePartnerOrganization == null
+                    ? null
+                    : new CoursePartnerOrganizationDto
+                    {
+                        Id = enrollment.CoursePartnerOrganization.Id,
+                        CourseId =
+                            enrollment.CoursePartnerOrganization.CourseId,
+                        PartnerOrganizationId =
+                            enrollment.CoursePartnerOrganization
+                                .PartnerOrganizationId,
+                        ContractNumber =
+                            enrollment.CoursePartnerOrganization
+                                .ContractNumber,
+                        AgreedPrice =
+                            enrollment.CoursePartnerOrganization.AgreedPrice,
+                        StartDate =
+                            enrollment.CoursePartnerOrganization.StartDate,
+                        EndDate =
+                            enrollment.CoursePartnerOrganization.EndDate,
+                        IsActive =
+                            enrollment.CoursePartnerOrganization.IsActive,
+                        Description =
+                            enrollment.CoursePartnerOrganization.Description,
+
+                        PartnerOrganization =
+                            enrollment.CoursePartnerOrganization
+                                .PartnerOrganization == null
+                                ? null
+                                : new PartnerOrganizationDto
+                                {
+                                    Id =
+                                        enrollment
+                                            .CoursePartnerOrganization
+                                            .PartnerOrganization.Id,
+                                    Name =
+                                        enrollment
+                                            .CoursePartnerOrganization
+                                            .PartnerOrganization.Name
+                                }
+                    }
+        };
+
+        return Ok(result);
     }
 }

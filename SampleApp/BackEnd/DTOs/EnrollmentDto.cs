@@ -26,4 +26,7 @@ public class EnrollmentDto
 
     // توضیحات ثبت‌نام
     public string? Description { get; set; }
+
+    // سازمان طرف قرارداد این ثبت‌نام
+    public CoursePartnerOrganizationDto? CoursePartnerOrganization { get; set; }
 }
