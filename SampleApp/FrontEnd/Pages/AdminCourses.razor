@@ -449,18 +449,31 @@
                                         </td>
 
 
-                                        <td>
+                                      <td>
 
-                                            <button
-                                             type="button"
-                                             class="course-edit-btn"
-                                             @onclick="@(() => EditCourse(course))">
+    <div class="course-row-actions">
 
-                                             ویرایش
+ <button
+    type="button"
+    class="course-contract-btn"
+    @onclick="@(() => OpenPartnerOrganizations(course.Id))">
 
-                                            </button>
+    قراردادها
 
-                                        </td>
+</button>
+
+        <button
+            type="button"
+            class="course-edit-btn"
+            @onclick="@(() => EditCourse(course))">
+
+            ویرایش
+
+        </button>
+
+    </div>
+
+</td>
 
                                     </tr>
                                 }
@@ -479,12 +492,473 @@
 
 </div>
 
+@if (ShowPartnerOrganizations)
+{
+    <div class="course-contract-overlay">
+
+        <div class="course-contract-modal">
+
+            <div class="course-contract-header">
+
+                <div>
+                    <span>
+                        مدیریت قرارداد
+                    </span>
+
+                    <h2>
+                        سازمان‌های طرف قرارداد
+                    </h2>
+                </div>
+
+                <button
+                    type="button"
+                    class="course-contract-close"
+                    @onclick="ClosePartnerOrganizations">
+
+                    ×
+
+                </button>
+
+            </div>
+
+
+            <div class="course-contract-body">
+
+                @if (PartnerOrganizationError != null)
+                {
+                    <div class="admin-error">
+                        @PartnerOrganizationError
+                    </div>
+                }
+
+                @if (PartnerOrganizationSuccess != null)
+                {
+                    <div class="admin-success">
+                        @PartnerOrganizationSuccess
+                    </div>
+                }
+
+
+                @if (IsLoadingPartnerOrganizations)
+                {
+                    <div class="admin-empty-state">
+                        <p>
+                            در حال دریافت قراردادهای دوره...
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <div class="course-contract-actions">
+
+                        <button
+                            type="button"
+                            class="admin-primary-btn"
+                            @onclick="OpenCreatePartnerOrganizationForm">
+
+                            + افزودن قرارداد
+
+                        </button>
+
+                    </div>
+
+
+                    @if (EditingCoursePartnerOrganizationId != null)
+                    {
+                        <div class="course-contract-form">
+
+                            <div class="course-contract-form-header">
+
+                                <div>
+                                    <span>
+                                        @(EditingCoursePartnerOrganizationId.HasValue
+                                            ? "ویرایش قرارداد"
+                                            : "ثبت قرارداد")
+                                    </span>
+
+                                    <h3>
+                                        اطلاعات قرارداد دوره
+                                    </h3>
+                                </div>
+
+                            </div>
+
+
+                            <div class="admin-form-grid">
+
+                                <div class="admin-form-group">
+
+                                    <label>
+                                        سازمان طرف قرارداد
+                                    </label>
+
+                                    <select
+                                        class="admin-input"
+                                        @bind="FormPartnerOrganizationId">
+
+                                        <option value="">
+                                            انتخاب سازمان
+                                        </option>
+
+                                        @foreach (var organization in PartnerOrganizations.Where(x => x.IsActive))
+                                        {
+                                            <option value="@organization.Id">
+                                                @organization.Name
+                                            </option>
+                                        }
+
+                                    </select>
+
+                                </div>
+
+
+                                <div class="admin-form-group">
+
+                                    <label>
+                                        شماره قرارداد
+                                    </label>
+
+                                    <input
+                                        class="admin-input"
+                                        @bind="FormPartnerContractNumber"
+                                        placeholder="شماره قرارداد" />
+
+                                </div>
+
+
+                                <div class="admin-form-group">
+
+                                    <label>
+                                        قیمت توافقی
+                                    </label>
+
+                                    <input
+                                        class="admin-input"
+                                        type="number"
+                                        @bind="FormPartnerAgreedPrice"
+                                        placeholder="مبلغ به تومان" />
+
+                                </div>
+
+
+                                <div class="admin-form-group">
+
+                                    <label>
+                                        تاریخ شروع
+                                    </label>
+
+                                    <input
+                                        class="admin-input"
+                                        type="date"
+                                        @bind="FormPartnerStartDate" />
+
+                                </div>
+
+
+                                <div class="admin-form-group">
+
+                                    <label>
+                                        تاریخ پایان
+                                    </label>
+
+                                    <input
+                                        class="admin-input"
+                                        type="date"
+                                        @bind="FormPartnerEndDate" />
+
+                                </div>
+
+
+                                <div class="admin-form-group admin-form-full">
+
+                                    <label>
+                                        توضیحات
+                                    </label>
+
+                                    <textarea
+                                        class="admin-input admin-textarea"
+                                        @bind="FormPartnerDescription"
+                                        placeholder="توضیحات مربوط به قرارداد"></textarea>
+
+                                </div>
+
+
+                                <div class="admin-form-group admin-form-full">
+
+                                    <label class="admin-checkbox-row">
+
+                                        <input
+                                            type="checkbox"
+                                            @bind="FormPartnerIsActive" />
+
+                                        <span>
+                                            قرارداد فعال باشد
+                                        </span>
+
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="course-form-actions">
+
+                                <button
+                                    type="button"
+                                    class="admin-primary-btn"
+                                    @onclick="SavePartnerOrganization"
+                                    disabled="@IsSavingPartnerOrganization">
+
+                                    @(IsSavingPartnerOrganization
+                                        ? "در حال ذخیره..."
+                                        : "ذخیره قرارداد")
+
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="admin-outline-btn"
+                                    @onclick="ResetPartnerOrganizationForm"
+                                    disabled="@IsSavingPartnerOrganization">
+
+                                    انصراف
+
+                                </button>
+
+                            </div>
+
+                        </div>
+                    }
+
+
+                    @if (CoursePartnerOrganizations.Count == 0)
+                    {
+                        <div class="admin-empty-state">
+
+                            <div>
+                                🏢
+                            </div>
+
+                            <h3>
+                                هنوز قراردادی برای این دوره ثبت نشده است
+                            </h3>
+
+                            <p>
+                                می‌توانید اولین سازمان طرف قرارداد را برای این دوره ثبت کنید.
+                            </p>
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="courses-table-wrapper">
+
+                            <table class="courses-table">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>
+                                            سازمان
+                                        </th>
+
+                                        <th>
+                                            قرارداد
+                                        </th>
+
+                                        <th>
+                                            قیمت توافقی
+                                        </th>
+
+                                        <th>
+                                            بازه قرارداد
+                                        </th>
+
+                                        <th>
+                                            وضعیت
+                                        </th>
+
+                                        <th>
+                                            عملیات
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @foreach (var contract in CoursePartnerOrganizations)
+                                    {
+                                        <tr>
+
+                                            <td>
+                                                <strong>
+                                                    @(contract.PartnerOrganization?.Name
+                                                        ?? "سازمان نامشخص")
+                                                </strong>
+                                            </td>
+
+                                            <td>
+                                                @(string.IsNullOrWhiteSpace(contract.ContractNumber)
+                                                    ? "بدون شماره"
+                                                    : contract.ContractNumber)
+                                            </td>
+
+                                            <td>
+
+                                                @if (contract.AgreedPrice.HasValue)
+                                                {
+                                                    <strong>
+                                                        @contract.AgreedPrice.Value.ToString("N0")
+                                                    </strong>
+
+                                                    <span class="price-unit">
+                                                        تومان
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="admin-muted">
+                                                        قیمت پایه دوره
+                                                    </span>
+                                                }
+
+                                            </td>
+
+                                            <td>
+
+                                                <div class="partner-org-dates">
+
+                                                    <span>
+                                                        شروع:
+                                                        @(contract.StartDate?.ToString("yyyy/MM/dd") ?? "—")
+                                                    </span>
+
+                                                    <span>
+                                                        پایان:
+                                                        @(contract.EndDate?.ToString("yyyy/MM/dd") ?? "—")
+                                                    </span>
+
+                                                </div>
+
+                                            </td>
+
+                                            <td>
+
+                                                @if (contract.IsActive)
+                                                {
+                                                    <span class="admin-status active">
+                                                        فعال
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="admin-status inactive">
+                                                        غیرفعال
+                                                    </span>
+                                                }
+
+                                            </td>
+
+                                            <td>
+
+                                                <div class="admin-row-actions">
+
+                                                    <button
+                                                        type="button"
+                                                        class="admin-action-btn"
+                                                        @onclick="() => EditPartnerOrganization(contract)">
+
+                                                        ویرایش
+
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        class="admin-action-btn danger"
+                                                        @onclick="() => DeletePartnerOrganization(contract)">
+
+                                                        حذف
+
+                                                    </button>
+
+                                                </div>
+
+                                            </td>
+
+                                        </tr>
+                                    }
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+                    }
+
+                }
+
+            </div>
+
+
+            <div class="course-contract-footer">
+
+                <button
+                    type="button"
+                    class="admin-outline-btn"
+                    @onclick="ClosePartnerOrganizations">
+
+                    بستن
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+}
 
 @code {
 
     private List<CourseDto> Courses { get; set; } = new();
 
     private List<InstructorDto> Instructors { get; set; } = new();
+
+private List<PartnerOrganizationDto> PartnerOrganizations { get; set; } = new();
+
+private List<CoursePartnerOrganizationDto> CoursePartnerOrganizations { get; set; } = new();
+
+private bool ShowPartnerOrganizations { get; set; }
+
+private int? SelectedCourseForPartnersId { get; set; }
+
+private bool IsLoadingPartnerOrganizations { get; set; }
+
+private bool IsSavingPartnerOrganization { get; set; }
+
+private string? PartnerOrganizationError { get; set; }
+
+private string? PartnerOrganizationSuccess { get; set; }
+
+private int? EditingCoursePartnerOrganizationId { get; set; }
+
+private string FormPartnerOrganizationId { get; set; } = string.Empty;
+
+private string FormPartnerContractNumber { get; set; } = string.Empty;
+
+private decimal? FormPartnerAgreedPrice { get; set; }
+
+private DateTime? FormPartnerStartDate { get; set; }
+
+private DateTime? FormPartnerEndDate { get; set; }
+
+private bool FormPartnerIsActive { get; set; } = true;
+
+private string FormPartnerDescription { get; set; } = string.Empty;
 
     private bool IsLoading { get; set; } = true;
 
@@ -508,12 +982,12 @@
 
     private bool FormIsActive { get; set; } = true;
 
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadCourses();
-        await LoadInstructors();
-    }
+protected override async Task OnInitializedAsync()
+{
+    await LoadCourses();
+    await LoadInstructors();
+    await LoadPartnerOrganizations();
+}
 
 
     private async Task LoadCourses()
@@ -562,6 +1036,339 @@
         }
     }
 
+private async Task LoadPartnerOrganizations()
+{
+    try
+    {
+        var client = Auth.CreateAuthenticatedClient();
+
+        var result =
+            await client.GetFromJsonAsync<List<PartnerOrganizationDto>>(
+                "api/PartnerOrganizations");
+
+        PartnerOrganizations =
+            result ?? new List<PartnerOrganizationDto>();
+    }
+    catch
+    {
+        PartnerOrganizations =
+            new List<PartnerOrganizationDto>();
+    }
+}
+
+private async Task OpenPartnerOrganizations(int courseId)
+{
+    SelectedCourseForPartnersId = courseId;
+
+    PartnerOrganizationError = null;
+    PartnerOrganizationSuccess = null;
+
+    EditingCoursePartnerOrganizationId = null;
+
+    ResetPartnerOrganizationForm();
+
+    ShowPartnerOrganizations = true;
+
+    await LoadCoursePartnerOrganizations(courseId);
+}
+
+
+private async Task LoadCoursePartnerOrganizations(int courseId)
+{
+    IsLoadingPartnerOrganizations = true;
+    PartnerOrganizationError = null;
+
+    try
+    {
+        var client = Auth.CreateAuthenticatedClient();
+
+        var result =
+            await client.GetFromJsonAsync<
+                List<CoursePartnerOrganizationDto>>(
+                $"api/CoursePartnerOrganizations/course/{courseId}"
+            );
+
+        CoursePartnerOrganizations =
+            result ?? new List<CoursePartnerOrganizationDto>();
+    }
+    catch
+    {
+        CoursePartnerOrganizations =
+            new List<CoursePartnerOrganizationDto>();
+
+        PartnerOrganizationError =
+            "دریافت قراردادهای این دوره با خطا مواجه شد.";
+    }
+    finally
+    {
+        IsLoadingPartnerOrganizations = false;
+    }
+}
+
+
+private void ResetPartnerOrganizationForm()
+{
+    EditingCoursePartnerOrganizationId = null;
+
+    FormPartnerOrganizationId = string.Empty;
+
+    FormPartnerContractNumber = string.Empty;
+
+    FormPartnerAgreedPrice = null;
+
+    FormPartnerStartDate = null;
+
+    FormPartnerEndDate = null;
+
+    FormPartnerIsActive = true;
+
+    FormPartnerDescription = string.Empty;
+}
+
+
+private void ClosePartnerOrganizations()
+{
+    ShowPartnerOrganizations = false;
+
+    SelectedCourseForPartnersId = null;
+
+    PartnerOrganizationError = null;
+
+    PartnerOrganizationSuccess = null;
+
+    ResetPartnerOrganizationForm();
+}
+
+private void OpenCreatePartnerOrganizationForm()
+{
+    PartnerOrganizationError = null;
+    PartnerOrganizationSuccess = null;
+
+    EditingCoursePartnerOrganizationId = null;
+
+    ResetPartnerOrganizationForm();
+
+    if (SelectedCourseForPartnersId.HasValue)
+    {
+        FormPartnerStartDate = DateTime.Today;
+    }
+}
+
+
+private async Task SavePartnerOrganization()
+{
+    PartnerOrganizationError = null;
+    PartnerOrganizationSuccess = null;
+
+    if (!SelectedCourseForPartnersId.HasValue)
+    {
+        PartnerOrganizationError =
+            "دوره انتخاب‌شده معتبر نیست.";
+
+        return;
+    }
+
+    if (!int.TryParse(
+        FormPartnerOrganizationId,
+        out var partnerOrganizationId))
+    {
+        PartnerOrganizationError =
+            "لطفاً سازمان طرف قرارداد را انتخاب کنید.";
+
+        return;
+    }
+
+    if (FormPartnerAgreedPrice.HasValue &&
+        FormPartnerAgreedPrice.Value < 0)
+    {
+        PartnerOrganizationError =
+            "قیمت توافقی نمی‌تواند منفی باشد.";
+
+        return;
+    }
+
+    if (FormPartnerStartDate.HasValue &&
+        FormPartnerEndDate.HasValue &&
+        FormPartnerEndDate.Value < FormPartnerStartDate.Value)
+    {
+        PartnerOrganizationError =
+            "تاریخ پایان قرارداد نمی‌تواند قبل از تاریخ شروع باشد.";
+
+        return;
+    }
+
+    IsSavingPartnerOrganization = true;
+
+    try
+    {
+        var client = Auth.CreateAuthenticatedClient();
+
+        HttpResponseMessage response;
+
+        if (EditingCoursePartnerOrganizationId.HasValue)
+        {
+            var request =
+                new UpdateCoursePartnerOrganizationDto
+                {
+                    PartnerOrganizationId =
+                        partnerOrganizationId,
+
+                    ContractNumber =
+                        FormPartnerContractNumber,
+
+                    AgreedPrice =
+                        FormPartnerAgreedPrice,
+
+                    StartDate =
+                        FormPartnerStartDate,
+
+                    EndDate =
+                        FormPartnerEndDate,
+
+                    IsActive =
+                        FormPartnerIsActive,
+
+                    Description =
+                        FormPartnerDescription
+                };
+
+            response = await client.PutAsJsonAsync(
+                $"api/CoursePartnerOrganizations/{EditingCoursePartnerOrganizationId.Value}",
+                request);
+        }
+        else
+        {
+            var request =
+                new CreateCoursePartnerOrganizationDto
+                {
+                    CourseId =
+                        SelectedCourseForPartnersId.Value,
+
+                    PartnerOrganizationId =
+                        partnerOrganizationId,
+
+                    ContractNumber =
+                        FormPartnerContractNumber,
+
+                    AgreedPrice =
+                        FormPartnerAgreedPrice,
+
+                    StartDate =
+                        FormPartnerStartDate,
+
+                    EndDate =
+                        FormPartnerEndDate,
+
+                    IsActive =
+                        FormPartnerIsActive,
+
+                    Description =
+                        FormPartnerDescription
+                };
+
+            response = await client.PostAsJsonAsync(
+                "api/CoursePartnerOrganizations",
+                request);
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            PartnerOrganizationError =
+                await GetErrorMessage(response);
+
+            return;
+        }
+
+        PartnerOrganizationSuccess =
+            EditingCoursePartnerOrganizationId.HasValue
+                ? "قرارداد با موفقیت ویرایش شد."
+                : "قرارداد با موفقیت ثبت شد.";
+
+        ResetPartnerOrganizationForm();
+
+        await LoadCoursePartnerOrganizations(
+            SelectedCourseForPartnersId.Value);
+    }
+    catch
+    {
+        PartnerOrganizationError =
+            "ارتباط با سرور برقرار نشد.";
+    }
+    finally
+    {
+        IsSavingPartnerOrganization = false;
+    }
+}
+
+
+private void EditPartnerOrganization(
+    CoursePartnerOrganizationDto contract)
+{
+    PartnerOrganizationError = null;
+    PartnerOrganizationSuccess = null;
+
+    EditingCoursePartnerOrganizationId =
+        contract.Id;
+
+    FormPartnerOrganizationId =
+        contract.PartnerOrganizationId.ToString();
+
+    FormPartnerContractNumber =
+        contract.ContractNumber ?? string.Empty;
+
+    FormPartnerAgreedPrice =
+        contract.AgreedPrice;
+
+    FormPartnerStartDate =
+        contract.StartDate;
+
+    FormPartnerEndDate =
+        contract.EndDate;
+
+    FormPartnerIsActive =
+        contract.IsActive;
+
+    FormPartnerDescription =
+        contract.Description ?? string.Empty;
+}
+
+
+private async Task DeletePartnerOrganization(
+    CoursePartnerOrganizationDto contract)
+{
+    PartnerOrganizationError = null;
+    PartnerOrganizationSuccess = null;
+
+    try
+    {
+        var client = Auth.CreateAuthenticatedClient();
+
+        var response = await client.DeleteAsync(
+            $"api/CoursePartnerOrganizations/{contract.Id}");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            PartnerOrganizationError =
+                await GetErrorMessage(response);
+
+            return;
+        }
+
+        PartnerOrganizationSuccess =
+            "قرارداد با موفقیت حذف شد.";
+
+        if (SelectedCourseForPartnersId.HasValue)
+        {
+            await LoadCoursePartnerOrganizations(
+                SelectedCourseForPartnersId.Value);
+        }
+    }
+    catch
+    {
+        PartnerOrganizationError =
+            "ارتباط با سرور برقرار نشد.";
+    }
+}
 
     private void OpenCreateForm()
     {
@@ -806,7 +1613,75 @@ private void EditCourse(CourseDto course)
         public bool IsActive { get; set; }
     }
 
+    public class PartnerOrganizationDto
+    {
+        public int Id { get; set; }
 
+        public string Name { get; set; } = string.Empty;
+
+        public bool IsActive { get; set; }
+    }
+
+
+    public class CoursePartnerOrganizationDto
+    {
+        public int Id { get; set; }
+
+        public int CourseId { get; set; }
+
+        public int PartnerOrganizationId { get; set; }
+
+        public string? ContractNumber { get; set; }
+
+        public decimal? AgreedPrice { get; set; }
+
+        public DateTime? StartDate { get; set; }
+
+        public DateTime? EndDate { get; set; }
+
+        public bool IsActive { get; set; }
+
+        public string? Description { get; set; }
+
+        public PartnerOrganizationDto? PartnerOrganization { get; set; }
+    }
+
+    public class CreateCoursePartnerOrganizationDto
+    {
+        public int CourseId { get; set; }
+
+        public int PartnerOrganizationId { get; set; }
+
+        public string? ContractNumber { get; set; }
+
+        public decimal? AgreedPrice { get; set; }
+
+        public DateTime? StartDate { get; set; }
+
+        public DateTime? EndDate { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        public string? Description { get; set; }
+    }
+
+
+    public class UpdateCoursePartnerOrganizationDto
+    {
+        public int PartnerOrganizationId { get; set; }
+
+        public string? ContractNumber { get; set; }
+
+        public decimal? AgreedPrice { get; set; }
+
+        public DateTime? StartDate { get; set; }
+
+        public DateTime? EndDate { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        public string? Description { get; set; }
+    }
     public class ApiError
     {
         public string? Message { get; set; }
