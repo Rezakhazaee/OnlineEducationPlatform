@@ -63,22 +63,29 @@
             <div>
                 <span>مدیریت</span>
                 <h1>گزارش‌ها</h1>
-                <p>خلاصه وضعیت دانشجویان، دوره‌ها، ثبت‌نام‌ها و پرداخت‌ها</p>
+                <p>
+                    خلاصه وضعیت دانشجویان، دوره‌ها، ثبت‌نام‌ها و پرداخت‌ها
+                </p>
             </div>
 
             <div class="admin-page-header-actions">
 
-                <button class="admin-primary-btn"
-                        @onclick="LoadReport"
-                        disabled="@IsLoading">
+                <button
+                    class="admin-primary-btn"
+                    @onclick="LoadReport"
+                    disabled="@IsLoading">
 
                     @if (IsLoading)
                     {
-                        <span>در حال بروزرسانی...</span>
+                        <span>
+                            در حال بروزرسانی...
+                        </span>
                     }
                     else
                     {
-                        <span>به‌روزرسانی گزارش</span>
+                        <span>
+                            به‌روزرسانی گزارش
+                        </span>
                     }
 
                 </button>
@@ -114,10 +121,15 @@
                 </div>
 
                 <div style="margin-top: 16px; text-align: center;">
-                    <button class="admin-primary-btn"
-                            @onclick="LoadReport">
+
+                    <button
+                        class="admin-primary-btn"
+                        @onclick="LoadReport">
+
                         تلاش مجدد
+
                     </button>
+
                 </div>
 
             </section>
@@ -127,6 +139,7 @@
             <div class="admin-stats-grid">
 
                 <div class="admin-stat-card">
+
                     <div class="admin-stat-label">
                         دانشجویان
                     </div>
@@ -134,9 +147,11 @@
                     <div class="admin-stat-value">
                         @Report.TotalStudents
                     </div>
+
                 </div>
 
                 <div class="admin-stat-card">
+
                     <div class="admin-stat-label">
                         دوره‌ها
                     </div>
@@ -144,9 +159,11 @@
                     <div class="admin-stat-value">
                         @Report.TotalCourses
                     </div>
+
                 </div>
 
                 <div class="admin-stat-card">
+
                     <div class="admin-stat-label">
                         ثبت‌نام‌ها
                     </div>
@@ -154,47 +171,124 @@
                     <div class="admin-stat-value">
                         @Report.TotalEnrollments
                     </div>
-                </div>
 
-                <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        پرداخت‌شده
-                    </div>
-
-                    <div class="admin-stat-value">
-                        @Report.TotalPaid.ToString("N0")
-                        <small>تومان</small>
-                    </div>
-                </div>
-
-                <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        در انتظار پرداخت
-                    </div>
-
-                    <div class="admin-stat-value">
-                        @Report.TotalPending.ToString("N0")
-                        <small>تومان</small>
-                    </div>
-                </div>
-
-                <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        لغوشده
-                    </div>
-
-                    <div class="admin-stat-value">
-                        @Report.TotalCancelled.ToString("N0")
-                        <small>تومان</small>
-                    </div>
                 </div>
 
             </div>
+
+
+            <section class="admin-content-card">
+
+                <div class="admin-card-header">
+
+                    <div>
+                        <span>
+                            وضعیت مالی
+                        </span>
+
+                        <h2>
+                            گزارش مالی
+                        </h2>
+                    </div>
+
+                </div>
+
+
+                <div class="admin-financial-grid">
+
+                    <div class="admin-financial-card">
+
+                        <small>
+                            ارزش کل ثبت‌نام‌ها
+                        </small>
+
+                        <strong>
+                            @Report.TotalEnrollmentValue.ToString("N0")
+                        </strong>
+
+                        <span>
+                            تومان
+                        </span>
+
+                    </div>
+
+
+                    <div class="admin-financial-card">
+
+                        <small>
+                            پرداخت‌شده
+                        </small>
+
+                        <strong>
+                            @Report.TotalPaid.ToString("N0")
+                        </strong>
+
+                        <span>
+                            تومان
+                        </span>
+
+                    </div>
+
+
+                    <div class="admin-financial-card">
+
+                        <small>
+                            مانده قابل وصول
+                        </small>
+
+                        <strong>
+                            @Report.TotalRemainingAmount.ToString("N0")
+                        </strong>
+
+                        <span>
+                            تومان
+                        </span>
+
+                    </div>
+
+
+                    <div class="admin-financial-card">
+
+                        <small>
+                            در انتظار پرداخت
+                        </small>
+
+                        <strong>
+                            @Report.TotalPending.ToString("N0")
+                        </strong>
+
+                        <span>
+                            تومان
+                        </span>
+
+                    </div>
+
+
+                    <div class="admin-financial-card">
+
+                        <small>
+                            لغوشده
+                        </small>
+
+                        <strong>
+                            @Report.TotalCancelled.ToString("N0")
+                        </strong>
+
+                        <span>
+                            تومان
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </section>
         }
 
     </main>
 
 </div>
+
 
 @code {
 
@@ -206,10 +300,12 @@
 
     private DateTime? LastUpdated { get; set; }
 
+
     protected override async Task OnInitializedAsync()
     {
         await LoadReport();
     }
+
 
     private async Task LoadReport()
     {
@@ -220,7 +316,8 @@
         {
             var client = Auth.CreateAuthenticatedClient();
 
-            var response = await client.GetAsync("api/Reports/summary");
+            var response =
+                await client.GetAsync("api/Reports/summary");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -231,9 +328,11 @@
             }
 
             var result =
-                await response.Content.ReadFromJsonAsync<ReportsSummaryDto>();
+                await response.Content
+                    .ReadFromJsonAsync<ReportsSummaryDto>();
 
-            Report = result ?? new ReportsSummaryDto();
+            Report =
+                result ?? new ReportsSummaryDto();
 
             LastUpdated = DateTime.Now;
         }
@@ -248,6 +347,7 @@
         }
     }
 
+
     public class ReportsSummaryDto
     {
         public int TotalStudents { get; set; }
@@ -261,5 +361,9 @@
         public decimal TotalPending { get; set; }
 
         public decimal TotalCancelled { get; set; }
+
+        public decimal TotalEnrollmentValue { get; set; }
+
+        public decimal TotalRemainingAmount { get; set; }
     }
 }
