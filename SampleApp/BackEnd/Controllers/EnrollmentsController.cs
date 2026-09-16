@@ -348,6 +348,9 @@ public async Task<ActionResult<List<EnrollmentDetailDto>>> GetMySupportEnrollmen
     
     [Authorize(Roles = "Admin,Support,Student")]
 [HttpGet]
+// دریافت لیست ثبت نام ها با اطلاعات دانشجو، دوره، پشتیبان، استاد و وضعیت مالی
+[Authorize(Roles = "Admin,Support,Student")]
+[HttpGet]
 public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
 {
     var query = _context.Enrollments
@@ -356,8 +359,8 @@ public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
         .Include(e => e.SupportUser)
         .Include(e => e.Instructor)
         .Include(e => e.CoursePartnerOrganization)
-         .ThenInclude(cpo => cpo!.PartnerOrganization)
-      .AsQueryable();
+            .ThenInclude(cpo => cpo!.PartnerOrganization)
+        .AsQueryable();
 
     // Student → فقط ثبت‌نام‌های خودش
     if (User.IsInRole("Student"))
@@ -404,53 +407,153 @@ public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
             e.Student.SupportUserId == userId);
     }
 
-    var enrollments = await query
-        .Select(e => new EnrollmentDto
+    // دریافت ثبت‌نام‌ها
+    var enrollmentEntities = await query.ToListAsync();
+
+    // دریافت مجموع پرداخت‌های تاییدشده برای ثبت‌نام‌های موجود
+    var enrollmentIds = enrollmentEntities
+        .Select(e => e.Id)
+        .ToList();
+
+    var paidAmounts = await _context.Payments
+        .Where(p =>
+            enrollmentIds.Contains(p.EnrollmentId) &&
+            p.Status == "Paid")
+        .GroupBy(p => p.EnrollmentId)
+        .Select(g => new
         {
-            Id = e.Id,
-            StudentId = e.StudentId,
-            StudentName = e.Student != null
-                ? e.Student.FirstName + " " + e.Student.LastName
-                : string.Empty,
-            CourseId = e.CourseId,
-            CourseTitle = e.Course != null
-                ? e.Course.Title
-                : string.Empty,
-            SupportUserId = e.SupportUserId,
-            SupportUserName = e.SupportUser != null
-                ? e.SupportUser.FullName
-                : null,
-            InstructorId = e.InstructorId,
-            InstructorName = e.Instructor != null
-                ? e.Instructor.FullName
-                : null,
-            StartDate = e.StartDate,
-            Status = e.Status,
-            Description = e.Description,
-            CoursePartnerOrganization = e.CoursePartnerOrganization == null
-    ? null
-    : new CoursePartnerOrganizationDto
-    {
-        Id = e.CoursePartnerOrganization.Id,
-        CourseId = e.CoursePartnerOrganization.CourseId,
-        PartnerOrganizationId = e.CoursePartnerOrganization.PartnerOrganizationId,
-        ContractNumber = e.CoursePartnerOrganization.ContractNumber,
-        AgreedPrice = e.CoursePartnerOrganization.AgreedPrice,
-        StartDate = e.CoursePartnerOrganization.StartDate,
-        EndDate = e.CoursePartnerOrganization.EndDate,
-        IsActive = e.CoursePartnerOrganization.IsActive,
-        Description = e.CoursePartnerOrganization.Description,
-        PartnerOrganization =
-            e.CoursePartnerOrganization.PartnerOrganization == null
-                ? null
-                : new PartnerOrganizationDto
-                {
-                    Id = e.CoursePartnerOrganization.PartnerOrganization.Id,
-                    Name = e.CoursePartnerOrganization.PartnerOrganization.Name
-                }
-    }
+            EnrollmentId = g.Key,
+            TotalPaid = g.Sum(p => p.Amount)
         })
-        .ToListAsync();
+        .ToDictionaryAsync(
+            x => x.EnrollmentId,
+            x => x.TotalPaid);
+
+    var enrollments = enrollmentEntities
+        .Select(e =>
+        {
+            var coursePrice =
+                e.CoursePartnerOrganization?.AgreedPrice
+                ?? e.Course?.Price
+                ?? 0;
+
+            var totalPaid =
+                paidAmounts.TryGetValue(e.Id, out var paid)
+                    ? paid
+                    : 0;
+
+            var remainingAmount =
+                Math.Max(coursePrice - totalPaid, 0);
+
+            string paymentStatus;
+
+            if (totalPaid <= 0)
+            {
+                paymentStatus = "Unpaid";
+            }
+            else if (totalPaid < coursePrice)
+            {
+                paymentStatus = "PartiallyPaid";
+            }
+            else if (totalPaid == coursePrice)
+            {
+                paymentStatus = "Paid";
+            }
+            else
+            {
+                paymentStatus = "Overpaid";
+            }
+
+            return new EnrollmentDto
+            {
+                Id = e.Id,
+
+                StudentId = e.StudentId,
+
+                StudentName = e.Student != null
+                    ? e.Student.FirstName + " " + e.Student.LastName
+                    : string.Empty,
+
+                CourseId = e.CourseId,
+
+                CourseTitle = e.Course != null
+                    ? e.Course.Title
+                    : string.Empty,
+
+                CoursePrice = coursePrice,
+
+                TotalPaid = totalPaid,
+
+                RemainingAmount = remainingAmount,
+
+                PaymentStatus = paymentStatus,
+
+                SupportUserId = e.SupportUserId,
+
+                SupportUserName = e.SupportUser != null
+                    ? e.SupportUser.FullName
+                    : null,
+
+                InstructorId = e.InstructorId,
+
+                InstructorName = e.Instructor != null
+                    ? e.Instructor.FullName
+                    : null,
+
+                StartDate = e.StartDate,
+
+                Status = e.Status,
+
+                Description = e.Description,
+
+                CoursePartnerOrganization =
+                    e.CoursePartnerOrganization == null
+                        ? null
+                        : new CoursePartnerOrganizationDto
+                        {
+                            Id = e.CoursePartnerOrganization.Id,
+
+                            CourseId =
+                                e.CoursePartnerOrganization.CourseId,
+
+                            PartnerOrganizationId =
+                                e.CoursePartnerOrganization.PartnerOrganizationId,
+
+                            ContractNumber =
+                                e.CoursePartnerOrganization.ContractNumber,
+
+                            AgreedPrice =
+                                e.CoursePartnerOrganization.AgreedPrice,
+
+                            StartDate =
+                                e.CoursePartnerOrganization.StartDate,
+
+                            EndDate =
+                                e.CoursePartnerOrganization.EndDate,
+
+                            IsActive =
+                                e.CoursePartnerOrganization.IsActive,
+
+                            Description =
+                                e.CoursePartnerOrganization.Description,
+
+                            PartnerOrganization =
+                                e.CoursePartnerOrganization.PartnerOrganization == null
+                                    ? null
+                                    : new PartnerOrganizationDto
+                                    {
+                                        Id =
+                                            e.CoursePartnerOrganization
+                                                .PartnerOrganization.Id,
+
+                                        Name =
+                                            e.CoursePartnerOrganization
+                                                .PartnerOrganization.Name
+                                    }
+                        }
+            };
+        })
+        .ToList();
 
     return Ok(enrollments);
 }

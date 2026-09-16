@@ -12,6 +12,18 @@ public class EnrollmentDto
 
     public string? CourseTitle { get; set; }
 
+    // قیمت نهایی ثبت‌نام
+    public decimal CoursePrice { get; set; }
+
+    // مجموع پرداخت‌های تاییدشده
+    public decimal TotalPaid { get; set; }
+
+    // مبلغ باقی‌مانده
+    public decimal RemainingAmount { get; set; }
+
+    // وضعیت مالی
+    public string PaymentStatus { get; set; } = string.Empty;
+
     public int? SupportUserId { get; set; }
 
     public string? SupportUserName { get; set; }

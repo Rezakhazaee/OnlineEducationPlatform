@@ -521,8 +521,20 @@
                                         سازمان طرف قرارداد
                                     </th>
 
+                                   <th>
+    قیمت
+                                    </th>
+
                                     <th>
-                                        قیمت
+                                        پرداخت‌شده
+                                    </th>
+
+                                    <th>
+                                        مانده
+                                    </th>
+
+                                    <th>
+                                        وضعیت مالی
                                     </th>
 
                                     <th>
@@ -561,7 +573,7 @@
                                                 ?? "بدون قرارداد سازمانی")
                                         </td>
 
-                                        <td>
+                                         <td>
                                             <strong>
                                                 @enrollment.CoursePrice.ToString("N0")
                                             </strong>
@@ -569,6 +581,59 @@
                                             <span class="price-unit">
                                                 تومان
                                             </span>
+                                        </td>
+
+                                        <td>
+                                            <strong>
+                                                @enrollment.TotalPaid.ToString("N0")
+                                            </strong>
+
+                                            <span class="price-unit">
+                                                تومان
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <strong>
+                                                @enrollment.RemainingAmount.ToString("N0")
+                                            </strong>
+
+                                            <span class="price-unit">
+                                                تومان
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            @if (enrollment.PaymentStatus == "Paid")
+                                            {
+                                                <span class="course-status active">
+                                                    تسویه‌شده
+                                                </span>
+                                            }
+                                            else if (enrollment.PaymentStatus == "PartiallyPaid")
+                                            {
+                                                <span class="course-status">
+                                                    پرداخت ناقص
+                                                </span>
+                                            }
+                                            else if (enrollment.PaymentStatus == "Unpaid")
+                                            {
+                                                <span class="course-status">
+                                                    پرداخت‌نشده
+                                                </span>
+                                            }
+                                            else if (enrollment.PaymentStatus == "Overpaid")
+                                            {
+                                                <span class="course-status">
+                                                    اضافه‌پرداخت
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="course-status">
+                                                    نامشخص
+                                                </span>
+                                            }
                                         </td>
 
                                         <td>
@@ -1049,28 +1114,38 @@ private async Task SaveEnrollment()
     }
 
 
-    public class EnrollmentDto
-    {
-        public int Id { get; set; }
+   public class EnrollmentDto
+{
+    public int Id { get; set; }
 
-        public int StudentId { get; set; }
+    public int StudentId { get; set; }
 
-        public string StudentName { get; set; } = string.Empty;
+    public string StudentName { get; set; } = string.Empty;
 
-        public int CourseId { get; set; }
+    public int CourseId { get; set; }
 
-        public string CourseTitle { get; set; } = string.Empty;
+    public string CourseTitle { get; set; } = string.Empty;
 
-        public decimal CoursePrice { get; set; }
+    // قیمت نهایی ثبت‌نام
+    public decimal CoursePrice { get; set; }
 
-        public DateTime StartDate { get; set; }
+    // مجموع پرداخت‌های تاییدشده
+    public decimal TotalPaid { get; set; }
 
-        public string Status { get; set; } = string.Empty;
+    // مبلغ باقی‌مانده
+    public decimal RemainingAmount { get; set; }
 
-        public string? Description { get; set; }
+    // وضعیت مالی
+    public string PaymentStatus { get; set; } = string.Empty;
 
-        public CoursePartnerOrganizationDto? CoursePartnerOrganization { get; set; }
-    }
+    public DateTime StartDate { get; set; }
+
+    public string Status { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+
+    public CoursePartnerOrganizationDto? CoursePartnerOrganization { get; set; }
+}
 
 
     public class CreateEnrollmentDto
