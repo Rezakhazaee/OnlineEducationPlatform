@@ -138,11 +138,12 @@
                 </label>
 
                 <input
-                    class="admin-input"
-                    type="number"
-                    min="1"
-                    step="1000"
-                    @bind="FormAmount" />
+                class="admin-input"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                value="@FormAmountText"
+                @oninput="OnAmountInput" />
 
             </div>
 
@@ -484,6 +485,8 @@ private string FormEnrollmentId { get; set; } = string.Empty;
 
 private decimal FormAmount { get; set; }
 
+private string FormAmountText { get; set; } = string.Empty;
+
 private string FormPaymentType { get; set; } =
     "FirstInstallment";
 
@@ -674,7 +677,33 @@ private async Task CreatePayment()
     }
 }
 
+private void OnAmountInput(ChangeEventArgs e)
+{
+    var input = e.Value?.ToString() ?? string.Empty;
 
+    // حذف جداکننده‌ها و هر چیزی غیر از رقم
+    var digits = new string(
+        input.Where(char.IsDigit).ToArray());
+
+    if (string.IsNullOrEmpty(digits))
+    {
+        FormAmount = 0;
+        FormAmountText = string.Empty;
+        return;
+    }
+
+    if (decimal.TryParse(
+        digits,
+        System.Globalization.NumberStyles.None,
+        System.Globalization.CultureInfo.InvariantCulture,
+        out var amount))
+    {
+        FormAmount = amount;
+        FormAmountText = amount.ToString(
+            "#,##0",
+            System.Globalization.CultureInfo.InvariantCulture);
+    }
+}
 private async Task ApprovePayment(
     PaymentDetailDto payment)
 {
