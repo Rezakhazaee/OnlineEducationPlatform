@@ -233,34 +233,120 @@
 
         @if (SelectedEnrollment != null)
         {
-            <div class="admin-info-box">
+            <div class="payment-enrollment-summary">
 
-                <strong>
-                    اطلاعات ثبت‌نام
-                </strong>
-
-                <div>
-                    دانشجو:
-                    @SelectedEnrollment.StudentName
+                <div class="payment-summary-title">
+                    اطلاعات مالی ثبت‌نام
                 </div>
 
-                <div>
-                    دوره:
-                    @SelectedEnrollment.CourseTitle
-                </div>
+                <div class="payment-summary-grid">
 
-                <div>
-                    وضعیت:
-                    @GetEnrollmentStatusText(
-                        SelectedEnrollment.Status)
-                </div>
+                    <div class="payment-summary-item">
+                        <span>
+                            دانشجو
+                        </span>
 
-                <div>
-                    قیمت:
-                    @FormatMoney(
-                        GetEnrollmentPrice(
-                            SelectedEnrollment))
-                    تومان
+                        <strong>
+                            @SelectedEnrollment.StudentName
+                        </strong>
+                    </div>
+
+                    <div class="payment-summary-item">
+                        <span>
+                            دوره
+                        </span>
+
+                        <strong>
+                            @SelectedEnrollment.CourseTitle
+                        </strong>
+                    </div>
+
+                    <div class="payment-summary-item">
+                        <span>
+                            قیمت نهایی
+                        </span>
+
+                        <strong>
+                            @FormatMoney(
+                                GetEnrollmentPrice(
+                                    SelectedEnrollment))
+                            تومان
+                        </strong>
+                    </div>
+
+                    <div class="payment-summary-item">
+                        <span>
+                            پرداخت‌شده
+                        </span>
+
+                        <strong>
+                            @FormatMoney(
+                                SelectedEnrollment.TotalPaid)
+                            تومان
+                        </strong>
+                    </div>
+
+                    <div class="payment-summary-item">
+                        <span>
+                            مانده
+                        </span>
+
+                        <strong>
+                            @FormatMoney(
+                                SelectedEnrollment.RemainingAmount)
+                            تومان
+                        </strong>
+                    </div>
+
+                    <div class="payment-summary-item">
+                        <span>
+                            وضعیت مالی
+                        </span>
+
+                        @if (SelectedEnrollment.PaymentStatus == "Paid")
+                        {
+                            <span class="course-status active">
+                                تسویه‌شده
+                            </span>
+                        }
+                        else if (SelectedEnrollment.PaymentStatus == "PartiallyPaid")
+                        {
+                            <span class="course-status">
+                                پرداخت ناقص
+                            </span>
+                        }
+                        else if (SelectedEnrollment.PaymentStatus == "Unpaid")
+                        {
+                            <span class="course-status">
+                                پرداخت‌نشده
+                            </span>
+                        }
+                        else if (SelectedEnrollment.PaymentStatus == "Overpaid")
+                        {
+                            <span class="course-status">
+                                اضافه‌پرداخت
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="course-status">
+                                نامشخص
+                            </span>
+                        }
+
+                    </div>
+
+                    <div class="payment-summary-item">
+                        <span>
+                            وضعیت ثبت‌نام
+                        </span>
+
+                        <strong>
+                            @GetEnrollmentStatusText(
+                                SelectedEnrollment.Status)
+                        </strong>
+                    </div>
+
                 </div>
 
             </div>
@@ -906,25 +992,27 @@ public class EnrollmentDto
 
     public int StudentId { get; set; }
 
-    public string StudentName { get; set; } =
-        string.Empty;
+    public string StudentName { get; set; } = string.Empty;
 
     public int CourseId { get; set; }
 
-    public string CourseTitle { get; set; } =
-        string.Empty;
+    public string CourseTitle { get; set; } = string.Empty;
 
     public decimal CoursePrice { get; set; }
 
+    public decimal TotalPaid { get; set; }
+
+    public decimal RemainingAmount { get; set; }
+
+    public string PaymentStatus { get; set; } = string.Empty;
+
     public DateTime StartDate { get; set; }
 
-    public string Status { get; set; } =
-        string.Empty;
+    public string Status { get; set; } = string.Empty;
 
     public string? Description { get; set; }
 
-    public CoursePartnerOrganizationDto?
-        CoursePartnerOrganization { get; set; }
+    public CoursePartnerOrganizationDto? CoursePartnerOrganization { get; set; }
 }
 
 
