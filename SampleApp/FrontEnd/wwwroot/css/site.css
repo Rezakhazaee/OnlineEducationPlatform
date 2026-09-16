@@ -3108,3 +3108,104 @@ textarea {
     transform: translateY(0);
     box-shadow: none;
 }
+/* =========================================
+   Admin Recent Enrollments
+   ========================================= */
+
+.admin-recent-enrollments {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-recent-enrollment {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 18px;
+
+    padding: 15px 16px;
+
+    border: 1px solid #e1ebef;
+    border-radius: 12px;
+
+    background: #fbfdfe;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.admin-recent-enrollment:hover {
+    background: #f6fafb;
+    border-color: #ccdfe5;
+    transform: translateY(-1px);
+}
+
+.recent-enrollment-main {
+    min-width: 0;
+}
+
+.recent-enrollment-main strong {
+    display: block;
+    margin-bottom: 4px;
+
+    color: var(--theme-text, #263d4a);
+    font-size: 14px;
+}
+
+.recent-enrollment-main span {
+    display: block;
+
+    color: #7b8b95;
+    font-size: 12px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.recent-enrollment-financial {
+    min-width: 115px;
+    text-align: center;
+}
+
+.recent-enrollment-financial strong {
+    display: block;
+
+    color: var(--theme-text, #263d4a);
+    font-size: 13px;
+}
+
+.recent-enrollment-financial small {
+    display: block;
+    margin-top: 3px;
+
+    color: #7b8b95;
+    font-size: 11px;
+}
+
+.recent-enrollment-date {
+    min-width: 85px;
+
+    color: #607581;
+    font-size: 12px;
+    text-align: left;
+    direction: ltr;
+}
+
+@media (max-width: 700px) {
+    .admin-recent-enrollment {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .recent-enrollment-financial {
+        text-align: right;
+    }
+
+    .recent-enrollment-date {
+        text-align: right;
+    }
+}

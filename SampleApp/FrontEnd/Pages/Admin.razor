@@ -285,6 +285,86 @@
                 </div>
 
             </section>
+
+        
+        <section class="admin-content-card">
+
+            <div class="admin-card-header">
+
+                <div>
+                    <span>
+                        فعالیت‌های اخیر
+                    </span>
+
+                    <h2>
+                        آخرین ثبت‌نام‌ها
+                    </h2>
+                </div>
+
+                <a
+                    href="/admin/enrollments"
+                    class="admin-outline-btn">
+
+                    مشاهده همه
+
+                </a>
+
+            </div>
+
+
+            @if (RecentEnrollments.Count == 0)
+            {
+                <div class="admin-empty-state">
+                    هنوز ثبت‌نامی ثبت نشده است.
+                </div>
+            }
+            else
+            {
+                <div class="admin-recent-enrollments">
+
+                    @foreach (var enrollment in RecentEnrollments)
+                    {
+                        <div class="admin-recent-enrollment">
+
+                            <div class="recent-enrollment-main">
+
+                                <strong>
+                                    @enrollment.StudentName
+                                </strong>
+
+                                <span>
+                                    @enrollment.CourseTitle
+                                </span>
+
+                            </div>
+
+                            <div class="recent-enrollment-financial">
+
+                                <strong>
+                                    @enrollment.RemainingAmount.ToString("N0")
+                                    تومان
+                                </strong>
+
+                                <small>
+                                    مانده
+                                </small>
+
+                            </div>
+
+                            <div class="recent-enrollment-date">
+
+                                @enrollment.StartDate.ToString("yyyy/MM/dd")
+
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+            }
+
+        </section>
+
         }
 
     </main>
@@ -299,6 +379,29 @@
     private bool IsLoading { get; set; } = true;
 
     private string? ErrorMessage { get; set; }
+
+    private List<RecentEnrollmentDto> RecentEnrollments { get; set; } = new();
+
+public class RecentEnrollmentDto
+{
+    public int Id { get; set; }
+
+    public string StudentName { get; set; } = string.Empty;
+
+    public string CourseTitle { get; set; } = string.Empty;
+
+    public decimal CoursePrice { get; set; }
+
+    public decimal TotalPaid { get; set; }
+
+    public decimal RemainingAmount { get; set; }
+
+    public string PaymentStatus { get; set; } = string.Empty;
+
+    public DateTime StartDate { get; set; }
+
+    public string Status { get; set; } = string.Empty;
+}
 
 
     protected override async Task OnInitializedAsync()
@@ -319,6 +422,16 @@
             Summary = await client.GetFromJsonAsync<ReportsSummaryDto>(
                 "api/Reports/summary"
             );
+              var enrollments =
+    await client.GetFromJsonAsync<List<RecentEnrollmentDto>>(
+        "api/Enrollments"
+    );
+
+RecentEnrollments =
+    (enrollments ?? new List<RecentEnrollmentDto>())
+        .OrderByDescending(x => x.StartDate)
+        .Take(5)
+        .ToList();
 
             if (Summary == null)
             {
