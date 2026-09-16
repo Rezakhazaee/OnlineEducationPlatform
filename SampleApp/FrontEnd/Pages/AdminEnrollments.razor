@@ -916,8 +916,7 @@
                                                 </td>
 
                                                 <td>
-                                                    @payment.PaymentType
-                                                </td>
+                                                         @GetPaymentTypeText(payment.PaymentType)                                                </td>
 
                                                 <td>
 
@@ -1363,6 +1362,17 @@ private async Task SaveEnrollment()
         FormError = null;
     }
 
+     private string GetPaymentTypeText(string paymentType)
+{
+    return paymentType switch
+    {
+        "FirstInstallment" => "قسط اول",
+        "SecondInstallment" => "قسط دوم",
+        "ThirdInstallment" => "قسط سوم",
+        "FullPayment" => "پرداخت کامل",
+        _ => paymentType
+    };
+}
 
     private async Task<string> GetErrorMessage(
         HttpResponseMessage response)
