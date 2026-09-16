@@ -2670,3 +2670,333 @@ textarea {
     }
 
 }
+/* =========================================
+   Enrollment Financial Details
+   ========================================= */
+
+.admin-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.admin-actions .admin-secondary-btn {
+    margin: 0;
+    white-space: nowrap;
+}
+
+/* Modal */
+
+.admin-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(15, 35, 45, 0.55);
+    backdrop-filter: blur(3px);
+}
+
+.admin-modal {
+    width: min(920px, 100%);
+    max-height: calc(100vh - 48px);
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #dce7ec;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(25, 55, 70, 0.20);
+    direction: rtl;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 22px;
+    border-bottom: 1px solid #e6eef2;
+    background: #f8fbfc;
+}
+
+.admin-modal-header h3 {
+    margin: 0;
+    color: var(--theme-text, #263d4a);
+    font-size: 19px;
+    font-weight: 700;
+}
+
+.admin-modal-close {
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 10px;
+    background: #eef4f6;
+    color: #607581;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s ease;
+}
+
+.admin-modal-close:hover {
+    background: #e2ecef;
+    color: #263d4a;
+}
+
+.admin-modal-body {
+    padding: 22px;
+    overflow-y: auto;
+}
+
+.admin-modal-footer {
+    display: flex;
+    justify-content: flex-start;
+    padding: 16px 22px;
+    border-top: 1px solid #e6eef2;
+    background: #fbfdfe;
+}
+
+/* Financial summary */
+
+.financial-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.financial-summary-item {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid #e1ebef;
+    border-radius: 14px;
+    background: #f8fbfc;
+}
+
+.financial-summary-item span:first-child {
+    display: block;
+    margin-bottom: 8px;
+    color: #7b8b95;
+    font-size: 13px;
+}
+
+.financial-summary-item strong {
+    display: block;
+    color: var(--theme-text, #263d4a);
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+/* Payment history */
+
+.financial-payments {
+    margin-top: 4px;
+}
+
+.financial-payments h4 {
+    margin: 0 0 14px;
+    color: var(--theme-text, #263d4a);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.financial-payments .courses-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e1ebef;
+    border-radius: 14px;
+}
+
+.financial-payments .courses-table {
+    width: 100%;
+    min-width: 680px;
+    margin: 0;
+}
+
+.financial-payments .courses-table th {
+    background: #f4f8fa;
+    color: #607581;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.financial-payments .courses-table td {
+    vertical-align: middle;
+}
+
+.financial-payments .price-unit {
+    margin-right: 4px;
+    font-size: 11px;
+}
+
+/* Error inside modal */
+
+.admin-modal .admin-error {
+    padding: 14px 16px;
+    border: 1px solid #e8caca;
+    border-radius: 12px;
+    background: #fff7f7;
+    color: #a33a3a;
+}
+
+/* Empty / loading state */
+
+.admin-modal .admin-empty-state {
+    padding: 32px 20px;
+    text-align: center;
+    color: #7b8b95;
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+    .financial-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-modal-overlay {
+        padding: 12px;
+    }
+
+    .admin-modal {
+        max-height: calc(100vh - 24px);
+        border-radius: 14px;
+    }
+
+    .admin-modal-header {
+        padding: 14px 16px;
+    }
+
+    .admin-modal-body {
+        padding: 16px;
+    }
+
+    .admin-modal-footer {
+        padding: 14px 16px;
+    }
+
+    .financial-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-actions .admin-secondary-btn {
+        width: 100%;
+    }
+}
+/* =========================================
+   Enrollment Action Buttons
+   ========================================= */
+
+.admin-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.admin-actions .admin-secondary-btn {
+    min-width: 105px;
+    height: 38px;
+    margin: 0;
+    padding: 0 14px;
+
+    border: 1px solid #d5e2e7;
+    border-radius: 10px;
+
+    background: #f7fafb;
+    color: #3d5b68;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    white-space: nowrap;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.admin-actions .admin-secondary-btn:hover {
+    background: #eef5f7;
+    border-color: var(--theme-primary, #568fa8);
+    color: var(--theme-primary-dark, #477f99);
+
+    transform: translateY(-1px);
+
+    box-shadow: 0 4px 10px rgba(50, 85, 100, 0.10);
+}
+
+.admin-actions .admin-secondary-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* دکمه جزئیات مالی */
+
+.admin-actions .admin-secondary-btn:first-child {
+    background: var(--theme-primary, #568fa8);
+    border-color: var(--theme-primary, #568fa8);
+    color: #ffffff;
+}
+
+.admin-actions .admin-secondary-btn:first-child:hover {
+    background: var(--theme-primary-dark, #477f99);
+    border-color: var(--theme-primary-dark, #477f99);
+    color: #ffffff;
+
+    box-shadow: 0 5px 14px rgba(50, 95, 115, 0.18);
+}
+
+/* دکمه ویرایش */
+
+.admin-actions .admin-secondary-btn:last-child {
+    background: #ffffff;
+    border-color: #d5e2e7;
+    color: #526b76;
+}
+
+.admin-actions .admin-secondary-btn:last-child:hover {
+    background: #f3f7f9;
+    border-color: #b9cbd2;
+    color: #344f5b;
+}
+
+@media (max-width: 700px) {
+    .admin-actions {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .admin-actions .admin-secondary-btn {
+        width: 100%;
+        min-width: 0;
+    }
+}

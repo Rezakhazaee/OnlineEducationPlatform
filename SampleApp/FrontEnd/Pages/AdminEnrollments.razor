@@ -640,51 +640,62 @@
                                             @enrollment.StartDate.ToString("yyyy/MM/dd")
                                         </td>
 
-                                        <td>
+                                     <td>
+    @if (enrollment.Status == "Active")
+    {
+        <span class="course-status active">
+            فعال
+        </span>
+    }
+    else if (enrollment.Status == "Completed")
+    {
+        <span class="course-status">
+            تکمیل‌شده
+        </span>
+    }
+    else if (enrollment.Status == "Suspended")
+    {
+        <span class="course-status">
+            تعلیق‌شده
+        </span>
+    }
+    else if (enrollment.Status == "Cancelled")
+    {
+        <span class="course-status inactive">
+            لغوشده
+        </span>
+    }
+    else
+    {
+        <span class="course-status">
+            @enrollment.Status
+        </span>
+    }
+</td>
 
-                                            @if (enrollment.Status == "Active")
-{
-    <span class="course-status active">
-        فعال
-    </span>
-}
-else if (enrollment.Status == "Completed")
-{
-    <span class="course-status">
-        تکمیل‌شده
-    </span>
-}
-else if (enrollment.Status == "Suspended")
-{
-    <span class="course-status">
-        تعلیق‌شده
-    </span>
-}
-else if (enrollment.Status == "Cancelled")
-{
-    <span class="course-status inactive">
-        لغوشده
-    </span>
-}
-else
-{
-    <span class="course-status">
-        @enrollment.Status
-    </span>
-}
+                              <td>
+    <div class="admin-actions">
 
-                                        </td>
+<button
+    type="button"
+    class="admin-secondary-btn"
+    @onclick="() => ShowFinancialDetails(enrollment)">
 
-                                        <td>
-                                        <button
-                                            type="button"
-                                            class="admin-secondary-btn"
-                                            @onclick="() => BeginEditEnrollment(enrollment)">
+    جزئیات مالی
 
-                                            ویرایش
+</button>
 
-                                        </button>
-                                        </td>
+        <button
+            type="button"
+            class="admin-secondary-btn"
+            @onclick="() => BeginEditEnrollment(enrollment)">
+
+            ویرایش
+
+        </button>
+
+    </div>
+</td>
 
                                     </tr>
                                 }
@@ -703,6 +714,278 @@ else
 
 </div>
 
+@if (IsFinancialDetailsOpen)
+{
+    <div class="admin-modal-overlay">
+
+        <div class="admin-modal">
+
+            <div class="admin-modal-header">
+
+                <h3>
+                    جزئیات مالی ثبت‌نام
+                </h3>
+
+                <button
+                    type="button"
+                    class="admin-modal-close"
+                    @onclick="CloseFinancialDetails">
+
+                    ×
+
+                </button>
+
+            </div>
+
+            <div class="admin-modal-body">
+
+                @if (IsLoadingFinancialDetails)
+                {
+                    <div class="admin-empty-state">
+                        در حال دریافت اطلاعات مالی...
+                    </div>
+                }
+                else if (!string.IsNullOrWhiteSpace(FinancialDetailsError))
+                {
+                    <div class="admin-error">
+                        @FinancialDetailsError
+                    </div>
+                }
+                else if (SelectedFinancialDetails != null)
+                {
+                    <div class="financial-summary">
+
+                        <div class="financial-summary-item">
+                            <span>
+                                دانشجو
+                            </span>
+
+                            <strong>
+                                @SelectedFinancialDetails.StudentName
+                            </strong>
+                        </div>
+
+                        <div class="financial-summary-item">
+                            <span>
+                                دوره
+                            </span>
+
+                            <strong>
+                                @SelectedFinancialDetails.CourseTitle
+                            </strong>
+                        </div>
+
+                        <div class="financial-summary-item">
+                            <span>
+                                قیمت دوره
+                            </span>
+
+                            <strong>
+                                @SelectedFinancialDetails.CoursePrice.ToString("N0")
+                                تومان
+                            </strong>
+                        </div>
+
+                        <div class="financial-summary-item">
+                            <span>
+                                مجموع پرداخت‌شده
+                            </span>
+
+                            <strong>
+                                @SelectedFinancialDetails.TotalPaid.ToString("N0")
+                                تومان
+                            </strong>
+                        </div>
+
+                        <div class="financial-summary-item">
+                            <span>
+                                مبلغ باقی‌مانده
+                            </span>
+
+                            <strong>
+                                @SelectedFinancialDetails.RemainingAmount.ToString("N0")
+                                تومان
+                            </strong>
+                        </div>
+
+                        <div class="financial-summary-item">
+                            <span>
+                                وضعیت مالی
+                            </span>
+
+                            @if (SelectedFinancialDetails.PaymentStatus == "Paid")
+                            {
+                                <span class="course-status active">
+                                    تسویه‌شده
+                                </span>
+                            }
+                            else if (SelectedFinancialDetails.PaymentStatus == "PartiallyPaid")
+                            {
+                                <span class="course-status">
+                                    پرداخت ناقص
+                                </span>
+                            }
+                            else if (SelectedFinancialDetails.PaymentStatus == "Unpaid")
+                            {
+                                <span class="course-status">
+                                    پرداخت‌نشده
+                                </span>
+                            }
+                            else if (SelectedFinancialDetails.PaymentStatus == "Overpaid")
+                            {
+                                <span class="course-status">
+                                    اضافه‌پرداخت
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="course-status">
+                                    نامشخص
+                                </span>
+                            }
+
+                        </div>
+
+                    </div>
+
+                    <div class="financial-payments">
+
+                        <h4>
+                            سوابق پرداخت
+                        </h4>
+
+                        @if (SelectedFinancialDetails.Payments == null ||
+                             SelectedFinancialDetails.Payments.Count == 0)
+                        {
+                            <div class="admin-empty-state">
+                                تاکنون پرداختی برای این ثبت‌نام ثبت نشده است.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="courses-table-wrapper">
+
+                                <table class="courses-table">
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th>
+                                                مبلغ
+                                            </th>
+
+                                            <th>
+                                                تاریخ
+                                            </th>
+
+                                            <th>
+                                                نوع پرداخت
+                                            </th>
+
+                                            <th>
+                                                وضعیت
+                                            </th>
+
+                                            <th>
+                                                توضیحات
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                        @foreach (var payment in SelectedFinancialDetails.Payments)
+                                        {
+                                            <tr>
+
+                                                <td>
+                                                    <strong>
+                                                        @payment.Amount.ToString("N0")
+                                                    </strong>
+
+                                                    <span class="price-unit">
+                                                        تومان
+                                                    </span>
+                                                </td>
+
+                                                <td>
+                                                    @payment.PaymentDate.ToString("yyyy/MM/dd HH:mm")
+                                                </td>
+
+                                                <td>
+                                                    @payment.PaymentType
+                                                </td>
+
+                                                <td>
+
+                                                    @if (payment.Status == "Paid")
+                                                    {
+                                                        <span class="course-status active">
+                                                            پرداخت‌شده
+                                                        </span>
+                                                    }
+                                                    else if (payment.Status == "Pending")
+                                                    {
+                                                        <span class="course-status">
+                                                            در انتظار
+                                                        </span>
+                                                    }
+                                                    else if (payment.Status == "Cancelled")
+                                                    {
+                                                        <span class="course-status inactive">
+                                                            لغوشده
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="course-status">
+                                                            @payment.Status
+                                                        </span>
+                                                    }
+
+                                                </td>
+
+                                                <td>
+                                                    @(string.IsNullOrWhiteSpace(payment.Description)
+                                                        ? "-"
+                                                        : payment.Description)
+                                                </td>
+
+                                            </tr>
+                                        }
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+                        }
+
+                    </div>
+                }
+
+            </div>
+
+            <div class="admin-modal-footer">
+
+                <button
+                    type="button"
+                    class="admin-secondary-btn"
+                    @onclick="CloseFinancialDetails">
+
+                    بستن
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+}
 
 @code {
 
@@ -713,6 +996,14 @@ else
     private List<CoursePartnerOrganizationDto> CoursePartnerOrganizations { get; set; } = new();
 
     private List<EnrollmentDto> Enrollments { get; set; } = new();
+
+    private EnrollmentFinancialDetailDto? SelectedFinancialDetails { get; set; }
+
+    private bool IsFinancialDetailsOpen { get; set; }
+
+    private bool IsLoadingFinancialDetails { get; set; }
+
+    private string? FinancialDetailsError { get; set; }
 
     private bool IsLoading { get; set; } = true;
 
@@ -822,6 +1113,40 @@ else
         }
     }
     
+        private async Task ShowFinancialDetails(EnrollmentDto enrollment)
+    {
+        IsLoadingFinancialDetails = true;
+        IsFinancialDetailsOpen = true;
+        SelectedFinancialDetails = null;
+        FinancialDetailsError = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            SelectedFinancialDetails =
+                await client.GetFromJsonAsync<EnrollmentFinancialDetailDto>(
+                    $"api/Enrollments/{enrollment.Id}/financial-details");
+        }
+        catch
+        {
+            FinancialDetailsError =
+                "دریافت جزئیات مالی ثبت‌نام با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsLoadingFinancialDetails = false;
+        }
+    }
+
+
+    private void CloseFinancialDetails()
+    {
+        IsFinancialDetailsOpen = false;
+        SelectedFinancialDetails = null;
+        FinancialDetailsError = null;
+    }
+
    private async Task BeginEditEnrollment(EnrollmentDto enrollment)
 {
     FormError = null;
@@ -1147,6 +1472,40 @@ private async Task SaveEnrollment()
     public CoursePartnerOrganizationDto? CoursePartnerOrganization { get; set; }
 }
 
+    public class EnrollmentFinancialDetailDto
+    {
+        public int EnrollmentId { get; set; }
+
+        public string StudentName { get; set; } = string.Empty;
+
+        public string CourseTitle { get; set; } = string.Empty;
+
+        public decimal CoursePrice { get; set; }
+
+        public decimal TotalPaid { get; set; }
+
+        public decimal RemainingAmount { get; set; }
+
+        public string PaymentStatus { get; set; } = string.Empty;
+
+        public List<PaymentItemDto> Payments { get; set; } = new();
+    }
+
+
+    public class PaymentItemDto
+    {
+        public int Id { get; set; }
+
+        public decimal Amount { get; set; }
+
+        public DateTime PaymentDate { get; set; }
+
+        public string PaymentType { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
+
+        public string Status { get; set; } = string.Empty;
+    }
 
     public class CreateEnrollmentDto
     {
