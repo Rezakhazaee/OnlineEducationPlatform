@@ -188,6 +188,13 @@
                   return;
               }
 
+              // مدرس → پنل مدرس
+              if (Auth.IsInstructor)
+              {
+                  Navigation.NavigateTo("/instructor");
+                  return;
+              }
+
               // سایر کاربران → صفحه اصلی
               Navigation.NavigateTo("/");
         }

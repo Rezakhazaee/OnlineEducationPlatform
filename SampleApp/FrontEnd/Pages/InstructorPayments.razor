@@ -1,0 +1,192 @@
+@page "/instructor/payments"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@layout InstructorLayout
+
+@inject AuthService Auth
+
+<PageTitle>پرداخت‌ها | آموزش‌یار</PageTitle>
+
+<div class="support-content">
+
+    <section class="support-content-card">
+
+        <div class="support-card-header">
+
+            <div>
+                <span>امور مالی</span>
+                <h2>پرداخت‌های دوره‌های من</h2>
+            </div>
+
+            <a href="/instructor" class="support-outline-btn">
+                ← داشبورد
+            </a>
+
+        </div>
+
+
+        @if (IsLoading)
+        {
+            <div class="support-loading">
+                در حال دریافت اطلاعات...
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="support-error">
+                <strong>@ErrorMessage</strong>
+            </div>
+        }
+        else if (Payments.Count == 0)
+        {
+            <div class="support-empty-state">
+                <h3>هنوز پرداختی برای دوره‌های شما ثبت نشده است.</h3>
+            </div>
+        }
+        else
+        {
+            <div class="support-payments-list">
+
+                @foreach (var payment in Payments.OrderByDescending(x => x.PaymentDate))
+                {
+                    <div class="support-payment-row">
+
+                        <div class="support-payment-item">
+                            <small>دوره:</small>
+                            <strong>@payment.CourseTitle</strong>
+                        </div>
+
+                        <div class="support-payment-item">
+                            <small>تاریخ پرداخت:</small>
+                            <strong>
+                                @payment.PaymentDate.ToString("yyyy/MM/dd")
+                            </strong>
+                        </div>
+
+                        <div class="support-payment-item">
+                            <small>نوع پرداخت:</small>
+                            <strong>
+                                @GetPaymentTypeText(payment.PaymentType)
+                            </strong>
+                        </div>
+
+                        <div class="support-payment-item">
+                            <small>وضعیت:</small>
+                            <span class="@GetPaymentStatusClass(payment.Status)">
+                                @GetPaymentStatusText(payment.Status)
+                            </span>
+                        </div>
+
+                        <div class="support-payment-item support-payment-amount">
+                            <small>مبلغ:</small>
+                            <strong>
+                                @payment.Amount.ToString("N0") تومان
+                            </strong>
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+        }
+
+    </section>
+
+</div>
+
+
+@code {
+
+    private List<PaymentDto> Payments { get; set; } = new();
+
+    private bool IsLoading { get; set; } = true;
+
+    private string? ErrorMessage { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsLoggedIn || !Auth.IsInstructor)
+        {
+            return;
+        }
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Payments =
+                await client.GetFromJsonAsync<List<PaymentDto>>(
+                    "api/Payments")
+                ?? new List<PaymentDto>();
+        }
+        catch
+        {
+            ErrorMessage =
+                "ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+
+    private string GetPaymentTypeText(string type)
+    {
+        return type switch
+        {
+            "FullPayment" => "پرداخت کامل",
+            "FirstInstallment" => "قسط اول",
+            "SecondInstallment" => "قسط دوم",
+            "ThirdInstallment" => "قسط سوم",
+            _ => type
+        };
+    }
+
+
+    private string GetPaymentStatusText(string status)
+    {
+        return status switch
+        {
+            "Paid" => "پرداخت‌شده",
+            "Pending" => "در انتظار پرداخت",
+            "Cancelled" => "لغوشده",
+            "Unpaid" => "پرداخت‌نشده",
+            _ => status
+        };
+    }
+
+
+    private string GetPaymentStatusClass(string status)
+    {
+        return status switch
+        {
+            "Paid" => "payment-paid",
+            "Pending" => "payment-pending",
+            "Cancelled" => "payment-cancelled",
+            _ => "payment-default"
+        };
+    }
+
+
+    public class PaymentDto
+    {
+        public int Id { get; set; }
+
+        public string CourseTitle { get; set; } = string.Empty;
+
+        public decimal Amount { get; set; }
+
+        public DateTime PaymentDate { get; set; }
+
+        public string PaymentType { get; set; } = string.Empty;
+
+        public string Status { get; set; } = string.Empty;
+
+        public int EnrollmentId { get; set; }
+    }
+
+}

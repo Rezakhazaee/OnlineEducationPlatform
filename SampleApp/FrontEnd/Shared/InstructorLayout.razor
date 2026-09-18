@@ -1,0 +1,132 @@
+@inherits LayoutComponentBase
+
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<div class="support-page">
+
+    <aside class="support-sidebar">
+
+        <div class="support-brand">
+
+            <div class="support-brand-mark">
+                م
+            </div>
+
+            <div>
+                <strong>آموزش‌یار</strong>
+                <small>پنل مدرس</small>
+            </div>
+
+        </div>
+
+
+        <nav class="support-menu">
+
+            <a href="/instructor"
+               class="@(IsActive("/instructor") ? "active" : "")">
+                <span>⌂</span>
+                داشبورد
+            </a>
+
+            <a href="/instructor/courses"
+               class="@(IsActive("/instructor/courses") ? "active" : "")">
+                <span>▣</span>
+                دوره‌های من
+            </a>
+
+            <a href="/instructor/students"
+               class="@(IsActive("/instructor/students") ? "active" : "")">
+                <span>♙</span>
+                دانشجویان من
+            </a>
+
+            <a href="/instructor/payments"
+               class="@(IsActive("/instructor/payments") ? "active" : "")">
+                <span>₿</span>
+                پرداخت‌ها
+            </a>
+
+        </nav>
+
+
+        <div class="support-sidebar-bottom">
+
+            <a href="/">
+                ← بازگشت به سایت
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <main class="support-main">
+
+        <header class="support-topbar">
+
+            <div>
+
+                <span class="support-label">
+                    آموزش
+                </span>
+
+                <h1>
+                    پنل مدرس
+                </h1>
+
+            </div>
+
+
+            <div class="support-user">
+
+                <div class="support-avatar">
+                    م
+                </div>
+
+                <div>
+
+                    <strong>
+                        @(Auth.FullName ?? "مدرس")
+                    </strong>
+
+                    <small>
+                        مدرس
+                    </small>
+
+                </div>
+
+                <InstructorLogout />
+
+            </div>
+
+        </header>
+
+
+        @Body
+
+    </main>
+
+</div>
+
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        if (!Auth.IsLoggedIn || !Auth.IsInstructor)
+        {
+            Navigation.NavigateTo("/login", replace: true);
+        }
+    }
+
+
+    private bool IsActive(string path)
+    {
+        return Navigation.Uri
+            .Contains(path, StringComparison.OrdinalIgnoreCase);
+    }
+
+}
