@@ -893,14 +893,14 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             dto.StudentId = student.Id;
         }
 
-          if (dto.SupportUserId.HasValue ||
-              dto.InstructorId.HasValue)
-          {
-              return BadRequest(new
-              {
-                  message = "دانشجو مجاز به تعیین پشتیبان یا مدرس ثبت نام نیست."
-              });
-          }
+        if (User.IsInRole("Student") &&
+            (dto.SupportUserId.HasValue || dto.InstructorId.HasValue))
+        {
+            return BadRequest(new
+            {
+                message = "دانشجو مجاز به تعیین پشتیبان یا مدرس ثبت نام نیست."
+            });
+        }
           // Marketer → فقط برای دانشجویان ارجاع‌شده توسط خودش
           if (User.IsInRole("Marketer"))
           {
