@@ -10,7 +10,8 @@ namespace BackEnd.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin,Support")]
+
+[Authorize]
 public class StudentFollowUpsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -22,7 +23,8 @@ public class StudentFollowUpsController : ControllerBase
 
     // Admin - مشاهده همه پیگیری‌ها
     // Support - مشاهده پیگیری‌های دانشجویان خودش
-    [HttpGet]
+      [Authorize(Roles = "Admin,EducationStaff,Marketer,Support")]
+      [HttpGet]
     public async Task<ActionResult> GetFollowUps()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -46,6 +48,13 @@ public class StudentFollowUpsController : ControllerBase
                 f.Student != null &&
                 f.Student.SupportUserId == userId);
         }
+
+          if (role == "Marketer")
+          {
+              query = query.Where(f =>
+                  f.Student != null &&
+                  f.Student.MarketingUserId == userId);
+          }
 
         var followUps = await query
             .OrderByDescending(f => f.FollowUpDate)
@@ -106,7 +115,8 @@ public class StudentFollowUpsController : ControllerBase
     }
 
     // Admin و Support - ثبت پیگیری
-    [HttpPost]
+      [Authorize(Roles = "Admin,EducationStaff,Support")]
+      [HttpPost]
     public async Task<ActionResult> CreateFollowUp(
         CreateStudentFollowUpDto dto)
     {
@@ -186,7 +196,8 @@ public class StudentFollowUpsController : ControllerBase
     }
 
     // Admin و Support - ویرایش پیگیری
-    [HttpPut("{id}")]
+      [Authorize(Roles = "Admin,EducationStaff,Support")]
+      [HttpPut("{id}")]
     public async Task<ActionResult> UpdateFollowUp(
         int id,
         UpdateStudentFollowUpDto dto)
@@ -259,7 +270,8 @@ public class StudentFollowUpsController : ControllerBase
     }
 
     // Admin و Support - حذف پیگیری
-    [HttpDelete("{id}")]
+      [Authorize(Roles = "Admin,EducationStaff,Support")]
+      [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteFollowUp(int id)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
