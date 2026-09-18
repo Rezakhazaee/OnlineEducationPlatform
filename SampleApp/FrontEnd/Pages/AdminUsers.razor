@@ -4,6 +4,7 @@
 @using FrontEnd.Services
 
 @inject AuthService Auth
+@inject NavigationManager Navigation
 
 <PageTitle>مدیریت کاربران | آموزش‌یار</PageTitle>
 
@@ -96,7 +97,7 @@
             </div>
 
         </header>
-         
+
          @if (ShowCreateUserForm)
             {
                 <section class="admin-content-card">
@@ -249,7 +250,7 @@
                     </div>
                 </section>
             }
-      
+
              @if (ShowRoleForm)
 {
     <section class="admin-content-card">
@@ -609,7 +610,7 @@ else
 
     </div>
 }
-               
+
 
                                         </td>
 
@@ -632,7 +633,7 @@ else
 
 
 @code {
-     
+
      public class ChangeUserPasswordModel
      {
       public string NewPassword { get; set; } = string.Empty;
@@ -651,6 +652,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        if (!Auth.IsLoggedIn || !Auth.IsAdmin)
+        {
+            Navigation.NavigateTo(Auth.IsLoggedIn ? "/admin" : "/login");
+            return;
+        }
+
         await LoadUsers();
     }
 
