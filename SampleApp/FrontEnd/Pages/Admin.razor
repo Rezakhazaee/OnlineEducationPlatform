@@ -4,8 +4,9 @@
 @using FrontEnd.Services
 
 @inject AuthService Auth
+@inject NavigationManager Navigation
 
-<PageTitle>پنل مدیریت | آموزش‌یار</PageTitle>
+<PageTitle>@(Auth.IsAdmin ? "پنل مدیریت" : "پنل آموزش") | آموزش‌یار</PageTitle>
 
 <div class="admin-page">
 
@@ -16,7 +17,7 @@
 
             <div>
                 <strong>آموزش‌یار</strong>
-                <small>پنل مدیریت</small>
+                <small>@(Auth.IsAdmin ? "پنل مدیریت" : "مدیریت آموزش")</small>
             </div>
         </div>
 
@@ -89,9 +90,7 @@
         <header class="admin-topbar">
 
             <div>
-                <span class="admin-label">
-                    مدیریت سامانه
-                </span>
+                <span class="admin-label">@(Auth.IsAdmin ? "مدیریت سامانه" : "مدیریت آموزش")</span>
 
                 <h1>
                     داشبورد
@@ -111,7 +110,7 @@
                         @(Auth.FullName ?? "مدیر سیستم")
                     </strong>
 
-                    <small>@(Auth.Role == "Admin" ? "مدیر سیستم" : "کارشناس آموزش")</small>
+                    <small>@(Auth.IsAdmin ? "مدیر سیستم" : "کارشناس آموزش")</small>
                 </div>
 
             </div>
@@ -414,10 +413,16 @@ public class RecentEnrollmentDto
 }
 
 
-    protected override async Task OnInitializedAsync()
+protected override async Task OnInitializedAsync()
+{
+    if (!Auth.IsLoggedIn || !Auth.IsManagementPanelUser)
     {
-        await LoadDashboard();
+        Navigation.NavigateTo("/login", replace: true);
+        return;
     }
+
+    await LoadDashboard();
+}
 
 
     private async Task LoadDashboard()
