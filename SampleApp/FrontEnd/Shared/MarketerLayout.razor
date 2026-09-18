@@ -1,0 +1,110 @@
+@inherits LayoutComponentBase
+
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<div class="support-page">
+
+    <aside class="support-sidebar">
+
+        <div class="support-brand">
+            <div class="support-brand-mark">ب</div>
+
+            <div>
+                <strong>آموزش‌یار</strong>
+                <small>پنل بازاریابی</small>
+            </div>
+        </div>
+
+        <nav class="support-menu">
+
+            <a href="/marketer" class="active">
+                <span>⌂</span>
+                داشبورد
+            </a>
+
+            <a href="/marketer/students">
+                <span>♙</span>
+                دانشجویان ارجاع‌شده
+            </a>
+
+            <a href="/marketer/enrollments">
+                <span>✓</span>
+                ثبت‌نام‌ها
+            </a>
+
+            <a href="/marketer/follow-ups">
+                <span>◷</span>
+                پیگیری‌ها
+            </a>
+
+            <a href="/marketer/payments">
+                <span>₿</span>
+                پرداخت‌ها
+            </a>
+
+        </nav>
+
+        <div class="support-sidebar-bottom">
+            <a href="/">
+                ← بازگشت به سایت
+            </a>
+        </div>
+
+    </aside>
+
+    <main class="support-main">
+
+        <header class="support-topbar">
+
+            <div>
+                <span class="support-label">
+                    بازاریابی و ارجاع
+                </span>
+
+                <h1>
+                    داشبورد
+                </h1>
+            </div>
+
+            <div class="support-user">
+
+                <div class="support-avatar">
+                    ب
+                </div>
+
+                <div>
+                    <strong>
+                        @(Auth.FullName ?? "بازاریاب")
+                    </strong>
+
+                    <small>
+                        بازاریاب
+                    </small>
+                </div>
+
+                <MarketerLogout />
+
+            </div>
+
+        </header>
+
+        @Body
+
+    </main>
+
+</div>
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        if (!Auth.IsLoggedIn || !Auth.IsMarketer)
+        {
+            Navigation.NavigateTo("/login", replace: true);
+        }
+    }
+
+}

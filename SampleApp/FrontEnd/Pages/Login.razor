@@ -181,6 +181,13 @@
                   return;
               }
 
+              // بازاریاب → پنل بازاریابی
+              if (Auth.IsMarketer)
+              {
+                  Navigation.NavigateTo("/marketer");
+                  return;
+              }
+
               // سایر کاربران → صفحه اصلی
               Navigation.NavigateTo("/");
         }

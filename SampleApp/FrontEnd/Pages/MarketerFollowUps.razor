@@ -1,0 +1,136 @@
+@page "/marketer/follow-ups"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@layout MarketerLayout
+
+@inject AuthService Auth
+
+<PageTitle>پیگیری‌ها | آموزش‌یار</PageTitle>
+
+<div class="support-content">
+
+    <section class="support-content-card">
+
+        <div class="support-card-header">
+
+            <div>
+                <span>پیگیری</span>
+                <h2>پیگیری‌های دانشجویان من</h2>
+            </div>
+
+            <a href="/marketer" class="support-outline-btn">
+                ← داشبورد
+            </a>
+
+        </div>
+
+        @if (IsLoading)
+        {
+            <div class="support-loading">در حال دریافت اطلاعات...</div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="support-error"><strong>@ErrorMessage</strong></div>
+        }
+        else if (FollowUps.Count == 0)
+        {
+            <div class="support-empty-state">
+                <h3>هنوز پیگیری‌ای ثبت نشده است.</h3>
+            </div>
+        }
+        else
+        {
+            <div class="support-enrollments-list">
+
+                @foreach (var item in FollowUps)
+                {
+                    <div class="support-enrollment-row">
+
+                        <div class="support-enrollment-main">
+                            <strong>@item.StudentName</strong>
+                            <span>تاریخ پیگیری: @item.FollowUpDate.ToString("yyyy/MM/dd")</span>
+                        </div>
+
+                        <div>
+                            <small>وضعیت</small>
+                            <span class="status-default">
+                                @GetStatusText(item.Status)
+                            </span>
+                        </div>
+
+                        <div>
+                            <small>توضیحات</small>
+                            <strong>
+                                @(string.IsNullOrWhiteSpace(item.Description)
+                                    ? "بدون توضیح"
+                                    : item.Description)
+                            </strong>
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+        }
+
+    </section>
+
+</div>
+
+@code {
+
+    private List<FollowUpDto> FollowUps { get; set; } = new();
+
+    private bool IsLoading { get; set; } = true;
+
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsLoggedIn || !Auth.IsMarketer)
+            return;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            FollowUps =
+                await client.GetFromJsonAsync<List<FollowUpDto>>("api/StudentFollowUps")
+                ?? new List<FollowUpDto>();
+        }
+        catch
+        {
+            ErrorMessage = "ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private string GetStatusText(string status)
+    {
+        return status switch
+        {
+            "Pending" => "در انتظار پیگیری",
+            "Completed" => "تکمیل‌شده",
+            "Cancelled" => "لغوشده",
+            _ => status
+        };
+    }
+
+    public class FollowUpDto
+    {
+        public int Id { get; set; }
+        public int StudentId { get; set; }
+        public string StudentName { get; set; } = string.Empty;
+        public int? SupportUserId { get; set; }
+        public DateTime FollowUpDate { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public DateTime CreatedDate { get; set; }
+    }
+
+}

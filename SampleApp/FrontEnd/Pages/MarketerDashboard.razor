@@ -1,0 +1,740 @@
+@page "/marketer"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@layout MarketerLayout
+
+@inject AuthService Auth
+
+<PageTitle>پنل بازاریابی | آموزش‌یار</PageTitle>
+
+<div class="support-content">
+
+@if (IsLoading)
+{
+    <div class="support-loading">
+        در حال دریافت اطلاعات...
+    </div>
+}
+else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+{
+    <div class="support-error">
+
+        <strong>
+            @ErrorMessage
+        </strong>
+
+        <button
+            type="button"
+            class="support-outline-btn"
+            @onclick="LoadDashboard">
+
+            تلاش مجدد
+
+        </button>
+
+    </div>
+}
+else
+{
+    <section class="support-welcome-card">
+
+        <span>
+            بازاریابی
+        </span>
+
+        <h2>
+            دانشجویان ارجاع‌شده توسط شما
+        </h2>
+
+        <p>
+            فقط دانشجویانی که توسط شما معرفی شده‌اند و اطلاعات مرتبط با آن‌ها در این بخش نمایش داده می‌شود.
+        </p>
+
+    </section>
+
+
+    <section class="support-stats">
+
+        <div class="support-stat-card">
+
+            <span class="support-stat-icon">
+                ♙
+            </span>
+
+            <div>
+                <small>
+                    دانشجویان ارجاع‌شده
+                </small>
+
+                <strong>
+                    @Students.Count
+                </strong>
+            </div>
+
+        </div>
+
+
+        <div class="support-stat-card">
+
+            <span class="support-stat-icon">
+                ✓
+            </span>
+
+            <div>
+                <small>
+                    ثبت‌نام‌ها
+                </small>
+
+                <strong>
+                    @Enrollments.Count
+                </strong>
+            </div>
+
+        </div>
+
+
+        <div class="support-stat-card">
+
+            <span class="support-stat-icon">
+                ◷
+            </span>
+
+            <div>
+                <small>
+                    پیگیری‌ها
+                </small>
+
+                <strong>
+                    @FollowUps.Count
+                </strong>
+            </div>
+
+        </div>
+
+
+        <div class="support-stat-card">
+
+            <span class="support-stat-icon">
+                ₿
+            </span>
+
+            <div>
+                <small>
+                    پرداخت‌شده
+                </small>
+
+                <strong>
+                    @TotalPaid.ToString("N0")
+                </strong>
+
+                <span>
+                    تومان
+                </span>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="support-content-card">
+
+        <div class="support-card-header">
+
+            <div>
+                <span>
+                    ارجاع‌ها
+                </span>
+
+                <h2>
+                    آخرین دانشجویان
+                </h2>
+            </div>
+
+            <a
+                href="/marketer/students"
+                class="support-outline-btn">
+
+                مشاهده همه
+
+            </a>
+
+        </div>
+
+
+        @if (Students.Count == 0)
+        {
+            <div class="support-empty-state">
+                <h3>
+                    هنوز دانشجویی توسط شما ارجاع نشده است.
+                </h3>
+            </div>
+        }
+        else
+        {
+            <div class="support-students-list">
+
+                @foreach (var student in Students.Take(5))
+                {
+                    <div class="support-student-row">
+
+                        <div class="support-student-main">
+
+                            <div class="support-student-avatar">
+                                @GetInitials(student)
+                            </div>
+
+                            <div>
+                                <strong>
+                                    @student.FirstName @student.LastName
+                                </strong>
+
+                                <small>
+                                    کد ملی: @student.NationalCode
+                                </small>
+                            </div>
+
+                        </div>
+
+                        <div>
+                            <small>
+                                موبایل
+                            </small>
+
+                            <strong>
+                                @student.Mobile
+                            </strong>
+                        </div>
+
+                        <div>
+                            <small>
+                                تاریخ ثبت
+                            </small>
+
+                            <strong>
+                                @student.CreatedDate.ToString("yyyy/MM/dd")
+                            </strong>
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+        }
+
+    </section>
+
+
+    <section class="support-content-card">
+
+        <div class="support-card-header">
+
+            <div>
+                <span>
+                    ثبت‌نام
+                </span>
+
+                <h2>
+                    آخرین ثبت‌نام‌ها
+                </h2>
+            </div>
+
+            <a
+                href="/marketer/enrollments"
+                class="support-outline-btn">
+
+                مشاهده همه
+
+            </a>
+
+        </div>
+
+
+        @if (Enrollments.Count == 0)
+        {
+            <div class="support-empty-state">
+                <h3>
+                    هنوز ثبت‌نامی برای ارجاع‌های شما وجود ندارد.
+                </h3>
+            </div>
+        }
+        else
+        {
+            <div class="support-enrollments-list">
+
+                @foreach (var enrollment in Enrollments
+                    .OrderByDescending(x => x.StartDate)
+                    .Take(5))
+                {
+                    <div class="support-enrollment-row">
+
+                        <div class="support-enrollment-main">
+
+                            <strong>
+                                @enrollment.StudentName
+                            </strong>
+
+                            <span>
+                                @enrollment.CourseTitle
+                            </span>
+
+                        </div>
+
+                        <div>
+                            <small>
+                                وضعیت
+                            </small>
+
+                            <span class="@GetEnrollmentStatusClass(enrollment.Status)">
+                                @GetEnrollmentStatusText(enrollment.Status)
+                            </span>
+                        </div>
+
+                        <div class="support-enrollment-money">
+
+                            <small>
+                                باقی‌مانده
+                            </small>
+
+                            <strong>
+                                @enrollment.RemainingAmount.ToString("N0")
+                                تومان
+                            </strong>
+
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+        }
+
+    </section>
+
+
+    <section class="support-content-card">
+
+        <div class="support-card-header">
+
+            <div>
+                <span>
+                    پیگیری
+                </span>
+
+                <h2>
+                    آخرین پیگیری‌ها
+                </h2>
+            </div>
+
+            <a
+                href="/marketer/follow-ups"
+                class="support-outline-btn">
+
+                مشاهده همه
+
+            </a>
+
+        </div>
+
+
+        @if (FollowUps.Count == 0)
+        {
+            <div class="support-empty-state">
+
+                <h3>
+                    هنوز پیگیری‌ای ثبت نشده است.
+                </h3>
+
+            </div>
+        }
+        else
+        {
+            <div class="support-enrollments-list">
+
+                @foreach (var followUp in FollowUps.Take(5))
+                {
+                    <div class="support-enrollment-row">
+
+                        <div class="support-enrollment-main">
+
+                            <strong>
+                                @followUp.StudentName
+                            </strong>
+
+                            <span>
+                                @followUp.FollowUpDate.ToString("yyyy/MM/dd")
+                            </span>
+
+                        </div>
+
+                        <div>
+                            <small>
+                                وضعیت
+                            </small>
+
+                            <span class="status-default">
+                                @GetFollowUpStatusText(followUp.Status)
+                            </span>
+                        </div>
+
+                        <div>
+                            <small>
+                                توضیحات
+                            </small>
+
+                            <strong>
+                                @(string.IsNullOrWhiteSpace(followUp.Description)
+                                    ? "بدون توضیح"
+                                    : followUp.Description)
+                            </strong>
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+        }
+
+    </section>
+
+
+    <section class="support-content-card">
+
+        <div class="support-card-header">
+
+            <div>
+                <span>
+                    امور مالی
+                </span>
+
+                <h2>
+                    آخرین پرداخت‌ها
+                </h2>
+            </div>
+
+            <a
+                href="/marketer/payments"
+                class="support-outline-btn">
+
+                مشاهده همه
+
+            </a>
+
+        </div>
+
+
+        @if (Payments.Count == 0)
+        {
+            <div class="support-empty-state">
+
+                <h3>
+                    هنوز پرداختی ثبت نشده است.
+                </h3>
+
+            </div>
+        }
+        else
+        {
+            <div class="support-payments-list">
+
+                @foreach (var payment in Payments
+                    .OrderByDescending(x => x.PaymentDate)
+                    .Take(5))
+                {
+                    <div class="support-payment-row">
+
+                        <div class="support-payment-item">
+
+                            <small>
+                                دوره:
+                            </small>
+
+                            <strong>
+                                @payment.CourseTitle
+                            </strong>
+
+                        </div>
+
+                        <div class="support-payment-item">
+
+                            <small>
+                                تاریخ پرداخت:
+                            </small>
+
+                            <strong>
+                                @payment.PaymentDate.ToString("yyyy/MM/dd")
+                            </strong>
+
+                        </div>
+
+                        <div class="support-payment-item">
+
+                            <small>
+                                نوع پرداخت:
+                            </small>
+
+                            <strong>
+                                @GetPaymentTypeText(payment.PaymentType)
+                            </strong>
+
+                        </div>
+
+                        <div class="support-payment-item">
+
+                            <small>
+                                وضعیت:
+                            </small>
+
+                            <span class="@GetPaymentStatusClass(payment.Status)">
+                                @GetPaymentStatusText(payment.Status)
+                            </span>
+
+                        </div>
+
+                        <div class="support-payment-item support-payment-amount">
+
+                            <small>
+                                مبلغ:
+                            </small>
+
+                            <strong>
+                                @payment.Amount.ToString("N0")
+                                تومان
+                            </strong>
+
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+        }
+
+    </section>
+
+}
+
+</div>
+
+
+@code {
+
+    private List<StudentDto> Students { get; set; } = new();
+
+    private List<EnrollmentDto> Enrollments { get; set; } = new();
+
+    private List<FollowUpDto> FollowUps { get; set; } = new();
+
+    private List<PaymentDto> Payments { get; set; } = new();
+
+    private bool IsLoading { get; set; } = true;
+
+    private string? ErrorMessage { get; set; }
+
+
+    private decimal TotalPaid =>
+        Enrollments.Sum(x => x.TotalPaid);
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsLoggedIn || !Auth.IsMarketer)
+        {
+            return;
+        }
+
+        await LoadDashboard();
+    }
+
+
+    private async Task LoadDashboard()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Students =
+                await client.GetFromJsonAsync<List<StudentDto>>(
+                    "api/Students")
+                ?? new List<StudentDto>();
+
+            Enrollments =
+                await client.GetFromJsonAsync<List<EnrollmentDto>>(
+                    "api/Enrollments")
+                ?? new List<EnrollmentDto>();
+
+            FollowUps =
+                await client.GetFromJsonAsync<List<FollowUpDto>>(
+                    "api/StudentFollowUps")
+                ?? new List<FollowUpDto>();
+
+            Payments =
+                await client.GetFromJsonAsync<List<PaymentDto>>(
+                    "api/Payments")
+                ?? new List<PaymentDto>();
+        }
+        catch
+        {
+            ErrorMessage =
+                "ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+
+    private string GetInitials(StudentDto student)
+    {
+        var first =
+            string.IsNullOrWhiteSpace(student.FirstName)
+                ? "د"
+                : student.FirstName.Trim()[0].ToString();
+
+        var last =
+            string.IsNullOrWhiteSpace(student.LastName)
+                ? ""
+                : student.LastName.Trim()[0].ToString();
+
+        return first + last;
+    }
+
+
+    private string GetEnrollmentStatusText(string status)
+    {
+        return status switch
+        {
+            "Active" => "فعال",
+            "Completed" => "تکمیل‌شده",
+            "Suspended" => "معلق",
+            "Cancelled" => "لغوشده",
+            _ => status
+        };
+    }
+
+
+    private string GetEnrollmentStatusClass(string status)
+    {
+        return status switch
+        {
+            "Active" => "status-active",
+            "Completed" => "status-completed",
+            "Suspended" => "status-suspended",
+            "Cancelled" => "status-cancelled",
+            _ => "status-default"
+        };
+    }
+
+
+    private string GetFollowUpStatusText(string status)
+    {
+        return status switch
+        {
+            "Pending" => "در انتظار پیگیری",
+            "Completed" => "تکمیل‌شده",
+            "Cancelled" => "لغوشده",
+            _ => status
+        };
+    }
+
+
+    private string GetPaymentTypeText(string type)
+    {
+        return type switch
+        {
+            "FullPayment" => "پرداخت کامل",
+            "FirstInstallment" => "قسط اول",
+            "SecondInstallment" => "قسط دوم",
+            "ThirdInstallment" => "قسط سوم",
+            _ => type
+        };
+    }
+
+
+    private string GetPaymentStatusText(string status)
+    {
+        return status switch
+        {
+            "Paid" => "پرداخت‌شده",
+            "Pending" => "در انتظار پرداخت",
+            "Cancelled" => "لغوشده",
+            "Unpaid" => "پرداخت‌نشده",
+            _ => status
+        };
+    }
+
+
+    private string GetPaymentStatusClass(string status)
+    {
+        return status switch
+        {
+            "Paid" => "payment-paid",
+            "Pending" => "payment-pending",
+            "Cancelled" => "payment-cancelled",
+            _ => "payment-default"
+        };
+    }
+
+
+    public class StudentDto
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string NationalCode { get; set; } = string.Empty;
+        public DateTime? BirthDate { get; set; }
+        public string Mobile { get; set; } = string.Empty;
+        public string? Address { get; set; }
+        public string? GuardianName { get; set; }
+        public string? GuardianMobile { get; set; }
+        public int? MarketingUserId { get; set; }
+        public int? SupportUserId { get; set; }
+        public DateTime CreatedDate { get; set; }
+    }
+
+
+    public class EnrollmentDto
+    {
+        public int Id { get; set; }
+        public string StudentName { get; set; } = string.Empty;
+        public string CourseTitle { get; set; } = string.Empty;
+        public decimal CoursePrice { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal RemainingAmount { get; set; }
+        public string PaymentStatus { get; set; } = string.Empty;
+        public DateTime StartDate { get; set; }
+        public string Status { get; set; } = string.Empty;
+    }
+
+
+    public class FollowUpDto
+    {
+        public int Id { get; set; }
+        public int StudentId { get; set; }
+        public string StudentName { get; set; } = string.Empty;
+        public int? SupportUserId { get; set; }
+        public DateTime FollowUpDate { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public DateTime CreatedDate { get; set; }
+    }
+
+
+    public class PaymentDto
+    {
+        public int Id { get; set; }
+        public string CourseTitle { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public DateTime PaymentDate { get; set; }
+        public string PaymentType { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public int EnrollmentId { get; set; }
+    }
+
+}
