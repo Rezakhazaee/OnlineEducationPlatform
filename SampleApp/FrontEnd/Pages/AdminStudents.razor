@@ -733,18 +733,13 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (!Auth.IsLoggedIn ||
-            !(Auth.IsAdmin ||
-              Auth.IsEducationStaff ||
-              Auth.IsMarketer ||
-              Auth.IsSupport ||
-              Auth.IsInstructor))
-        {
-            Navigation.NavigateTo(
-                Auth.IsLoggedIn ? "/admin" : "/login");
+        if (!Auth.IsLoggedIn || !Auth.IsManagementPanelUser)
+{
+    Navigation.NavigateTo(
+        Auth.IsLoggedIn ? "/" : "/login");
 
-            return;
-        }
+    return;
+}
 
         await LoadData();
     }

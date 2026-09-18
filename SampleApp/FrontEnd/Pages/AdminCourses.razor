@@ -1006,10 +1006,11 @@ private string FormPartnerDescription { get; set; } = string.Empty;
 
 protected override async Task OnInitializedAsync()
     {
-        if (!Auth.IsLoggedIn ||
-            !(Auth.IsAdmin || Auth.IsEducationStaff || Auth.IsInstructor))
+        if (!Auth.IsLoggedIn || !Auth.IsManagementPanelUser)
         {
-            Navigation.NavigateTo(Auth.IsLoggedIn ? "/admin" : "/login");
+            Navigation.NavigateTo(
+                Auth.IsLoggedIn ? "/" : "/login");
+
             return;
         }
 
