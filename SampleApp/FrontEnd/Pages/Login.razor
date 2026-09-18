@@ -48,7 +48,7 @@
 
                 <input
                     type="text"
-                    @bind="Username"
+                    @bind="Username" @bind:event="oninput"
                     placeholder="نام کاربری خود را وارد کنید"
                     disabled="@IsLoading" />
 
@@ -63,7 +63,7 @@
 
                 <input
                     type="password"
-                    @bind="Password"
+                    @bind="Password" @bind:event="oninput"
                     placeholder="رمز عبور خود را وارد کنید"
                     disabled="@IsLoading" />
 
@@ -162,14 +162,20 @@
 
             // مدیر و کارشناس آموزش → پنل عملیاتی
               if (Auth.IsManagementPanelUser)
-            {
-                Navigation.NavigateTo("/admin");
-                return;
-            }
+              {
+                  Navigation.NavigateTo("/admin");
+                  return;
+              }
 
+              // دانشجو → پنل دانشجو
+              if (Auth.IsStudent)
+              {
+                  Navigation.NavigateTo("/student");
+                  return;
+              }
 
-            // سایر کاربران → صفحه اصلی
-            Navigation.NavigateTo("/");
+              // سایر کاربران → صفحه اصلی
+              Navigation.NavigateTo("/");
         }
         catch
         {

@@ -1,0 +1,125 @@
+@inherits LayoutComponentBase
+
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<div class="student-app">
+
+    <aside class="student-sidebar">
+
+        <div class="student-brand">
+
+            <div class="student-brand-mark">
+                آ
+            </div>
+
+            <div>
+                <strong>آموزش‌یار</strong>
+                <small>پنل دانشجو</small>
+            </div>
+
+        </div>
+
+
+        <div class="student-user-card">
+
+            <div class="student-user-avatar">
+                @GetInitial()
+            </div>
+
+            <div>
+                <strong>
+                    @(Auth.FullName ?? "دانشجو")
+                </strong>
+
+                <small>
+                    دانشجو
+                </small>
+            </div>
+
+        </div>
+
+
+        <nav class="student-nav">
+
+            <NavLink href="/student" Match="NavLinkMatch.All">
+                <span>⌂</span>
+                داشبورد
+            </NavLink>
+
+            <NavLink href="/student/profile">
+                <span>♙</span>
+                پروفایل من
+            </NavLink>
+
+            <NavLink href="/student/courses">
+                <span>✓</span>
+                دوره‌های من
+            </NavLink>
+
+            <NavLink href="/student/payments">
+                <span>₿</span>
+                پرداخت‌های من
+            </NavLink>
+
+        </nav>
+
+
+        <div class="student-sidebar-bottom">
+
+            <a href="/">
+                ← بازگشت به سایت
+            </a>
+
+            <button
+                type="button"
+                class="student-logout-btn"
+                @onclick="Logout">
+
+                <span>↪</span>
+                خروج
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <main class="student-main">
+
+        @Body
+
+    </main>
+
+</div>
+
+
+@code {
+
+    private string GetInitial()
+    {
+        var name = Auth.FullName;
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return "د";
+        }
+
+        return name.Trim().Substring(0, 1);
+    }
+
+
+    private void Logout()
+    {
+        Auth.Logout();
+
+        Navigation.NavigateTo(
+            "/login",
+            replace: true,
+            forceLoad: true);
+    }
+
+}

@@ -1,0 +1,656 @@
+@page "/student/profile"
+@layout StudentLayout
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>پروفایل من | آموزش‌یار</PageTitle>
+
+<div class="student-page">
+
+    <header class="student-topbar">
+
+        <div>
+            <span class="student-eyebrow">
+                حساب کاربری
+            </span>
+
+            <h1>
+                پروفایل من
+            </h1>
+
+            <p>
+                اطلاعات شخصی و مشخصات ثبت‌شده حساب دانشجویی شما.
+            </p>
+        </div>
+
+        <a
+            href="/student"
+            class="student-profile-btn">
+
+            بازگشت به داشبورد
+            <span>←</span>
+
+        </a>
+
+    </header>
+
+
+    @if (IsLoading)
+    {
+        <div class="student-loading">
+
+            <div class="student-loading-icon">
+                ↻
+            </div>
+
+            <h3>
+                در حال دریافت اطلاعات...
+            </h3>
+
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="student-error">
+
+            <strong>
+                خطا در دریافت پروفایل
+            </strong>
+
+            <p>
+                @ErrorMessage
+            </p>
+
+            <button
+                type="button"
+                class="student-outline-btn"
+                @onclick="LoadProfile">
+
+                تلاش مجدد
+
+            </button>
+
+        </div>
+    }
+    else if (Profile != null)
+    {
+        <section class="student-profile-hero">
+
+            <div class="student-profile-large-avatar">
+                @GetInitial()
+            </div>
+
+            <div class="student-profile-hero-main">
+
+                <span>
+                    دانشجوی سامانه آموزش‌یار
+                </span>
+
+                <h2>
+                    @Profile.FirstName @Profile.LastName
+                </h2>
+
+                <p>
+                    عضو شده در
+                    @Profile.CreatedDate.ToString("yyyy/MM/dd")
+                </p>
+
+            </div>
+
+            @if (!IsEditMode)
+            {
+                <button
+                    type="button"
+                    class="student-edit-profile-btn"
+                    @onclick="StartEdit">
+
+                    ویرایش اطلاعات
+
+                </button>
+            }
+
+        </section>
+
+
+        @if (!IsEditMode)
+        {
+            <section class="student-content-card">
+
+                <div class="student-section-header">
+
+                    <div>
+                        <span>
+                            اطلاعات شخصی
+                        </span>
+
+                        <h2>
+                            مشخصات دانشجو
+                        </h2>
+                    </div>
+
+                </div>
+
+
+                <div class="student-profile-grid">
+
+                    <div class="student-profile-field">
+                        <small>نام</small>
+                        <strong>@Profile.FirstName</strong>
+                    </div>
+
+                    <div class="student-profile-field">
+                        <small>نام خانوادگی</small>
+                        <strong>@Profile.LastName</strong>
+                    </div>
+
+                    <div class="student-profile-field">
+                        <small>کد ملی</small>
+                        <strong>@Profile.NationalCode</strong>
+                    </div>
+
+                    <div class="student-profile-field">
+                        <small>شماره موبایل</small>
+                        <strong>@Profile.Mobile</strong>
+                    </div>
+
+                    <div class="student-profile-field">
+                        <small>تاریخ تولد</small>
+                        <strong>
+                            @(Profile.BirthDate?.ToString("yyyy/MM/dd") ?? "ثبت نشده")
+                        </strong>
+                    </div>
+
+                    <div class="student-profile-field">
+                        <small>نام سرپرست</small>
+                        <strong>
+                            @(string.IsNullOrWhiteSpace(Profile.GuardianName)
+                                ? "ثبت نشده"
+                                : Profile.GuardianName)
+                        </strong>
+                    </div>
+
+                    <div class="student-profile-field">
+                        <small>موبایل سرپرست</small>
+                        <strong>
+                            @(string.IsNullOrWhiteSpace(Profile.GuardianMobile)
+                                ? "ثبت نشده"
+                                : Profile.GuardianMobile)
+                        </strong>
+                    </div>
+
+                    <div class="student-profile-field student-profile-field-wide">
+                        <small>آدرس</small>
+                        <strong>
+                            @(string.IsNullOrWhiteSpace(Profile.Address)
+                                ? "ثبت نشده"
+                                : Profile.Address)
+                        </strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <section class="student-info-note">
+
+                <strong>
+                    نکته
+                </strong>
+
+                <p>
+                    بازاریاب و پشتیبان آموزشی توسط سامانه مدیریت می‌شوند و از طرف دانشجو قابل تغییر نیستند.
+                </p>
+
+            </section>
+        }
+        else
+        {
+            <section class="student-content-card student-edit-section">
+
+                <div class="student-section-header">
+
+                    <div>
+                        <span>
+                            ویرایش اطلاعات
+                        </span>
+
+                        <h2>
+                            به‌روزرسانی پروفایل
+                        </h2>
+                    </div>
+
+                </div>
+
+
+                @if (!string.IsNullOrWhiteSpace(FormError))
+                {
+                    <div class="student-error student-profile-form-error">
+                        @FormError
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(SuccessMessage))
+                {
+                    <div class="student-success">
+                        @SuccessMessage
+                    </div>
+                }
+
+
+                <div class="student-profile-edit-grid">
+
+                    <div class="student-edit-field">
+                        <label>نام</label>
+
+                        <input
+                            type="text"
+                            @bind="FormFirstName" />
+                    </div>
+
+
+                    <div class="student-edit-field">
+                        <label>نام خانوادگی</label>
+
+                        <input
+                            type="text"
+                            @bind="FormLastName" />
+                    </div>
+
+
+                    <div class="student-edit-field">
+                        <label>کد ملی</label>
+
+                        <input
+                            type="text"
+                            maxlength="10"
+                            @bind="FormNationalCode" />
+                    </div>
+
+
+                    <div class="student-edit-field">
+                        <label>شماره موبایل</label>
+
+                        <input
+                            type="text"
+                            maxlength="11"
+                            placeholder="09123456789"
+                            @bind="FormMobile" />
+                    </div>
+
+
+                    <div class="student-edit-field">
+                        <label>تاریخ تولد</label>
+
+                        <input
+                            type="date"
+                            @bind="FormBirthDate" />
+                    </div>
+
+
+                    <div class="student-edit-field">
+                        <label>نام سرپرست</label>
+
+                        <input
+                            type="text"
+                            @bind="FormGuardianName" />
+                    </div>
+
+
+                    <div class="student-edit-field">
+                        <label>موبایل سرپرست</label>
+
+                        <input
+                            type="text"
+                            maxlength="11"
+                            placeholder="09123456789"
+                            @bind="FormGuardianMobile" />
+                    </div>
+
+
+                    <div class="student-edit-field student-edit-field-wide">
+                        <label>آدرس</label>
+
+                        <textarea
+                            rows="4"
+                            @bind="FormAddress">
+                        </textarea>
+                    </div>
+
+                </div>
+
+
+                <div class="student-form-actions">
+
+                    <button
+                        type="button"
+                        class="student-save-profile-btn"
+                        disabled="@IsSaving"
+                        @onclick="SaveProfile">
+
+                        @(IsSaving ? "در حال ذخیره..." : "ذخیره تغییرات")
+
+                    </button>
+
+                    <button
+                        type="button"
+                        class="student-outline-btn"
+                        disabled="@IsSaving"
+                        @onclick="CancelEdit">
+
+                        انصراف
+
+                    </button>
+
+                </div>
+
+            </section>
+        }
+    }
+
+</div>
+
+
+@code {
+
+    private StudentDto? Profile { get; set; }
+
+    private bool IsLoading { get; set; } = true;
+
+    private bool IsSaving { get; set; }
+
+    private bool IsEditMode { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+    private string? FormError { get; set; }
+
+    private string? SuccessMessage { get; set; }
+
+
+    private string FormFirstName { get; set; } = string.Empty;
+
+    private string FormLastName { get; set; } = string.Empty;
+
+    private string FormNationalCode { get; set; } = string.Empty;
+
+    private string FormMobile { get; set; } = string.Empty;
+
+    private DateTime? FormBirthDate { get; set; }
+
+    private string FormAddress { get; set; } = string.Empty;
+
+    private string FormGuardianName { get; set; } = string.Empty;
+
+    private string FormGuardianMobile { get; set; } = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsLoggedIn || !Auth.IsStudent)
+        {
+            Navigation.NavigateTo(
+                Auth.IsLoggedIn ? "/" : "/login");
+
+            return;
+        }
+
+        await LoadProfile();
+    }
+
+
+    private async Task LoadProfile()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Profile =
+                await client.GetFromJsonAsync<StudentDto>(
+                    "api/Students/me");
+        }
+        catch
+        {
+            ErrorMessage =
+                "دریافت اطلاعات پروفایل با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+
+    private void StartEdit()
+    {
+        if (Profile == null)
+        {
+            return;
+        }
+
+        FormError = null;
+        SuccessMessage = null;
+
+        FormFirstName = Profile.FirstName;
+        FormLastName = Profile.LastName;
+        FormNationalCode = Profile.NationalCode;
+        FormMobile = Profile.Mobile;
+        FormAddress = Profile.Address ?? string.Empty;
+        FormGuardianName = Profile.GuardianName ?? string.Empty;
+        FormGuardianMobile = Profile.GuardianMobile ?? string.Empty;
+
+        FormBirthDate = Profile.BirthDate;
+
+        IsEditMode = true;
+    }
+
+
+    private void CancelEdit()
+    {
+        FormError = null;
+        SuccessMessage = null;
+        IsEditMode = false;
+    }
+
+
+    private async Task SaveProfile()
+    {
+        FormError = null;
+        SuccessMessage = null;
+
+        if (string.IsNullOrWhiteSpace(FormFirstName) ||
+            string.IsNullOrWhiteSpace(FormLastName) ||
+            string.IsNullOrWhiteSpace(FormNationalCode) ||
+            string.IsNullOrWhiteSpace(FormMobile))
+        {
+            FormError =
+                "نام، نام خانوادگی، کد ملی و موبایل الزامی هستند.";
+
+            return;
+        }
+
+        if (FormNationalCode.Length != 10 ||
+            !FormNationalCode.All(char.IsDigit))
+        {
+            FormError =
+                "کد ملی باید دقیقاً ۱۰ رقم باشد.";
+
+            return;
+        }
+
+        if (FormMobile.Length != 11 ||
+            !FormMobile.StartsWith("09") ||
+            !FormMobile.All(char.IsDigit))
+        {
+            FormError =
+                "شماره موبایل باید با 09 شروع شود و ۱۱ رقم باشد.";
+
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(FormGuardianMobile) &&
+            (FormGuardianMobile.Length != 11 ||
+             !FormGuardianMobile.StartsWith("09") ||
+             !FormGuardianMobile.All(char.IsDigit)))
+        {
+            FormError =
+                "شماره موبایل سرپرست باید با 09 شروع شود و ۱۱ رقم باشد.";
+
+            return;
+        }
+
+        DateTime? birthDate = FormBirthDate;
+
+        IsSaving = true;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var request =
+                new UpdateMyStudentProfileRequest
+                {
+                    FirstName = FormFirstName.Trim(),
+                    LastName = FormLastName.Trim(),
+                    NationalCode = FormNationalCode.Trim(),
+                    BirthDate = birthDate,
+                    Mobile = FormMobile.Trim(),
+                    Address = string.IsNullOrWhiteSpace(FormAddress)
+                        ? null
+                        : FormAddress.Trim(),
+                    GuardianName = string.IsNullOrWhiteSpace(FormGuardianName)
+                        ? null
+                        : FormGuardianName.Trim(),
+                    GuardianMobile = string.IsNullOrWhiteSpace(FormGuardianMobile)
+                        ? null
+                        : FormGuardianMobile.Trim()
+                };
+
+            var response =
+                await client.PutAsJsonAsync(
+                    "api/Students/me",
+                    request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                FormError =
+                    await ReadApiError(response);
+
+                return;
+            }
+
+            Profile =
+                await response.Content
+                    .ReadFromJsonAsync<StudentDto>();
+
+            IsEditMode = false;
+
+            SuccessMessage =
+                "اطلاعات پروفایل با موفقیت ذخیره شد.";
+        }
+        catch
+        {
+            FormError =
+                "ذخیره اطلاعات پروفایل با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+
+    private async Task<string> ReadApiError(
+        HttpResponseMessage response)
+    {
+        try
+        {
+            var result =
+                await response.Content
+                    .ReadFromJsonAsync<ApiError>();
+
+            if (!string.IsNullOrWhiteSpace(result?.Message))
+            {
+                return result.Message;
+            }
+        }
+        catch
+        {
+        }
+
+        return "عملیات با خطا مواجه شد.";
+    }
+
+
+    private string GetInitial()
+    {
+        if (string.IsNullOrWhiteSpace(Profile?.FirstName))
+        {
+            return "د";
+        }
+
+        return Profile.FirstName.Trim().Substring(0, 1);
+    }
+
+
+    public class StudentDto
+    {
+        public int Id { get; set; }
+
+        public string FirstName { get; set; } = string.Empty;
+
+        public string LastName { get; set; } = string.Empty;
+
+        public string NationalCode { get; set; } = string.Empty;
+
+        public DateTime? BirthDate { get; set; }
+
+        public string Mobile { get; set; } = string.Empty;
+
+        public string? Address { get; set; }
+
+        public string? GuardianName { get; set; }
+
+        public string? GuardianMobile { get; set; }
+
+        public int? MarketingUserId { get; set; }
+
+        public int? SupportUserId { get; set; }
+
+        public DateTime CreatedDate { get; set; }
+    }
+
+
+    public class UpdateMyStudentProfileRequest
+    {
+        public string FirstName { get; set; } = string.Empty;
+
+        public string LastName { get; set; } = string.Empty;
+
+        public string NationalCode { get; set; } = string.Empty;
+
+        public DateTime? BirthDate { get; set; }
+
+        public string Mobile { get; set; } = string.Empty;
+
+        public string? Address { get; set; }
+
+        public string? GuardianName { get; set; }
+
+        public string? GuardianMobile { get; set; }
+    }
+
+
+    public class ApiError
+    {
+        public string? Message { get; set; }
+    }
+
+}

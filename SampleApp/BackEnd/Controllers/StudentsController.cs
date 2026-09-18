@@ -187,6 +187,36 @@ public class StudentsController : ControllerBase
 
 
     // ==========================================
+    // گزینه‌های لازم برای مدیریت دانشجویان
+    // فقط Admin و EducationStaff
+    // ==========================================
+
+    [Authorize(Roles = "Admin,EducationStaff")]
+    [HttpGet("management-options")]
+    public async Task<
+        ActionResult<List<StudentManagementOptionDto>>>
+        GetManagementOptions()
+    {
+        var options = await _context.Users
+            .Where(u =>
+                u.IsActive &&
+                (u.Role == "Marketer" ||
+                 u.Role == "Support"))
+            .OrderBy(u => u.Role)
+            .ThenBy(u => u.FullName)
+            .Select(u => new StudentManagementOptionDto
+            {
+                Id = u.Id,
+                FullName = u.FullName,
+                Role = u.Role
+            })
+            .ToListAsync();
+
+        return Ok(options);
+    }
+
+
+    // ==========================================
     // ثبت دانشجوی جدید
     // ==========================================
 
@@ -234,6 +264,40 @@ public class StudentsController : ControllerBase
             return Forbid();
         }
 
+        if (dto.MarketingUserId.HasValue)
+        {
+            var marketer = await _context.Users
+                .FirstOrDefaultAsync(u =>
+                    u.Id == dto.MarketingUserId.Value &&
+                    u.Role == "Marketer" &&
+                    u.IsActive);
+
+            if (marketer == null)
+            {
+                return BadRequest(new
+                {
+                    message = "بازاریاب انتخاب‌شده معتبر نیست."
+                });
+            }
+        }
+
+        if (dto.SupportUserId.HasValue)
+        {
+            var support = await _context.Users
+                .FirstOrDefaultAsync(u =>
+                    u.Id == dto.SupportUserId.Value &&
+                    u.Role == "Support" &&
+                    u.IsActive);
+
+            if (support == null)
+            {
+                return BadRequest(new
+                {
+                    message = "پشتیبان انتخاب‌شده معتبر نیست."
+                });
+            }
+        }
+
         var student = new Student
         {
             UserId = dto.UserId,
@@ -246,7 +310,8 @@ public class StudentsController : ControllerBase
             GuardianName = dto.GuardianName,
             GuardianMobile = dto.GuardianMobile,
             MarketingUserId = dto.MarketingUserId,
-            SupportUserId = dto.SupportUserId
+            SupportUserId = dto.SupportUserId,
+            CreatedByUserId = currentUser.Id
         };
 
         _context.Students.Add(student);
@@ -328,4 +393,115 @@ public class StudentsController : ControllerBase
                 supportUser.FullName
         });
     }
+
+
+    // ==========================================
+    // Student - ویرایش پروفایل خودش
+    // ==========================================
+
+    [Authorize(Roles = "Student")]
+    [HttpPut("me")]
+    public async Task<ActionResult<StudentDto>> UpdateMyProfile(
+        UpdateMyStudentProfileDto dto)
+    {
+        var userIdClaim =
+            User.FindFirst(ClaimTypes.NameIdentifier);
+
+        if (userIdClaim == null)
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر در توکن پیدا نشد"
+            });
+        }
+
+        if (!int.TryParse(
+            userIdClaim.Value,
+            out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s =>
+                s.UserId == userId);
+
+        if (student == null)
+        {
+            return NotFound(new
+            {
+                message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
+            });
+        }
+
+        var normalizedNationalCode =
+            dto.NationalCode.Trim();
+
+        var duplicateNationalCode =
+            await _context.Students.AnyAsync(s =>
+                s.Id != student.Id &&
+                s.NationalCode == normalizedNationalCode);
+
+        if (duplicateNationalCode)
+        {
+            return BadRequest(new
+            {
+                message = "این کد ملی قبلاً برای دانشجوی دیگری ثبت شده است."
+            });
+        }
+
+        student.FirstName =
+            dto.FirstName.Trim();
+
+        student.LastName =
+            dto.LastName.Trim();
+
+        student.NationalCode =
+            normalizedNationalCode;
+
+        student.BirthDate =
+            dto.BirthDate;
+
+        student.Mobile =
+            dto.Mobile.Trim();
+
+        student.Address =
+            string.IsNullOrWhiteSpace(dto.Address)
+                ? null
+                : dto.Address.Trim();
+
+        student.GuardianName =
+            string.IsNullOrWhiteSpace(dto.GuardianName)
+                ? null
+                : dto.GuardianName.Trim();
+
+        student.GuardianMobile =
+            string.IsNullOrWhiteSpace(dto.GuardianMobile)
+                ? null
+                : dto.GuardianMobile.Trim();
+
+        await _context.SaveChangesAsync();
+
+        var result = new StudentDto
+        {
+            Id = student.Id,
+            FirstName = student.FirstName,
+            LastName = student.LastName,
+            NationalCode = student.NationalCode,
+            BirthDate = student.BirthDate,
+            Mobile = student.Mobile,
+            Address = student.Address,
+            GuardianName = student.GuardianName,
+            GuardianMobile = student.GuardianMobile,
+            MarketingUserId = student.MarketingUserId,
+            SupportUserId = student.SupportUserId,
+            CreatedDate = student.CreatedDate
+        };
+
+        return Ok(result);
+    }
+
 }

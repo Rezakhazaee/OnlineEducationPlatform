@@ -1,0 +1,1137 @@
+@page "/admin/students"
+
+@using System.Net.Http.Json
+@using System.Globalization
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>مدیریت دانشجویان | آموزش‌یار</PageTitle>
+
+<div class="admin-page">
+
+    <aside class="admin-sidebar">
+
+        <div class="admin-brand">
+            <div class="admin-brand-mark">آ</div>
+
+            <div>
+                <strong>آموزش‌یار</strong>
+                <small>پنل مدیریت</small>
+            </div>
+        </div>
+
+        <nav class="admin-menu">
+
+            <a href="/admin">
+                <span>⌂</span>
+                داشبورد
+            </a>
+
+            <a href="/admin/students" class="active">
+                <span>♙</span>
+                دانشجویان
+            </a>
+
+            <a href="/admin/courses">
+                <span>▣</span>
+                دوره‌ها
+            </a>
+
+            <a href="/admin/enrollments">
+                <span>✓</span>
+                ثبت‌نام‌ها
+            </a>
+
+            <a href="/admin/payments">
+                <span>₿</span>
+                پرداخت‌ها
+            </a>
+
+            <a href="/admin/partner-organizations">
+                <span>♧</span>
+                سازمان‌های طرف قرارداد
+            </a>
+
+            <a href="/admin/reports">
+                <span>▤</span>
+                گزارش‌ها
+            </a>
+
+            @if (Auth.IsAdmin)
+            {
+                <a href="/admin/users">
+                    <span>♙</span>
+                    کاربران
+                </a>
+
+                <a href="/admin/organizations">
+                    <span>◈</span>
+                    سازمان‌ها و ظاهر
+                </a>
+            }
+
+        </nav>
+
+        <div class="admin-sidebar-bottom">
+
+            <a href="/">
+                ← بازگشت به سایت
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <main class="admin-main">
+
+        <header class="admin-topbar">
+
+            <div>
+                <span class="admin-label">
+                    مدیریت آموزشی
+                </span>
+
+                <h1>
+                    دانشجویان
+                </h1>
+            </div>
+
+            <AdminLogout />
+
+            <div class="admin-user">
+
+                <div class="admin-avatar">
+                    ا
+                </div>
+
+                <div>
+                    <strong>
+                        @(Auth.FullName ?? "کاربر سامانه")
+                    </strong>
+
+                    <small>
+                        @RoleTitle
+                    </small>
+                </div>
+
+            </div>
+
+        </header>
+
+
+        @if (IsLoading)
+        {
+            <div class="admin-loading">
+
+                <div class="admin-loading-icon">
+                    ↻
+                </div>
+
+                <h3>
+                    در حال دریافت اطلاعات...
+                </h3>
+
+                <p>
+                    اطلاعات دانشجویان از سرور دریافت می‌شود.
+                </p>
+
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="admin-error">
+
+                <strong>
+                    خطا در دریافت اطلاعات
+                </strong>
+
+                <p>
+                    @ErrorMessage
+                </p>
+
+                <button
+                    class="admin-outline-btn"
+                    @onclick="LoadData">
+
+                    تلاش مجدد
+
+                </button>
+
+            </div>
+        }
+        else
+        {
+            <section class="students-summary">
+
+                <div class="student-summary-card">
+
+                    <span>
+                        تعداد دانشجویان قابل مشاهده
+                    </span>
+
+                    <strong>
+                        @VisibleStudents.Count()
+                    </strong>
+
+                </div>
+
+
+                <div class="student-summary-card">
+
+                    <span>
+                        دارای پشتیبان
+                    </span>
+
+                    <strong>
+                        @VisibleStudents.Count(x => x.SupportUserId.HasValue)
+                    </strong>
+
+                </div>
+
+
+                <div class="student-summary-card">
+
+                    <span>
+                        دارای بازاریاب
+                    </span>
+
+                    <strong>
+                        @VisibleStudents.Count(x => x.MarketingUserId.HasValue)
+                    </strong>
+
+                </div>
+
+            </section>
+
+
+            <section class="admin-content-card">
+
+                <div class="admin-card-header">
+
+                    <div>
+                        <span>
+                            @ScopeTitle
+                        </span>
+
+                        <h2>
+                            فهرست دانشجویان
+                        </h2>
+                    </div>
+
+                    @if (CanManageStudents)
+                    {
+                        <button
+                            class="admin-primary-btn"
+                            @onclick="OpenCreateForm">
+
+                            + دانشجوی جدید
+
+                        </button>
+                    }
+
+                </div>
+
+
+                <div class="students-toolbar">
+
+                    <div class="students-search">
+
+                        <label>
+                            جستجو
+                        </label>
+
+                        <input
+                            type="text"
+                            placeholder="نام، نام خانوادگی، کد ملی یا موبایل..."
+                            @bind="SearchText"
+                            @bind:event="oninput" />
+
+                    </div>
+
+                </div>
+
+
+                @if (FilteredStudents.Count == 0)
+                {
+                    <div class="admin-empty-state">
+                        دانشجویی مطابق اطلاعات فعلی پیدا نشد.
+                    </div>
+                }
+                else
+                {
+                    <div class="students-table-wrap">
+
+                        <table class="students-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        دانشجو
+                                    </th>
+
+                                    <th>
+                                        کد ملی
+                                    </th>
+
+                                    <th>
+                                        موبایل
+                                    </th>
+
+                                    <th>
+                                        بازاریاب
+                                    </th>
+
+                                    <th>
+                                        پشتیبان
+                                    </th>
+
+                                    <th>
+                                        تاریخ ایجاد
+                                    </th>
+
+                                    @if (CanManageStudents)
+                                    {
+                                        <th>
+                                            عملیات
+                                        </th>
+                                    }
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                @foreach (var student in FilteredStudents)
+                                {
+                                    <tr>
+
+                                        <td>
+                                            <div class="student-name-cell">
+
+                                                <strong>
+                                                    @student.FirstName @student.LastName
+                                                </strong>
+
+                                                <small>
+                                                    شناسه: @student.Id
+                                                </small>
+
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            @student.NationalCode
+                                        </td>
+
+                                        <td>
+                                            @student.Mobile
+                                        </td>
+
+                                        <td>
+                                            @GetMarketerName(student.MarketingUserId)
+                                        </td>
+
+                                        <td>
+                                            @if (CanManageStudents)
+                                            {
+                                                <div class="student-support-cell">
+
+                                                    <select
+                                                        value="@GetSupportSelection(student.Id)"
+                                                        @onchange="e => SetSupportSelection(student.Id, e.Value?.ToString() ?? string.Empty)">
+
+                                                        <option value="">
+                                                            انتخاب پشتیبان
+                                                        </option>
+
+                                                        @foreach (var support in SupportUsers)
+                                                        {
+                                                            <option value="@support.Id">
+                                                                @support.FullName
+                                                            </option>
+                                                        }
+
+                                                    </select>
+
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="student-muted">
+                                                    @(student.SupportUserId.HasValue
+                                                        ? "دارای پشتیبان"
+                                                        : "بدون پشتیبان")
+                                                </span>
+                                            }
+                                        </td>
+
+                                        <td>
+                                            @student.CreatedDate.ToString("yyyy/MM/dd")
+                                        </td>
+
+                                        @if (CanManageStudents)
+                                        {
+                                            <td>
+
+                                                <button
+                                                    class="admin-small-btn success"
+                                                    disabled="@string.IsNullOrWhiteSpace(GetSupportSelection(student.Id))"
+                                                    @onclick="() => AssignSupport(student)">
+
+                                                    ذخیره پشتیبان
+
+                                                </button>
+
+                                            </td>
+                                        }
+
+                                    </tr>
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+                }
+
+            </section>
+
+
+            @if (CanManageStudents && IsCreateFormOpen)
+            {
+                <section class="admin-content-card students-form-section">
+
+                    <div class="admin-card-header">
+
+                        <div>
+                            <span>
+                                مدیریت آموزشی
+                            </span>
+
+                            <h2>
+                                ثبت دانشجوی جدید
+                            </h2>
+                        </div>
+
+                        <button
+                            class="admin-outline-btn"
+                            @onclick="CloseCreateForm">
+
+                            انصراف
+
+                        </button>
+
+                    </div>
+
+
+                    @if (!string.IsNullOrWhiteSpace(FormError))
+                    {
+                        <div class="admin-error student-form-error">
+                            @FormError
+                        </div>
+                    }
+
+
+                    <div class="course-form-grid">
+
+                        <div class="form-group">
+
+                            <label>
+                                نام
+                            </label>
+
+                            <input
+                                type="text"
+                                @bind="FormFirstName" />
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                نام خانوادگی
+                            </label>
+
+                            <input
+                                type="text"
+                                @bind="FormLastName" />
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                کد ملی
+                            </label>
+
+                            <input
+                                type="text"
+                                maxlength="10"
+                                @bind="FormNationalCode" />
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                موبایل
+                            </label>
+
+                            <input
+                                type="text"
+                                maxlength="11"
+                                placeholder="09123456789"
+                                @bind="FormMobile" />
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                تاریخ تولد
+                            </label>
+
+                            <input
+                                type="date"
+                                @bind="FormBirthDate" />
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                نام سرپرست
+                            </label>
+
+                            <input
+                                type="text"
+                                @bind="FormGuardianName" />
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                موبایل سرپرست
+                            </label>
+
+                            <input
+                                type="text"
+                                maxlength="11"
+                                placeholder="09123456789"
+                                @bind="FormGuardianMobile" />
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                بازاریاب
+                            </label>
+
+                            <select @bind="FormMarketingUserId">
+
+                                <option value="">
+                                    بدون بازاریاب
+                                </option>
+
+                                @foreach (var marketer in MarketerUsers)
+                                {
+                                    <option value="@marketer.Id">
+                                        @marketer.FullName
+                                    </option>
+                                }
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                پشتیبان آموزشی
+                            </label>
+
+                            <select @bind="FormSupportUserId">
+
+                                <option value="">
+                                    بدون پشتیبان
+                                </option>
+
+                                @foreach (var support in SupportUsers)
+                                {
+                                    <option value="@support.Id">
+                                        @support.FullName
+                                    </option>
+                                }
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-group student-address-field">
+
+                            <label>
+                                آدرس
+                            </label>
+
+                            <textarea
+                                rows="3"
+                                @bind="FormAddress">
+                            </textarea>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="student-form-actions">
+
+                        <button
+                            class="admin-primary-btn"
+                            disabled="@IsSaving"
+                            @onclick="CreateStudent">
+
+                            @(IsSaving ? "در حال ثبت..." : "ثبت دانشجو")
+
+                        </button>
+
+                        <button
+                            class="admin-outline-btn"
+                            @onclick="CloseCreateForm">
+
+                            انصراف
+
+                        </button>
+
+                    </div>
+
+                </section>
+            }
+
+        }
+
+    </main>
+
+</div>
+
+
+@code {
+
+    private List<StudentDto> Students { get; set; } = new();
+
+    private List<StudentManagementOptionDto> ManagementOptions { get; set; } = new();
+
+    private Dictionary<int, string> SupportSelections { get; set; } = new();
+
+    private bool IsLoading { get; set; } = true;
+
+    private bool IsSaving { get; set; }
+
+    private bool IsCreateFormOpen { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+    private string? FormError { get; set; }
+
+    private string SearchText { get; set; } = string.Empty;
+
+
+    private string FormFirstName { get; set; } = string.Empty;
+
+    private string FormLastName { get; set; } = string.Empty;
+
+    private string FormNationalCode { get; set; } = string.Empty;
+
+    private string FormMobile { get; set; } = string.Empty;
+
+    private DateTime? FormBirthDate { get; set; }
+
+    private string FormAddress { get; set; } = string.Empty;
+
+    private string FormGuardianName { get; set; } = string.Empty;
+
+    private string FormGuardianMobile { get; set; } = string.Empty;
+
+    private string FormMarketingUserId { get; set; } = string.Empty;
+
+    private string FormSupportUserId { get; set; } = string.Empty;
+
+
+    private bool CanManageStudents =>
+        Auth.IsAdmin || Auth.IsEducationStaff;
+
+
+    private string RoleTitle =>
+        Auth.Role switch
+        {
+            "Admin" => "مدیر سیستم",
+            "EducationStaff" => "کارشناس آموزش",
+            "Marketer" => "بازاریاب",
+            "Support" => "پشتیبان آموزشی",
+            "Instructor" => "مدرس",
+            "Student" => "دانشجو",
+            _ => "کاربر سامانه"
+        };
+
+
+    private string ScopeTitle =>
+        Auth.Role switch
+        {
+            "Admin" => "همه دانشجویان",
+            "EducationStaff" => "همه دانشجویان",
+            "Marketer" => "دانشجویان ارجاع‌شده توسط شما",
+            "Support" => "دانشجویان اختصاص‌یافته به شما",
+            "Instructor" => "دانشجویان دوره‌های شما",
+            _ => "دانشجویان"
+        };
+
+
+    private IEnumerable<StudentDto> VisibleStudents =>
+        string.IsNullOrWhiteSpace(SearchText)
+            ? Students
+            : Students.Where(x =>
+                $"{x.FirstName} {x.LastName}"
+                    .Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                x.NationalCode.Contains(
+                    SearchText,
+                    StringComparison.OrdinalIgnoreCase) ||
+                x.Mobile.Contains(
+                    SearchText,
+                    StringComparison.OrdinalIgnoreCase));
+
+
+    private IEnumerable<StudentManagementOptionDto> MarketerUsers =>
+        ManagementOptions.Where(x => x.Role == "Marketer");
+
+
+    private IEnumerable<StudentManagementOptionDto> SupportUsers =>
+        ManagementOptions.Where(x => x.Role == "Support");
+
+
+    private List<StudentDto> FilteredStudents =>
+        VisibleStudents
+            .OrderByDescending(x => x.CreatedDate)
+            .ToList();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsLoggedIn ||
+            !(Auth.IsAdmin ||
+              Auth.IsEducationStaff ||
+              Auth.IsMarketer ||
+              Auth.IsSupport ||
+              Auth.IsInstructor))
+        {
+            Navigation.NavigateTo(
+                Auth.IsLoggedIn ? "/admin" : "/login");
+
+            return;
+        }
+
+        await LoadData();
+    }
+
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Students =
+                await client.GetFromJsonAsync<List<StudentDto>>(
+                    "api/Students")
+                ?? new List<StudentDto>();
+
+            if (CanManageStudents)
+            {
+                ManagementOptions =
+                    await client.GetFromJsonAsync<List<StudentManagementOptionDto>>(
+                        "api/Students/management-options")
+                    ?? new List<StudentManagementOptionDto>();
+            }
+            else
+            {
+                ManagementOptions.Clear();
+            }
+
+            SyncSupportSelections();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage =
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? "دریافت اطلاعات دانشجویان با خطا مواجه شد."
+                    : "دریافت اطلاعات دانشجویان با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+
+    private void SyncSupportSelections()
+    {
+        SupportSelections = Students
+            .ToDictionary(
+                x => x.Id,
+                x => x.SupportUserId?.ToString() ?? string.Empty);
+    }
+
+
+    private string GetSupportSelection(int studentId)
+    {
+        return SupportSelections.TryGetValue(
+            studentId,
+            out var value)
+                ? value
+                : string.Empty;
+    }
+
+
+    private void SetSupportSelection(
+        int studentId,
+        string value)
+    {
+        SupportSelections[studentId] = value;
+    }
+
+
+    private string GetMarketerName(int? marketerId)
+    {
+        if (!marketerId.HasValue)
+        {
+            return CanManageStudents
+                ? "بدون بازاریاب"
+                : "اختصاص داده شده";
+        }
+
+        var marketer = ManagementOptions
+            .FirstOrDefault(x => x.Id == marketerId.Value);
+
+        return marketer?.FullName
+            ?? (CanManageStudents
+                ? $"شناسه {marketerId.Value}"
+                : "اختصاص داده شده");
+    }
+
+
+    private async Task AssignSupport(StudentDto student)
+    {
+        var selectedValue =
+            GetSupportSelection(student.Id);
+
+        if (!int.TryParse(
+            selectedValue,
+            out var supportUserId))
+        {
+            return;
+        }
+
+        try
+        {
+            FormError = null;
+
+            var client = Auth.CreateAuthenticatedClient();
+
+            var response =
+                await client.PutAsJsonAsync(
+                    $"api/Students/{student.Id}/assign-support",
+                    new AssignSupportRequest
+                    {
+                        SupportUserId = supportUserId
+                    });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                FormError =
+                    await ReadApiError(response);
+
+                return;
+            }
+
+            await LoadData();
+        }
+        catch
+        {
+            FormError =
+                "ذخیره پشتیبان با خطا مواجه شد.";
+        }
+    }
+
+
+    private void OpenCreateForm()
+    {
+        ResetForm();
+
+        IsCreateFormOpen = true;
+    }
+
+
+    private void CloseCreateForm()
+    {
+        IsCreateFormOpen = false;
+
+        FormError = null;
+
+        ResetForm();
+    }
+
+
+    private void ResetForm()
+    {
+        FormFirstName = string.Empty;
+        FormLastName = string.Empty;
+        FormNationalCode = string.Empty;
+        FormMobile = string.Empty;
+        FormBirthDate = null;
+        FormAddress = string.Empty;
+        FormGuardianName = string.Empty;
+        FormGuardianMobile = string.Empty;
+        FormMarketingUserId = string.Empty;
+        FormSupportUserId = string.Empty;
+    }
+
+
+    private async Task CreateStudent()
+    {
+        FormError = null;
+
+        if (string.IsNullOrWhiteSpace(FormFirstName) ||
+            string.IsNullOrWhiteSpace(FormLastName) ||
+            string.IsNullOrWhiteSpace(FormNationalCode) ||
+            string.IsNullOrWhiteSpace(FormMobile))
+        {
+            FormError =
+                "نام، نام خانوادگی، کد ملی و موبایل الزامی هستند.";
+
+            return;
+        }
+
+        if (FormNationalCode.Length != 10 ||
+            !FormNationalCode.All(char.IsDigit))
+        {
+            FormError =
+                "کد ملی باید دقیقاً ۱۰ رقم باشد.";
+
+            return;
+        }
+
+        if (FormMobile.Length != 11 ||
+            !FormMobile.StartsWith("09") ||
+            !FormMobile.All(char.IsDigit))
+        {
+            FormError =
+                "شماره موبایل باید با 09 شروع شود و ۱۱ رقم باشد.";
+
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(FormGuardianMobile) &&
+            (FormGuardianMobile.Length != 11 ||
+             !FormGuardianMobile.StartsWith("09") ||
+             !FormGuardianMobile.All(char.IsDigit)))
+        {
+            FormError =
+                "شماره موبایل سرپرست باید با 09 شروع شود و ۱۱ رقم باشد.";
+
+            return;
+        }
+
+        DateTime? birthDate = FormBirthDate;
+
+        int? marketingUserId =
+            int.TryParse(
+                FormMarketingUserId,
+                out var marketerId)
+                    ? marketerId
+                    : null;
+
+        int? supportUserId =
+            int.TryParse(
+                FormSupportUserId,
+                out var supportId)
+                    ? supportId
+                    : null;
+
+        IsSaving = true;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var request = new CreateStudentRequest
+            {
+                FirstName = FormFirstName.Trim(),
+                LastName = FormLastName.Trim(),
+                NationalCode = FormNationalCode.Trim(),
+                BirthDate = birthDate,
+                Mobile = FormMobile.Trim(),
+                Address = string.IsNullOrWhiteSpace(FormAddress)
+                    ? null
+                    : FormAddress.Trim(),
+                GuardianName = string.IsNullOrWhiteSpace(FormGuardianName)
+                    ? null
+                    : FormGuardianName.Trim(),
+                GuardianMobile = string.IsNullOrWhiteSpace(FormGuardianMobile)
+                    ? null
+                    : FormGuardianMobile.Trim(),
+                MarketingUserId = marketingUserId,
+                SupportUserId = supportUserId
+            };
+
+            var response =
+                await client.PostAsJsonAsync(
+                    "api/Students",
+                    request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                FormError =
+                    await ReadApiError(response);
+
+                return;
+            }
+
+            IsCreateFormOpen = false;
+
+            ResetForm();
+
+            await LoadData();
+        }
+        catch
+        {
+            FormError =
+                "ثبت دانشجو با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+
+    private async Task<string> ReadApiError(
+        HttpResponseMessage response)
+    {
+        try
+        {
+            var result =
+                await response.Content.ReadFromJsonAsync<ApiError>();
+
+            if (!string.IsNullOrWhiteSpace(result?.Message))
+            {
+                return result.Message;
+            }
+        }
+        catch
+        {
+        }
+
+        var raw =
+            await response.Content.ReadAsStringAsync();
+
+        return string.IsNullOrWhiteSpace(raw)
+            ? "عملیات با خطا مواجه شد."
+            : raw;
+    }
+
+
+    public class StudentDto
+    {
+        public int Id { get; set; }
+
+        public string FirstName { get; set; } = string.Empty;
+
+        public string LastName { get; set; } = string.Empty;
+
+        public string NationalCode { get; set; } = string.Empty;
+
+        public DateTime? BirthDate { get; set; }
+
+        public string Mobile { get; set; } = string.Empty;
+
+        public string? Address { get; set; }
+
+        public string? GuardianName { get; set; }
+
+        public string? GuardianMobile { get; set; }
+
+        public int? MarketingUserId { get; set; }
+
+        public int? SupportUserId { get; set; }
+
+        public DateTime CreatedDate { get; set; }
+    }
+
+
+    public class StudentManagementOptionDto
+    {
+        public int Id { get; set; }
+
+        public string FullName { get; set; } = string.Empty;
+
+        public string Role { get; set; } = string.Empty;
+    }
+
+
+    public class CreateStudentRequest
+    {
+        public int? UserId { get; set; }
+
+        public string FirstName { get; set; } = string.Empty;
+
+        public string LastName { get; set; } = string.Empty;
+
+        public string NationalCode { get; set; } = string.Empty;
+
+        public DateTime? BirthDate { get; set; }
+
+        public string Mobile { get; set; } = string.Empty;
+
+        public string? Address { get; set; }
+
+        public string? GuardianName { get; set; }
+
+        public string? GuardianMobile { get; set; }
+
+        public int? MarketingUserId { get; set; }
+
+        public int? SupportUserId { get; set; }
+    }
+
+
+    public class AssignSupportRequest
+    {
+        public int SupportUserId { get; set; }
+    }
+
+
+    public class ApiError
+    {
+        public string? Message { get; set; }
+    }
+
+}

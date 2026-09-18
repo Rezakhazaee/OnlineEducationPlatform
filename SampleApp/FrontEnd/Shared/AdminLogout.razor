@@ -1,0 +1,28 @@
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<button
+    type="button"
+    class="admin-logout-btn"
+    @onclick="Logout">
+
+    <span class="admin-logout-icon">↪</span>
+    <span>خروج</span>
+
+</button>
+
+@code {
+
+    private void Logout()
+    {
+        Auth.Logout();
+
+        Navigation.NavigateTo(
+            "/login",
+            replace: true,
+            forceLoad: true);
+    }
+
+}

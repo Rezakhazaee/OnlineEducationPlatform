@@ -1,0 +1,401 @@
+@page "/student/payments"
+@layout StudentLayout
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>پرداخت‌های من | آموزش‌یار</PageTitle>
+
+<div class="student-page">
+
+    <header class="student-topbar">
+
+        <div>
+            <span class="student-eyebrow">
+                امور مالی
+            </span>
+
+            <h1>
+                پرداخت‌های من
+            </h1>
+
+            <p>
+                تاریخچه پرداخت‌ها و وضعیت مالی ثبت‌نام‌های شما.
+            </p>
+        </div>
+
+        <a
+            href="/student"
+            class="student-profile-btn">
+
+            داشبورد
+            <span>←</span>
+
+        </a>
+
+    </header>
+
+
+    @if (IsLoading)
+    {
+        <div class="student-loading">
+
+            <div class="student-loading-icon">
+                ↻
+            </div>
+
+            <h3>
+                در حال دریافت پرداخت‌ها...
+            </h3>
+
+            <p>
+                سوابق پرداخت شما در حال بارگذاری است.
+            </p>
+
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="student-error">
+
+            <strong>
+                دریافت پرداخت‌ها با خطا مواجه شد
+            </strong>
+
+            <p>
+                @ErrorMessage
+            </p>
+
+            <button
+                type="button"
+                class="student-outline-btn"
+                @onclick="LoadPayments">
+
+                تلاش مجدد
+
+            </button>
+
+        </div>
+    }
+    else
+    {
+        <section class="student-payment-summary">
+
+            <div class="student-payment-summary-card">
+
+                <small>
+                    تعداد پرداخت‌ها
+                </small>
+
+                <strong>
+                    @Payments.Count
+                </strong>
+
+            </div>
+
+
+            <div class="student-payment-summary-card">
+
+                <small>
+                    مجموع پرداخت‌های تأییدشده
+                </small>
+
+                <strong>
+                    @TotalPaid.ToString("N0")
+                    <em>تومان</em>
+                </strong>
+
+            </div>
+
+
+            <div class="student-payment-summary-card">
+
+                <small>
+                    پرداخت‌های در انتظار
+                </small>
+
+                <strong>
+                    @PendingAmount.ToString("N0")
+                    <em>تومان</em>
+                </strong>
+
+            </div>
+
+        </section>
+
+
+        <section class="student-content-card">
+
+            <div class="student-section-header">
+
+                <div>
+                    <span>
+                        سابقه مالی
+                    </span>
+
+                    <h2>
+                        فهرست پرداخت‌ها
+                    </h2>
+                </div>
+
+            </div>
+
+
+            @if (Payments.Count == 0)
+            {
+                <div class="student-empty-state">
+
+                    <div class="student-empty-icon">
+                        ₿
+                    </div>
+
+                    <h3>
+                        هنوز پرداختی ثبت نشده است
+                    </h3>
+
+                    <p>
+                        سابقه پرداخت‌های شما در این بخش نمایش داده خواهد شد.
+                    </p>
+
+                </div>
+            }
+            else
+            {
+                <div class="student-payments-table-wrap">
+
+                    <table class="student-payments-table">
+
+                        <thead>
+
+                            <tr>
+                                <th>دوره</th>
+                                <th>نوع پرداخت</th>
+                                <th>تاریخ</th>
+                                <th>مبلغ</th>
+                                <th>وضعیت</th>
+                                <th>ثبت‌نام</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var payment in Payments
+                                .OrderByDescending(x => x.PaymentDate))
+                            {
+                                <tr>
+
+                                    <td>
+                                        <div class="student-payment-course">
+
+                                            <strong>
+                                                @payment.CourseTitle
+                                            </strong>
+
+                                            @if (!string.IsNullOrWhiteSpace(payment.Description))
+                                            {
+                                                <small>
+                                                    @payment.Description
+                                                </small>
+                                            }
+
+                                        </div>
+                                    </td>
+
+
+                                    <td>
+                                        <span class="student-payment-type-badge">
+                                            @GetPaymentTypeText(payment.PaymentType)
+                                        </span>
+                                    </td>
+
+
+                                    <td>
+                                        <span class="student-payment-date">
+                                            @payment.PaymentDate.ToString("yyyy/MM/dd")
+                                        </span>
+                                    </td>
+
+
+                                    <td>
+                                        <strong class="student-payment-table-amount">
+                                            @payment.Amount.ToString("N0")
+                                            تومان
+                                        </strong>
+                                    </td>
+
+
+                                    <td>
+                                        <span class="@GetPaymentStatusClass(payment.Status)">
+                                            @GetPaymentStatusText(payment.Status)
+                                        </span>
+                                    </td>
+
+
+                                    <td>
+                                        <span class="student-enrollment-number">
+                                            #@payment.EnrollmentId
+                                        </span>
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            }
+
+        </section>
+
+
+        <section class="student-info-note">
+
+            <strong>
+                توجه
+            </strong>
+
+            <p>
+                فقط پرداخت‌های مربوط به ثبت‌نام‌های حساب کاربری خودتان در این صفحه نمایش داده می‌شود.
+            </p>
+
+        </section>
+    }
+
+</div>
+
+
+@code {
+
+    private List<PaymentDto> Payments { get; set; } = new();
+
+    private bool IsLoading { get; set; } = true;
+
+    private string? ErrorMessage { get; set; }
+
+
+    private decimal TotalPaid =>
+        Payments
+            .Where(x => x.Status == "Paid")
+            .Sum(x => x.Amount);
+
+
+    private decimal PendingAmount =>
+        Payments
+            .Where(x => x.Status == "Pending")
+            .Sum(x => x.Amount);
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsLoggedIn || !Auth.IsStudent)
+        {
+            Navigation.NavigateTo(
+                Auth.IsLoggedIn ? "/" : "/login");
+
+            return;
+        }
+
+        await LoadPayments();
+    }
+
+
+    private async Task LoadPayments()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Payments =
+                await client.GetFromJsonAsync<List<PaymentDto>>(
+                    "api/Payments/my")
+                ?? new List<PaymentDto>();
+        }
+        catch
+        {
+            ErrorMessage =
+                "دریافت سوابق پرداخت با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+
+    private string GetPaymentTypeText(string type)
+    {
+        return type switch
+        {
+            "FullPayment" => "پرداخت کامل",
+            "FirstInstallment" => "قسط اول",
+            "SecondInstallment" => "قسط دوم",
+            "ThirdInstallment" => "قسط سوم",
+            "Installment" => "قسط",
+            "Cash" => "نقدی",
+            "Card" => "کارت",
+            "Transfer" => "انتقال بانکی",
+            _ => string.IsNullOrWhiteSpace(type)
+                ? "پرداخت"
+                : type
+        };
+    }
+
+
+    private string GetPaymentStatusText(string status)
+    {
+        return status switch
+        {
+            "Paid" => "پرداخت‌شده",
+            "Pending" => "در انتظار پرداخت",
+            "Cancelled" => "لغوشده",
+            "Unpaid" => "پرداخت‌نشده",
+            _ => string.IsNullOrWhiteSpace(status)
+                ? "نامشخص"
+                : status
+        };
+    }
+
+
+    private string GetPaymentStatusClass(string status)
+    {
+        return status switch
+        {
+            "Paid" => "payment-status-paid",
+            "Pending" => "payment-status-pending",
+            "Cancelled" => "payment-status-cancelled",
+            _ => "payment-status-neutral"
+        };
+    }
+
+
+    public class PaymentDto
+    {
+        public int Id { get; set; }
+
+        public int EnrollmentId { get; set; }
+
+        public string StudentName { get; set; } = string.Empty;
+
+        public string CourseTitle { get; set; } = string.Empty;
+
+        public decimal Amount { get; set; }
+
+        public DateTime PaymentDate { get; set; }
+
+        public string PaymentType { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
+
+        public string Status { get; set; } = string.Empty;
+    }
+
+}
