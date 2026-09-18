@@ -7402,3 +7402,172 @@ grep -nE 'Admin Students|students-summary|student-summary-card|students-table|st
 
 }
 
+
+/* =========================
+   Support Follow-ups
+   ========================= */
+
+.support-followup-form {
+    padding: 24px;
+    border-bottom: 1px solid #edf2f4;
+}
+
+.support-followup-form-header h3 {
+    margin: 0;
+    color: #263d4a;
+    font-size: 17px;
+}
+
+.support-followup-form-header p {
+    margin: 7px 0 20px;
+    color: #71838d;
+    font-size: 12px;
+}
+
+.support-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.support-form-group {
+    min-width: 0;
+}
+
+.support-form-group label {
+    display: block;
+    margin-bottom: 7px;
+    color: #526873;
+    font-size: 12px;
+}
+
+.support-form-input {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 12px;
+    box-sizing: border-box;
+    border: 1px solid #d6e2e7;
+    border-radius: 10px;
+    background: #fff;
+    color: #263d4a;
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.support-form-textarea {
+    min-height: 100px;
+    padding: 12px;
+    resize: vertical;
+}
+
+.support-form-wide {
+    grid-column: 1 / -1;
+}
+
+.support-form-actions {
+    margin-top: 18px;
+}
+
+.support-primary-btn {
+    min-height: 42px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 10px;
+    background: #568fa8;
+    color: #fff;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.support-primary-btn:disabled {
+    opacity: .6;
+    cursor: default;
+}
+
+.support-success-message,
+.support-error-message {
+    margin-bottom: 16px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.support-success-message {
+    background: #e8f5ec;
+    color: #327449;
+}
+
+.support-error-message {
+    background: #f6e9e9;
+    color: #9d4d4d;
+}
+
+.support-followups-list {
+    padding: 8px 24px 16px;
+}
+
+.support-followup-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(130px, .7fr) minmax(0, 2fr);
+    gap: 18px;
+    align-items: center;
+    padding: 17px 0;
+    border-bottom: 1px solid #edf2f4;
+}
+
+.support-followup-row:last-child {
+    border-bottom: 0;
+}
+
+.support-followup-main,
+.support-followup-status,
+.support-followup-description {
+    min-width: 0;
+}
+
+.support-followup-main strong,
+.support-followup-main small,
+.support-followup-status small,
+.support-followup-description small,
+.support-followup-description strong {
+    display: block;
+}
+
+.support-followup-main strong {
+    color: #263d4a;
+    font-size: 14px;
+}
+
+.support-followup-main small,
+.support-followup-status small,
+.support-followup-description small {
+    margin-top: 5px;
+    color: #71838d;
+    font-size: 11px;
+}
+
+.support-followup-description strong {
+    margin-top: 5px;
+    color: #405864;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+@media (max-width: 850px) {
+
+    .support-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .support-form-wide {
+        grid-column: auto;
+    }
+
+    .support-followup-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+}
+
