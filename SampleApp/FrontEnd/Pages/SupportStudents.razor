@@ -1,0 +1,180 @@
+@page "/support/students"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@layout SupportLayout
+
+@inject AuthService Auth
+
+<PageTitle>دانشجویان من | آموزش‌یار</PageTitle>
+
+<div class="support-content">
+
+    <section class="support-content-card">
+
+        <div class="support-card-header">
+
+            <div>
+                <span>پشتیبانی آموزشی</span>
+                <h2>دانشجویان من</h2>
+            </div>
+
+            <a href="/support" class="support-outline-btn">
+                ← داشبورد
+            </a>
+
+        </div>
+
+        @if (IsLoading)
+        {
+            <div class="support-loading">
+                در حال دریافت اطلاعات...
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="support-error">
+                <strong>@ErrorMessage</strong>
+            </div>
+        }
+        else if (Students.Count == 0)
+        {
+            <div class="support-empty-state">
+                <h3>دانشجویی به شما اختصاص داده نشده است.</h3>
+            </div>
+        }
+        else
+        {
+            <div class="support-students-list">
+
+                @foreach (var student in Students)
+                {
+                    <div class="support-student-row">
+
+                        <div class="support-student-main">
+
+                            <div class="support-student-avatar">
+                                @GetInitials(student)
+                            </div>
+
+                            <div>
+                                <strong>
+                                    @student.FirstName @student.LastName
+                                </strong>
+
+                                <small>
+                                    کد ملی: @student.NationalCode
+                                </small>
+                            </div>
+
+                        </div>
+
+                        <div class="support-student-contact">
+
+                            <small>موبایل</small>
+
+                            <strong>
+                                @student.Mobile
+                            </strong>
+
+                        </div>
+
+                        <div class="support-student-date">
+
+                            <small>تاریخ ثبت</small>
+
+                            <strong>
+                                @student.CreatedDate.ToString("yyyy/MM/dd")
+                            </strong>
+
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+        }
+
+    </section>
+
+</div>
+
+@code {
+
+    private List<StudentDto> Students { get; set; } = new();
+
+    private bool IsLoading { get; set; } = true;
+
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsLoggedIn || !Auth.IsSupport)
+        {
+            return;
+        }
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Students =
+                await client.GetFromJsonAsync<List<StudentDto>>(
+                    "api/Students")
+                ?? new List<StudentDto>();
+        }
+        catch
+        {
+            ErrorMessage =
+                "ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private string GetInitials(StudentDto student)
+    {
+        var first =
+            string.IsNullOrWhiteSpace(student.FirstName)
+                ? "د"
+                : student.FirstName.Trim()[0].ToString();
+
+        var last =
+            string.IsNullOrWhiteSpace(student.LastName)
+                ? ""
+                : student.LastName.Trim()[0].ToString();
+
+        return first + last;
+    }
+
+    public class StudentDto
+    {
+        public int Id { get; set; }
+
+        public string FirstName { get; set; } = string.Empty;
+
+        public string LastName { get; set; } = string.Empty;
+
+        public string NationalCode { get; set; } = string.Empty;
+
+        public DateTime? BirthDate { get; set; }
+
+        public string Mobile { get; set; } = string.Empty;
+
+        public string? Address { get; set; }
+
+        public string? GuardianName { get; set; }
+
+        public string? GuardianMobile { get; set; }
+
+        public int? MarketingUserId { get; set; }
+
+        public int? SupportUserId { get; set; }
+
+        public DateTime CreatedDate { get; set; }
+    }
+
+}

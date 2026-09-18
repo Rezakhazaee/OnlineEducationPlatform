@@ -1,0 +1,109 @@
+@inherits LayoutComponentBase
+
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<div class="support-page">
+
+    <aside class="support-sidebar">
+
+        <div class="support-brand">
+            <div class="support-brand-mark">پ</div>
+
+            <div>
+                <strong>آموزش‌یار</strong>
+                <small>پنل پشتیبانی</small>
+            </div>
+        </div>
+
+        <nav class="support-menu">
+
+            <a href="/support" class="active">
+                <span>⌂</span>
+                داشبورد
+            </a>
+
+            <a href="/support/students">
+                <span>♙</span>
+                دانشجویان من
+            </a>
+
+            <a href="/support/enrollments">
+                <span>✓</span>
+                ثبت‌نام‌ها
+            </a>
+
+            <a href="/support/payments">
+                <span>₿</span>
+                پرداخت‌ها
+            </a>
+
+        </nav>
+
+        <div class="support-sidebar-bottom">
+
+            <a href="/">
+                ← بازگشت به سایت
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <main class="support-main">
+
+        <header class="support-topbar">
+
+            <div>
+                <span class="support-label">
+                    پشتیبانی آموزشی
+                </span>
+
+                <h1>
+                    داشبورد
+                </h1>
+            </div>
+
+            <div class="support-user">
+
+                <div class="support-avatar">
+                    پ
+                </div>
+
+                <div>
+                    <strong>
+                        @(Auth.FullName ?? "پشتیبان آموزشی")
+                    </strong>
+
+                    <small>
+                        پشتیبان آموزشی
+                    </small>
+                </div>
+
+                <SupportLogout />
+
+            </div>
+
+        </header>
+
+
+        @Body
+
+    </main>
+
+</div>
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        if (!Auth.IsLoggedIn || !Auth.IsSupport)
+        {
+            Navigation.NavigateTo("/login", replace: true);
+        }
+    }
+
+}

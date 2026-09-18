@@ -1,0 +1,185 @@
+@page "/support/enrollments"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@layout SupportLayout
+
+@inject AuthService Auth
+
+<PageTitle>ثبت‌نام‌های من | آموزش‌یار</PageTitle>
+
+<div class="support-content">
+
+    <section class="support-content-card">
+
+        <div class="support-card-header">
+
+            <div>
+                <span>پشتیبانی آموزشی</span>
+                <h2>ثبت‌نام‌های دانشجویان من</h2>
+            </div>
+
+            <a href="/support" class="support-outline-btn">
+                ← داشبورد
+            </a>
+
+        </div>
+
+        @if (IsLoading)
+        {
+            <div class="support-loading">
+                در حال دریافت اطلاعات...
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="support-error">
+                <strong>@ErrorMessage</strong>
+            </div>
+        }
+        else if (Enrollments.Count == 0)
+        {
+            <div class="support-empty-state">
+                <h3>هنوز ثبت‌نامی برای دانشجویان شما ثبت نشده است.</h3>
+            </div>
+        }
+        else
+        {
+            <div class="support-enrollments-list">
+
+                @foreach (var enrollment in Enrollments)
+                {
+                    <div class="support-enrollment-row">
+
+                        <div class="support-enrollment-main">
+
+                            <strong>
+                                @enrollment.StudentName
+                            </strong>
+
+                            <span>
+                                @enrollment.CourseTitle
+                            </span>
+
+                        </div>
+
+                        <div class="support-enrollment-status">
+
+                            <small>وضعیت</small>
+
+                            <span class="@GetEnrollmentStatusClass(enrollment.Status)">
+                                @GetEnrollmentStatusText(enrollment.Status)
+                            </span>
+
+                        </div>
+
+                        <div class="support-enrollment-money">
+
+                            <small>پرداخت‌شده</small>
+
+                            <strong>
+                                @enrollment.TotalPaid.ToString("N0")
+                                تومان
+                            </strong>
+
+                            <small style="margin-top:8px;">باقی‌مانده</small>
+
+                            <strong>
+                                @enrollment.RemainingAmount.ToString("N0")
+                                تومان
+                            </strong>
+
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+        }
+
+    </section>
+
+</div>
+
+@code {
+
+    private List<EnrollmentDto> Enrollments { get; set; } = new();
+
+    private bool IsLoading { get; set; } = true;
+
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsLoggedIn || !Auth.IsSupport)
+        {
+            return;
+        }
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Enrollments =
+                await client.GetFromJsonAsync<List<EnrollmentDto>>(
+                    "api/Enrollments")
+                ?? new List<EnrollmentDto>();
+        }
+        catch
+        {
+            ErrorMessage =
+                "ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private string GetEnrollmentStatusText(string status)
+    {
+        return status switch
+        {
+            "Active" => "فعال",
+            "Completed" => "تکمیل‌شده",
+            "Suspended" => "معلق",
+            "Cancelled" => "لغوشده",
+            _ => status
+        };
+    }
+
+    private string GetEnrollmentStatusClass(string status)
+    {
+        return status switch
+        {
+            "Active" => "status-active",
+            "Completed" => "status-completed",
+            "Suspended" => "status-suspended",
+            "Cancelled" => "status-cancelled",
+            _ => "status-default"
+        };
+    }
+
+    public class EnrollmentDto
+    {
+        public int Id { get; set; }
+
+        public string StudentName { get; set; } = string.Empty;
+
+        public string CourseTitle { get; set; } = string.Empty;
+
+        public decimal CoursePrice { get; set; }
+
+        public decimal TotalPaid { get; set; }
+
+        public decimal RemainingAmount { get; set; }
+
+        public string PaymentStatus { get; set; } = string.Empty;
+
+        public DateTime StartDate { get; set; }
+
+        public string Status { get; set; } = string.Empty;
+    }
+
+}

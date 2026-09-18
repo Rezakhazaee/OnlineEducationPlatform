@@ -6780,3 +6780,625 @@ grep -nE 'Admin Students|students-summary|student-summary-card|students-table|st
     }
 }
 
+
+/* =========================
+   Support Panel
+   ========================= */
+
+.support-page {
+    min-height: 100vh;
+    display: flex;
+    direction: rtl;
+    background: #f3f7fa;
+}
+
+.support-sidebar {
+    width: 250px;
+    min-width: 250px;
+    min-height: 100vh;
+    background: #ffffff;
+    border-left: 1px solid #dfe9ee;
+    padding: 24px 16px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+.support-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 8px 26px;
+}
+
+.support-brand-mark {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #568fa8;
+    color: #fff;
+    font-weight: 800;
+    font-size: 20px;
+}
+
+.support-brand strong {
+    display: block;
+    color: #263d4a;
+    font-size: 17px;
+}
+
+.support-brand small {
+    display: block;
+    margin-top: 3px;
+    color: #71838d;
+    font-size: 12px;
+}
+
+.support-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.support-menu a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 46px;
+    padding: 0 13px;
+    border-radius: 12px;
+    color: #526873;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.support-menu a span {
+    width: 22px;
+    text-align: center;
+}
+
+.support-menu a:hover,
+.support-menu a.active {
+    background: #edf5f8;
+    color: #3e7188;
+}
+
+.support-sidebar-bottom {
+    margin-top: auto;
+    padding-top: 22px;
+}
+
+.support-sidebar-bottom a {
+    color: #71838d;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.support-main {
+    flex: 1;
+    min-width: 0;
+    padding: 26px 30px 40px;
+    box-sizing: border-box;
+}
+
+.support-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.support-label {
+    display: block;
+    color: #71838d;
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
+.support-topbar h1 {
+    margin: 0;
+    color: #263d4a;
+    font-size: 28px;
+}
+
+.support-user {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+.support-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #dcecf2;
+    color: #3e7188;
+    font-weight: 800;
+}
+
+.support-user strong {
+    display: block;
+    color: #263d4a;
+    font-size: 14px;
+}
+
+.support-user small {
+    display: block;
+    margin-top: 3px;
+    color: #71838d;
+    font-size: 11px;
+}
+
+.support-logout-btn {
+    border: 0;
+    background: #f6e9e9;
+    color: #9d4d4d;
+    min-width: 82px;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    margin-right: 8px;
+}
+
+.support-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.support-welcome-card,
+.support-content-card {
+    background: #fff;
+    border: 1px solid #e1ebef;
+    border-radius: 18px;
+    box-sizing: border-box;
+}
+
+.support-welcome-card {
+    padding: 24px 26px;
+}
+
+.support-welcome-card span,
+.support-card-header span {
+    display: block;
+    color: #71838d;
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+
+.support-welcome-card h2,
+.support-card-header h2 {
+    margin: 0;
+    color: #263d4a;
+}
+
+.support-welcome-card p {
+    margin: 9px 0 0;
+    color: #71838d;
+    line-height: 1.8;
+    font-size: 13px;
+}
+
+.support-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.support-stat-card {
+    min-width: 0;
+    background: #fff;
+    border: 1px solid #e1ebef;
+    border-radius: 16px;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.support-stat-icon {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: #edf5f8;
+    color: #3e7188;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+}
+
+.support-stat-card small,
+.support-stat-card strong,
+.support-stat-card > div > span {
+    display: block;
+}
+
+.support-stat-card small {
+    color: #71838d;
+    font-size: 12px;
+}
+
+.support-stat-card strong {
+    margin-top: 4px;
+    color: #263d4a;
+    font-size: 21px;
+}
+
+.support-stat-card > div > span {
+    margin-top: 2px;
+    color: #71838d;
+    font-size: 11px;
+}
+
+.support-card-header {
+    padding: 21px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    border-bottom: 1px solid #edf2f4;
+}
+
+.support-card-header h2 {
+    font-size: 19px;
+}
+
+.support-outline-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0 14px;
+    border: 1px solid #cfdde3;
+    border-radius: 10px;
+    background: #fff;
+    color: #3e7188;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.support-students-list,
+.support-enrollments-list,
+.support-payments-list {
+    padding: 8px 24px 16px;
+}
+
+.support-student-row,
+.support-enrollment-row,
+.support-payment-row {
+    border-bottom: 1px solid #edf2f4;
+}
+
+.support-student-row:last-child,
+.support-enrollment-row:last-child,
+.support-payment-row:last-child {
+    border-bottom: 0;
+}
+
+.support-student-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(150px, 1fr) minmax(130px, 1fr);
+    align-items: center;
+    gap: 20px;
+    padding: 16px 0;
+}
+
+.support-student-main {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+.support-student-avatar {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #edf5f8;
+    color: #3e7188;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.support-student-main strong,
+.support-student-main small,
+.support-student-contact small,
+.support-student-contact strong,
+.support-student-date small,
+.support-student-date strong {
+    display: block;
+}
+
+.support-student-main strong {
+    color: #263d4a;
+    font-size: 14px;
+}
+
+.support-student-main small,
+.support-student-contact small,
+.support-student-date small {
+    margin-top: 4px;
+    color: #71838d;
+    font-size: 11px;
+}
+
+.support-student-contact strong,
+.support-student-date strong {
+    margin-top: 4px;
+    color: #405864;
+    font-size: 12px;
+}
+
+.support-enrollment-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(120px, 1fr) minmax(140px, 1fr);
+    gap: 18px;
+    align-items: center;
+    padding: 17px 0;
+}
+
+.support-enrollment-main {
+    min-width: 0;
+}
+
+.support-enrollment-main strong,
+.support-enrollment-main span,
+.support-enrollment-status small,
+.support-enrollment-money small,
+.support-enrollment-money strong {
+    display: block;
+}
+
+.support-enrollment-main strong {
+    color: #263d4a;
+    font-size: 14px;
+}
+
+.support-enrollment-main span {
+    margin-top: 4px;
+    color: #71838d;
+    font-size: 11px;
+}
+
+.support-enrollment-status small,
+.support-enrollment-money small {
+    color: #71838d;
+    font-size: 11px;
+}
+
+.support-enrollment-money {
+    text-align: left;
+}
+
+.support-enrollment-money strong {
+    margin-top: 4px;
+    color: #263d4a;
+    font-size: 13px;
+}
+
+.support-payments-list .support-payment-row {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 2fr)
+        minmax(125px, 1fr)
+        minmax(110px, 1fr)
+        minmax(125px, 1fr)
+        minmax(145px, 1fr);
+    gap: 16px;
+    align-items: center;
+    padding: 18px 0;
+    box-sizing: border-box;
+}
+
+.support-payment-item {
+    min-width: 0;
+}
+
+.support-payment-item small,
+.support-payment-item strong {
+    display: block;
+}
+
+.support-payment-item small {
+    color: #71838d;
+    font-size: 11px;
+    margin-bottom: 5px;
+}
+
+.support-payment-item strong {
+    color: #263d4a;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.support-payment-amount {
+    min-width: 0;
+}
+
+.support-loading,
+.support-error,
+.support-empty-state {
+    background: #fff;
+    border: 1px solid #e1ebef;
+    border-radius: 18px;
+    padding: 38px 24px;
+    text-align: center;
+}
+
+.support-loading-icon {
+    font-size: 30px;
+    color: #568fa8;
+}
+
+.support-loading h3,
+.support-empty-state h3,
+.support-error strong {
+    color: #263d4a;
+}
+
+.support-loading p,
+.support-empty-state p,
+.support-error p {
+    color: #71838d;
+    font-size: 13px;
+}
+
+.support-error {
+    border-color: #ead6d6;
+}
+
+.support-error strong {
+    color: #9d4d4d;
+}
+
+.status-active,
+.status-completed,
+.status-suspended,
+.status-cancelled,
+.payment-paid,
+.payment-pending,
+.payment-cancelled,
+.payment-default {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 0 9px;
+    border-radius: 8px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.status-active {
+    background: #e8f5ec;
+    color: #327449;
+}
+
+.status-completed {
+    background: #e7f0f7;
+    color: #456b83;
+}
+
+.status-suspended,
+.status-cancelled,
+.payment-cancelled {
+    background: #f6e9e9;
+    color: #9d4d4d;
+}
+
+.payment-paid {
+    background: #e8f5ec;
+    color: #327449;
+}
+
+.payment-pending {
+    background: #f8f0df;
+    color: #956f2d;
+}
+
+.payment-default,
+.status-default {
+    background: #edf2f4;
+    color: #607581;
+}
+
+@media (max-width: 1150px) {
+
+    .support-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .support-payments-list .support-payment-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 850px) {
+
+    .support-page {
+        display: block;
+    }
+
+    .support-sidebar {
+        width: 100%;
+        min-width: 0;
+        min-height: auto;
+        border-left: 0;
+        border-bottom: 1px solid #dfe9ee;
+    }
+
+    .support-menu {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .support-sidebar-bottom {
+        margin-top: 12px;
+    }
+
+    .support-main {
+        padding: 20px 16px 30px;
+    }
+
+    .support-student-row,
+    .support-enrollment-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .support-enrollment-money {
+        text-align: right;
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .support-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .support-topbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .support-user {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .support-menu {
+        grid-template-columns: 1fr;
+    }
+
+    .support-card-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .support-payments-list .support-payment-row {
+        grid-template-columns: 1fr;
+    }
+
+}
+
