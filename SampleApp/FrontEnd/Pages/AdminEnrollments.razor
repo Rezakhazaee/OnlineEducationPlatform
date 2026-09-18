@@ -364,6 +364,54 @@
                         <div class="form-group">
 
                             <label>
+                                پشتیبان آموزشی
+                            </label>
+
+                            <select @bind="FormSupportUserId">
+
+                                <option value="">
+                                    بدون پشتیبان
+                                </option>
+
+                                @foreach (var support in SupportUsers)
+                                {
+                                    <option value="@support.Id">
+                                        @support.FullName
+                                    </option>
+                                }
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                مدرس
+                            </label>
+
+                            <select @bind="FormInstructorId">
+
+                                <option value="">
+                                    بدون مدرس
+                                </option>
+
+                                @foreach (var instructor in ActiveInstructors)
+                                {
+                                    <option value="@instructor.Id">
+                                        @instructor.FullName
+                                    </option>
+                                }
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
                                 تاریخ شروع
                             </label>
 
@@ -524,8 +572,16 @@
                                         سازمان طرف قرارداد
                                     </th>
 
-                                   <th>
-    قیمت
+                                    <th>
+                                        مدرس
+                                    </th>
+
+                                    <th>
+                                        پشتیبان
+                                    </th>
+
+                                    <th>
+                                        قیمت
                                     </th>
 
                                     <th>
@@ -574,6 +630,18 @@
                                         <td>
                                             @(enrollment.CoursePartnerOrganization?.PartnerOrganization?.Name
                                                 ?? "بدون قرارداد سازمانی")
+                                        </td>
+
+                                        <td>
+                                            @(string.IsNullOrWhiteSpace(enrollment.InstructorName)
+                                                ? "بدون مدرس"
+                                                : enrollment.InstructorName)
+                                        </td>
+
+                                        <td>
+                                            @(string.IsNullOrWhiteSpace(enrollment.SupportUserName)
+                                                ? "بدون پشتیبان"
+                                                : enrollment.SupportUserName)
                                         </td>
 
                                          <td>
@@ -999,6 +1067,10 @@
 
     private List<EnrollmentDto> Enrollments { get; set; } = new();
 
+    private List<StudentManagementOptionDto> ManagementOptions { get; set; } = new();
+
+    private List<InstructorDto> Instructors { get; set; } = new();
+
     private EnrollmentFinancialDetailDto? SelectedFinancialDetails { get; set; }
 
     private bool IsFinancialDetailsOpen { get; set; }
@@ -1025,6 +1097,10 @@
     private string FormCourseId { get; set; } = string.Empty;
 
     private string FormCoursePartnerOrganizationId { get; set; } = string.Empty;
+
+    private string FormSupportUserId { get; set; } = string.Empty;
+
+    private string FormInstructorId { get; set; } = string.Empty;
 
     private DateTime FormStartDate { get; set; } = DateTime.Today;
 
@@ -1055,6 +1131,18 @@
         SelectedContractId.HasValue
             ? CoursePartnerOrganizations.FirstOrDefault(x => x.Id == SelectedContractId.Value)
             : null;
+
+
+    private IEnumerable<StudentManagementOptionDto> SupportUsers =>
+        ManagementOptions
+            .Where(x => x.Role == "Support")
+            .OrderBy(x => x.FullName);
+
+
+    private IEnumerable<InstructorDto> ActiveInstructors =>
+        Instructors
+            .Where(x => x.IsActive)
+            .OrderBy(x => x.FullName);
 
 
     private decimal FinalPrice =>
@@ -1096,10 +1184,20 @@
                 client.GetFromJsonAsync<List<EnrollmentDto>>(
                     "api/Enrollments");
 
+            var managementOptionsTask =
+                client.GetFromJsonAsync<List<StudentManagementOptionDto>>(
+                    "api/Students/management-options");
+
+            var instructorsTask =
+                client.GetFromJsonAsync<List<InstructorDto>>(
+                    "api/Courses/instructors");
+
             await Task.WhenAll(
                 studentsTask,
                 coursesTask,
-                enrollmentsTask);
+                enrollmentsTask,
+                managementOptionsTask,
+                instructorsTask);
 
             Students =
                 studentsTask.Result ?? new List<StudentDto>();
@@ -1109,6 +1207,12 @@
 
             Enrollments =
                 enrollmentsTask.Result ?? new List<EnrollmentDto>();
+
+            ManagementOptions =
+                managementOptionsTask.Result ?? new List<StudentManagementOptionDto>();
+
+            Instructors =
+                instructorsTask.Result ?? new List<InstructorDto>();
         }
         catch
         {
@@ -1482,6 +1586,14 @@ private async Task SaveEnrollment()
     // وضعیت مالی
     public string PaymentStatus { get; set; } = string.Empty;
 
+    public int? SupportUserId { get; set; }
+
+    public string? SupportUserName { get; set; }
+
+    public int? InstructorId { get; set; }
+
+    public string? InstructorName { get; set; }
+
     public DateTime StartDate { get; set; }
 
     public string Status { get; set; } = string.Empty;
@@ -1559,6 +1671,26 @@ private async Task SaveEnrollment()
 
     public string? Description { get; set; }
 }
+
+
+    public class StudentManagementOptionDto
+    {
+        public int Id { get; set; }
+
+        public string FullName { get; set; } = string.Empty;
+
+        public string Role { get; set; } = string.Empty;
+    }
+
+
+    public class InstructorDto
+    {
+        public int Id { get; set; }
+
+        public string? FullName { get; set; }
+
+        public bool IsActive { get; set; }
+    }
 
 
     public class ApiError

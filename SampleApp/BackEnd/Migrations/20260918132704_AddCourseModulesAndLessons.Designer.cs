@@ -3,6 +3,7 @@ using System;
 using BackEnd.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackEnd.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260918132704_AddCourseModulesAndLessons")]
+    partial class AddCourseModulesAndLessons
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
@@ -48,74 +51,6 @@ namespace BackEnd.Migrations
                     b.HasIndex("InstructorId");
 
                     b.ToTable("Courses");
-                });
-
-            modelBuilder.Entity("BackEnd.Models.CourseLesson", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ContentUrl")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("CourseModuleId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("DurationMinutes")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsFreePreview")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CourseModuleId");
-
-                    b.ToTable("CourseLessons");
-                });
-
-            modelBuilder.Entity("BackEnd.Models.CourseModule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CourseId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CourseId");
-
-                    b.ToTable("CourseModules");
                 });
 
             modelBuilder.Entity("BackEnd.Models.CoursePartnerOrganization", b =>
@@ -458,28 +393,6 @@ namespace BackEnd.Migrations
                     b.Navigation("Instructor");
                 });
 
-            modelBuilder.Entity("BackEnd.Models.CourseLesson", b =>
-                {
-                    b.HasOne("BackEnd.Models.CourseModule", "CourseModule")
-                        .WithMany("Lessons")
-                        .HasForeignKey("CourseModuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CourseModule");
-                });
-
-            modelBuilder.Entity("BackEnd.Models.CourseModule", b =>
-                {
-                    b.HasOne("BackEnd.Models.Course", "Course")
-                        .WithMany()
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Course");
-                });
-
             modelBuilder.Entity("BackEnd.Models.CoursePartnerOrganization", b =>
                 {
                     b.HasOne("BackEnd.Models.Course", "Course")
@@ -598,11 +511,6 @@ namespace BackEnd.Migrations
                     b.Navigation("Student");
 
                     b.Navigation("SupportUser");
-                });
-
-            modelBuilder.Entity("BackEnd.Models.CourseModule", b =>
-                {
-                    b.Navigation("Lessons");
                 });
 #pragma warning restore 612, 618
         }

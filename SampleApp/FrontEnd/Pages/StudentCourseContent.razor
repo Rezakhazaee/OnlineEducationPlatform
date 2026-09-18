@@ -1,0 +1,261 @@
+@page "/student/course-content/{CourseId:int}"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@layout StudentLayout
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>محتوای دوره | آموزش‌یار</PageTitle>
+
+<div style="padding:30px;">
+
+    @if (IsLoading)
+    {
+        <h2>در حال بارگذاری محتوای دوره...</h2>
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <h2>خطا</h2>
+
+        <p>@ErrorMessage</p>
+
+        <a href="/student/courses">
+            ← بازگشت به دوره‌ها
+        </a>
+    }
+    else if (Content == null)
+    {
+        <h2>محتوای دوره پیدا نشد.</h2>
+
+        <a href="/student/courses">
+            ← بازگشت به دوره‌ها
+        </a>
+    }
+    else
+    {
+        <h1>
+            @Content.CourseTitle
+        </h1>
+
+        <p>
+            نوع دوره:
+            @GetDeliveryTypeText(Content.DeliveryType)
+        </p>
+
+        <hr />
+
+        @if (Content.Modules.Count == 0)
+        {
+            <h3>
+                هنوز سرفصلی برای این دوره ثبت نشده است.
+            </h3>
+        }
+        else
+        {
+            @foreach (var module in Content.Modules)
+            {
+                <section style="margin:25px 0;">
+
+                    <h2>
+                        سرفصل @module.SortOrder:
+                        @module.Title
+                    </h2>
+
+                    @if (module.Lessons.Count == 0)
+                    {
+                        <p>
+                            درسی در این سرفصل منتشر نشده است.
+                        </p>
+                    }
+                    else
+                    {
+                        @foreach (var lesson in module.Lessons)
+                        {
+                            <div style="border:1px solid #ddd; padding:15px; margin:10px 0;">
+
+                                <h3>
+                                    @lesson.SortOrder.
+                                    @lesson.Title
+                                </h3>
+
+                                @if (!string.IsNullOrWhiteSpace(lesson.Description))
+                                {
+                                    <p>
+                                        @lesson.Description
+                                    </p>
+                                }
+
+                                <p>
+                                    نوع محتوا:
+                                    @(lesson.ContentType == "Video"
+                                        ? "ویدئو"
+                                        : "متن")
+                                </p>
+
+                                @if (lesson.DurationMinutes > 0)
+                                {
+                                    <p>
+                                        مدت:
+                                        @lesson.DurationMinutes دقیقه
+                                    </p>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(lesson.ContentUrl))
+                                {
+                                    <a
+                                        href="@lesson.ContentUrl"
+                                        target="_blank"
+                                        rel="noopener noreferrer">
+
+                                        مشاهده محتوا
+
+                                    </a>
+                                }
+
+                            </div>
+                        }
+                    }
+
+                </section>
+            }
+        }
+
+        <hr />
+
+        <a href="/student/courses">
+            ← بازگشت به دوره‌های من
+        </a>
+    }
+
+</div>
+
+
+@code {
+
+    [Parameter]
+    public int CourseId { get; set; }
+
+    private bool IsLoading { get; set; } = true;
+
+    private string? ErrorMessage { get; set; }
+
+    private StudentCourseContentDto? Content { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsLoggedIn)
+        {
+            Navigation.NavigateTo("/login", true);
+            return;
+        }
+
+        if (!Auth.IsStudent)
+        {
+            Navigation.NavigateTo("/student", true);
+            return;
+        }
+
+        await LoadContent();
+    }
+
+
+    private async Task LoadContent()
+    {
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var response =
+                await client.GetAsync(
+                    $"api/StudentCourseContent/{CourseId}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage =
+                    $"دریافت محتوای دوره ناموفق بود. کد: {(int)response.StatusCode}";
+
+                return;
+            }
+
+            Content =
+                await response.Content
+                    .ReadFromJsonAsync<StudentCourseContentDto>();
+
+            if (Content == null)
+            {
+                ErrorMessage =
+                    "اطلاعات محتوای دوره خالی است.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage =
+                $"خطای دریافت محتوا: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+
+    private string GetDeliveryTypeText(string? value)
+    {
+        return value switch
+        {
+            "Online" => "آنلاین",
+            "InPerson" => "حضوری",
+            "Hybrid" => "ترکیبی",
+            _ => "نامشخص"
+        };
+    }
+
+
+    public class StudentCourseContentDto
+    {
+        public int CourseId { get; set; }
+
+        public string CourseTitle { get; set; } = string.Empty;
+
+        public string DeliveryType { get; set; } = "Online";
+
+        public List<StudentCourseModuleDto> Modules { get; set; } = new();
+    }
+
+
+    public class StudentCourseModuleDto
+    {
+        public int Id { get; set; }
+
+        public string Title { get; set; } = string.Empty;
+
+        public int SortOrder { get; set; }
+
+        public List<StudentCourseLessonDto> Lessons { get; set; } = new();
+    }
+
+
+    public class StudentCourseLessonDto
+    {
+        public int Id { get; set; }
+
+        public string Title { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
+
+        public string ContentType { get; set; } = "Video";
+
+        public string? ContentUrl { get; set; }
+
+        public int DurationMinutes { get; set; }
+
+        public int SortOrder { get; set; }
+
+        public bool IsFreePreview { get; set; }
+    }
+
+}
