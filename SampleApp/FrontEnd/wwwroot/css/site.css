@@ -7571,3 +7571,93 @@ grep -nE 'Admin Students|students-summary|student-summary-card|students-table|st
 
 }
 
+
+/* =========================
+   Support Payment Operations
+   ========================= */
+
+.support-payment-summary {
+    margin-top: 20px;
+    padding: 16px;
+    border: 1px solid #e1ebef;
+    border-radius: 13px;
+    background: #f8fbfc;
+}
+
+.support-payment-summary > span {
+    display: block;
+    color: #71838d;
+    font-size: 11px;
+    margin-bottom: 5px;
+}
+
+.support-payment-summary > strong {
+    display: block;
+    color: #263d4a;
+    font-size: 14px;
+}
+
+.support-payment-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 15px;
+}
+
+.support-payment-summary-grid small,
+.support-payment-summary-grid strong {
+    display: block;
+}
+
+.support-payment-summary-grid small {
+    color: #71838d;
+    font-size: 10px;
+}
+
+.support-payment-summary-grid strong {
+    margin-top: 4px;
+    color: #405864;
+    font-size: 12px;
+}
+
+.support-payment-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 10px;
+}
+
+.support-payment-action-btn {
+    min-height: 32px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.support-payment-action-btn.approve {
+    background: #e8f5ec;
+    color: #327449;
+}
+
+.support-payment-action-btn.cancel {
+    background: #f6e9e9;
+    color: #9d4d4d;
+}
+
+.support-payment-action-btn:disabled {
+    opacity: .55;
+    cursor: default;
+}
+
+@media (max-width: 850px) {
+
+    .support-payment-summary-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+}
+

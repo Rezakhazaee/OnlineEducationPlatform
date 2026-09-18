@@ -17,7 +17,7 @@
 
             <div>
                 <span>امور مالی</span>
-                <h2>پرداخت‌های دانشجویان من</h2>
+                <h2>ثبت پرداخت جدید</h2>
             </div>
 
             <a href="/support" class="support-outline-btn">
@@ -25,6 +25,235 @@
             </a>
 
         </div>
+
+
+        @if (!string.IsNullOrWhiteSpace(FormSuccessMessage))
+        {
+            <div class="support-success-message">
+                @FormSuccessMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(FormErrorMessage))
+        {
+            <div class="support-error-message">
+                @FormErrorMessage
+            </div>
+        }
+
+
+        <div class="support-followup-form">
+
+            <div class="support-form-grid">
+
+                <div class="support-form-group">
+
+                    <label>
+                        ثبت‌نام
+                    </label>
+
+                    <select
+                        class="support-form-input"
+                        @bind="FormEnrollmentId">
+
+                        <option value="0">
+                            انتخاب ثبت‌نام
+                        </option>
+
+                        @foreach (var enrollment in Enrollments)
+                        {
+                            <option value="@enrollment.Id">
+                                @enrollment.StudentName
+                                -
+                                @enrollment.CourseTitle
+                                -
+                                @enrollment.RemainingAmount.ToString("N0")
+                                تومان باقی‌مانده
+                            </option>
+                        }
+
+                    </select>
+
+                </div>
+
+
+                <div class="support-form-group">
+
+                    <label>
+                        مبلغ پرداخت
+                    </label>
+
+                    <input
+                        class="support-form-input"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        value="@FormAmountText"
+                        @oninput="OnAmountInput" />
+
+                </div>
+
+
+                <div class="support-form-group">
+
+                    <label>
+                        نوع پرداخت
+                    </label>
+
+                    <select
+                        class="support-form-input"
+                        @bind="FormPaymentType">
+
+                        <option value="FirstInstallment">
+                            قسط اول
+                        </option>
+
+                        <option value="SecondInstallment">
+                            قسط دوم
+                        </option>
+
+                        <option value="ThirdInstallment">
+                            قسط سوم
+                        </option>
+
+                        <option value="FullPayment">
+                            پرداخت کامل
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="support-form-group">
+
+                    <label>
+                        وضعیت پرداخت
+                    </label>
+
+                    <select
+                        class="support-form-input"
+                        @bind="FormStatus">
+
+                        <option value="Paid">
+                            پرداخت‌شده
+                        </option>
+
+                        <option value="Pending">
+                            در انتظار تأیید
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="support-form-group">
+
+                    <label>
+                        تاریخ پرداخت
+                    </label>
+
+                    <input
+                        class="support-form-input"
+                        type="datetime-local"
+                        @bind="FormPaymentDate" />
+
+                </div>
+
+
+                <div class="support-form-group">
+
+                    <label>
+                        توضیحات
+                    </label>
+
+                    <input
+                        class="support-form-input"
+                        @bind="FormDescription"
+                        placeholder="توضیحات پرداخت..." />
+
+                </div>
+
+            </div>
+
+
+            @if (SelectedEnrollment != null)
+            {
+                <div class="support-payment-summary">
+
+                    <span>
+                        ثبت‌نام انتخاب‌شده
+                    </span>
+
+                    <strong>
+                        @SelectedEnrollment.StudentName
+                        -
+                        @SelectedEnrollment.CourseTitle
+                    </strong>
+
+                    <div class="support-payment-summary-grid">
+
+                        <div>
+                            <small>قیمت دوره</small>
+                            <strong>
+                                @SelectedEnrollment.CoursePrice.ToString("N0")
+                                تومان
+                            </strong>
+                        </div>
+
+                        <div>
+                            <small>پرداخت‌شده</small>
+                            <strong>
+                                @SelectedEnrollment.TotalPaid.ToString("N0")
+                                تومان
+                            </strong>
+                        </div>
+
+                        <div>
+                            <small>باقی‌مانده</small>
+                            <strong>
+                                @SelectedEnrollment.RemainingAmount.ToString("N0")
+                                تومان
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+
+            <div class="support-form-actions">
+
+                <button
+                    type="button"
+                    class="support-primary-btn"
+                    disabled="@IsSaving"
+                    @onclick="CreatePayment">
+
+                    @(IsSaving ? "در حال ثبت..." : "ثبت پرداخت")
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="support-content-card">
+
+        <div class="support-card-header">
+
+            <div>
+                <span>امور مالی</span>
+                <h2>پرداخت‌های دانشجویان من</h2>
+            </div>
+
+        </div>
+
 
         @if (IsLoading)
         {
@@ -41,30 +270,52 @@
         else if (Payments.Count == 0)
         {
             <div class="support-empty-state">
-                <h3>هنوز پرداختی ثبت نشده است.</h3>
+
+                <h3>
+                    هنوز پرداختی ثبت نشده است.
+                </h3>
+
+                <p>
+                    پرداخت‌های دانشجویان تحت پشتیبانی شما در این بخش نمایش داده می‌شود.
+                </p>
+
             </div>
         }
         else
         {
             <div class="support-payments-list">
 
-                @foreach (var payment in Payments)
+                @foreach (var payment in Payments
+                    .OrderByDescending(x => x.PaymentDate))
                 {
                     <div class="support-payment-row">
 
                         <div class="support-payment-item">
 
-                            <small>دوره:</small>
+                            <small>
+                                دوره:
+                            </small>
 
                             <strong>
                                 @payment.CourseTitle
                             </strong>
 
+                            <small style="margin-top:7px;">
+                                دانشجو:
+                            </small>
+
+                            <strong>
+                                @payment.StudentName
+                            </strong>
+
                         </div>
+
 
                         <div class="support-payment-item">
 
-                            <small>تاریخ پرداخت:</small>
+                            <small>
+                                تاریخ پرداخت:
+                            </small>
 
                             <strong>
                                 @payment.PaymentDate.ToString("yyyy/MM/dd")
@@ -72,9 +323,12 @@
 
                         </div>
 
+
                         <div class="support-payment-item">
 
-                            <small>نوع پرداخت:</small>
+                            <small>
+                                نوع پرداخت:
+                            </small>
 
                             <strong>
                                 @GetPaymentTypeText(payment.PaymentType)
@@ -82,9 +336,12 @@
 
                         </div>
 
+
                         <div class="support-payment-item">
 
-                            <small>وضعیت:</small>
+                            <small>
+                                وضعیت:
+                            </small>
 
                             <span class="@GetPaymentStatusClass(payment.Status)">
                                 @GetPaymentStatusText(payment.Status)
@@ -92,13 +349,45 @@
 
                         </div>
 
+
                         <div class="support-payment-item support-payment-amount">
 
-                            <small>مبلغ:</small>
+                            <small>
+                                مبلغ:
+                            </small>
 
                             <strong>
-                                @payment.Amount.ToString("N0") تومان
+                                @payment.Amount.ToString("N0")
+                                تومان
                             </strong>
+
+
+                            @if (payment.Status == "Pending")
+                            {
+                                <div class="support-payment-actions">
+
+                                    <button
+                                        type="button"
+                                        class="support-payment-action-btn approve"
+                                        disabled="@IsProcessingPayment"
+                                        @onclick="() => ApprovePayment(payment)">
+
+                                        تأیید پرداخت
+
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="support-payment-action-btn cancel"
+                                        disabled="@IsProcessingPayment"
+                                        @onclick="() => CancelPayment(payment)">
+
+                                        لغو
+
+                                    </button>
+
+                                </div>
+                            }
 
                         </div>
 
@@ -112,13 +401,48 @@
 
 </div>
 
+
 @code {
 
-    private List<PaymentDto> Payments { get; set; } = new();
+    private List<EnrollmentDto> Enrollments { get; set; } = new();
+
+    private List<PaymentDetailDto> Payments { get; set; } = new();
 
     private bool IsLoading { get; set; } = true;
 
+    private bool IsSaving { get; set; }
+
+    private bool IsProcessingPayment { get; set; }
+
     private string? ErrorMessage { get; set; }
+
+    private string? FormErrorMessage { get; set; }
+
+    private string? FormSuccessMessage { get; set; }
+
+    private int FormEnrollmentId { get; set; }
+
+    private decimal FormAmount { get; set; }
+
+    private string FormAmountText { get; set; } = string.Empty;
+
+    private string FormPaymentType { get; set; } =
+        "FirstInstallment";
+
+    private string FormStatus { get; set; } = "Paid";
+
+    private DateTime FormPaymentDate { get; set; } =
+        DateTime.Now;
+
+    private string FormDescription { get; set; } = string.Empty;
+
+
+    private EnrollmentDto? SelectedEnrollment =>
+        FormEnrollmentId > 0
+            ? Enrollments.FirstOrDefault(
+                x => x.Id == FormEnrollmentId)
+            : null;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -127,14 +451,38 @@
             return;
         }
 
+        await LoadData();
+    }
+
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
         try
         {
             var client = Auth.CreateAuthenticatedClient();
 
+            var enrollmentsTask =
+                client.GetFromJsonAsync<List<EnrollmentDto>>(
+                    "api/Enrollments");
+
+            var paymentsTask =
+                client.GetFromJsonAsync<List<PaymentDetailDto>>(
+                    "api/Payments");
+
+            await Task.WhenAll(
+                enrollmentsTask,
+                paymentsTask);
+
+            Enrollments =
+                enrollmentsTask.Result
+                ?? new List<EnrollmentDto>();
+
             Payments =
-                await client.GetFromJsonAsync<List<PaymentDto>>(
-                    "api/Payments")
-                ?? new List<PaymentDto>();
+                paymentsTask.Result
+                ?? new List<PaymentDetailDto>();
         }
         catch
         {
@@ -146,6 +494,247 @@
             IsLoading = false;
         }
     }
+
+
+    private async Task CreatePayment()
+    {
+        FormErrorMessage = null;
+        FormSuccessMessage = null;
+
+        if (FormEnrollmentId <= 0)
+        {
+            FormErrorMessage =
+                "لطفاً ثبت‌نام را انتخاب کنید.";
+
+            return;
+        }
+
+        if (FormAmount <= 0)
+        {
+            FormErrorMessage =
+                "مبلغ پرداخت باید بیشتر از صفر باشد.";
+
+            return;
+        }
+
+        var enrollment = SelectedEnrollment;
+
+        if (enrollment == null)
+        {
+            FormErrorMessage =
+                "ثبت‌نام انتخاب‌شده پیدا نشد.";
+
+            return;
+        }
+
+        if (enrollment.Status == "Cancelled" ||
+            enrollment.Status == "Suspended")
+        {
+            FormErrorMessage =
+                "برای ثبت‌نام لغوشده یا تعلیق‌شده امکان ثبت پرداخت وجود ندارد.";
+
+            return;
+        }
+
+        IsSaving = true;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var request = new CreatePaymentDto
+            {
+                EnrollmentId = FormEnrollmentId,
+                Amount = FormAmount,
+                PaymentDate = FormPaymentDate,
+                PaymentType = FormPaymentType,
+                Description =
+                    string.IsNullOrWhiteSpace(FormDescription)
+                        ? null
+                        : FormDescription.Trim(),
+                Status = FormStatus
+            };
+
+            var response =
+                await client.PostAsJsonAsync(
+                    "api/Payments",
+                    request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                FormErrorMessage =
+                    await GetErrorMessage(response);
+
+                return;
+            }
+
+            FormSuccessMessage =
+                "پرداخت با موفقیت ثبت شد.";
+
+            ResetForm();
+
+            await LoadData();
+        }
+        catch
+        {
+            FormErrorMessage =
+                "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+
+    private async Task ApprovePayment(
+        PaymentDetailDto payment)
+    {
+        FormErrorMessage = null;
+        FormSuccessMessage = null;
+
+        IsProcessingPayment = true;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var response =
+                await client.PutAsync(
+                    $"api/Payments/{payment.Id}/pay",
+                    null);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                FormErrorMessage =
+                    await GetErrorMessage(response);
+
+                return;
+            }
+
+            FormSuccessMessage =
+                "پرداخت با موفقیت تأیید شد.";
+
+            await LoadData();
+        }
+        catch
+        {
+            FormErrorMessage =
+                "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            IsProcessingPayment = false;
+        }
+    }
+
+
+    private async Task CancelPayment(
+        PaymentDetailDto payment)
+    {
+        FormErrorMessage = null;
+        FormSuccessMessage = null;
+
+        IsProcessingPayment = true;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var response =
+                await client.PutAsync(
+                    $"api/Payments/{payment.Id}/cancel",
+                    null);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                FormErrorMessage =
+                    await GetErrorMessage(response);
+
+                return;
+            }
+
+            FormSuccessMessage =
+                "پرداخت لغو شد.";
+
+            await LoadData();
+        }
+        catch
+        {
+            FormErrorMessage =
+                "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            IsProcessingPayment = false;
+        }
+    }
+
+
+    private void OnAmountInput(ChangeEventArgs e)
+    {
+        var input =
+            e.Value?.ToString() ?? string.Empty;
+
+        var digits = new string(
+            input.Where(char.IsDigit).ToArray());
+
+        if (string.IsNullOrWhiteSpace(digits))
+        {
+            FormAmount = 0;
+            FormAmountText = string.Empty;
+            return;
+        }
+
+        if (decimal.TryParse(
+            digits,
+            System.Globalization.NumberStyles.None,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out var amount))
+        {
+            FormAmount = amount;
+
+            FormAmountText =
+                amount.ToString(
+                    "#,##0",
+                    System.Globalization.CultureInfo.InvariantCulture);
+        }
+    }
+
+
+    private void ResetForm()
+    {
+        FormEnrollmentId = 0;
+        FormAmount = 0;
+        FormAmountText = string.Empty;
+        FormPaymentType = "FirstInstallment";
+        FormStatus = "Paid";
+        FormPaymentDate = DateTime.Now;
+        FormDescription = string.Empty;
+    }
+
+
+    private async Task<string> GetErrorMessage(
+        HttpResponseMessage response)
+    {
+        try
+        {
+            var error =
+                await response.Content
+                    .ReadFromJsonAsync<ApiError>();
+
+            if (!string.IsNullOrWhiteSpace(error?.Message))
+            {
+                return error.Message;
+            }
+        }
+        catch
+        {
+        }
+
+        return "عملیات انجام نشد.";
+    }
+
 
     private string GetPaymentTypeText(string type)
     {
@@ -159,17 +748,18 @@
         };
     }
 
+
     private string GetPaymentStatusText(string status)
     {
         return status switch
         {
             "Paid" => "پرداخت‌شده",
-            "Pending" => "در انتظار پرداخت",
+            "Pending" => "در انتظار تأیید",
             "Cancelled" => "لغوشده",
-            "Unpaid" => "پرداخت‌نشده",
             _ => status
         };
     }
+
 
     private string GetPaymentStatusClass(string status)
     {
@@ -182,9 +772,38 @@
         };
     }
 
-    public class PaymentDto
+
+    public class EnrollmentDto
     {
         public int Id { get; set; }
+
+        public int StudentId { get; set; }
+
+        public string StudentName { get; set; } = string.Empty;
+
+        public string CourseTitle { get; set; } = string.Empty;
+
+        public decimal CoursePrice { get; set; }
+
+        public decimal TotalPaid { get; set; }
+
+        public decimal RemainingAmount { get; set; }
+
+        public string PaymentStatus { get; set; } = string.Empty;
+
+        public DateTime StartDate { get; set; }
+
+        public string Status { get; set; } = string.Empty;
+    }
+
+
+    public class PaymentDetailDto
+    {
+        public int Id { get; set; }
+
+        public int EnrollmentId { get; set; }
+
+        public string StudentName { get; set; } = string.Empty;
 
         public string CourseTitle { get; set; } = string.Empty;
 
@@ -194,9 +813,31 @@
 
         public string PaymentType { get; set; } = string.Empty;
 
-        public string Status { get; set; } = string.Empty;
+        public string? Description { get; set; }
 
+        public string Status { get; set; } = string.Empty;
+    }
+
+
+    public class CreatePaymentDto
+    {
         public int EnrollmentId { get; set; }
+
+        public decimal Amount { get; set; }
+
+        public DateTime PaymentDate { get; set; }
+
+        public string PaymentType { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
+
+        public string Status { get; set; } = "Paid";
+    }
+
+
+    public class ApiError
+    {
+        public string? Message { get; set; }
     }
 
 }
