@@ -21,11 +21,69 @@ public class PaymentsController : ControllerBase
 
 
     // دریافت لیست پرداخت‌ها با اطلاعات دانشجو و دوره
-    [Authorize(Roles = "Admin,Support")]
-    [HttpGet]
-    public async Task<List<PaymentDetailDto>> Get()
+
+[Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Instructor")]
+[HttpGet]
+public async Task<ActionResult<List<PaymentDetailDto>>> Get()
+{
+    var query = _context.Payments.AsQueryable();
+
+    if (User.IsInRole("Support"))
     {
-        return await _context.Payments
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        query = query.Where(p =>
+            p.Enrollment != null &&
+            p.Enrollment.Student != null &&
+            p.Enrollment.Student.SupportUserId == userId);
+    }
+
+    if (User.IsInRole("Marketer"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        query = query.Where(p =>
+            p.Enrollment != null &&
+            p.Enrollment.Student != null &&
+            p.Enrollment.Student.MarketingUserId == userId);
+    }
+
+    if (User.IsInRole("Instructor"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        query = query.Where(p =>
+            p.Enrollment != null &&
+            p.Enrollment.Course != null &&
+            p.Enrollment.Course.InstructorId == userId);
+    }
+
+    return await query
+
             .Select(p => new PaymentDetailDto
             {
                 Id = p.Id,
@@ -56,8 +114,8 @@ public class PaymentsController : ControllerBase
             .ToListAsync();
     }
 
-    
-    
+
+
     // Student - مشاهده پرداخت‌های خودش
     [Authorize(Roles = "Student")]
     [HttpGet("my")]
@@ -112,10 +170,10 @@ public class PaymentsController : ControllerBase
         return Ok(payments);
     }
 
-    
+
     // ثبت پرداخت جدید
-    [Authorize(Roles = "Admin,Support")]  
-    [HttpPost]
+    [Authorize(Roles = "Admin,EducationStaff,Support")]
+      [HttpPost]
     public async Task<ActionResult<PaymentDto>> Create(CreatePaymentDto dto)
     {
         // ----------------------------------------
@@ -171,13 +229,36 @@ public class PaymentsController : ControllerBase
             .Include(e => e.Student)
             .FirstOrDefaultAsync(e => e.Id == dto.EnrollmentId);
 
-        if (enrollment == null)
+
+if (enrollment == null)
         {
             return BadRequest(new
             {
                 message = "ثبت نام مورد نظر وجود ندارد"
             });
         }
+
+          if (User.IsInRole("Support"))
+          {
+              var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+              if (!int.TryParse(userIdClaim, out var userId))
+              {
+                  return Unauthorized(new
+                  {
+                      message = "شناسه کاربر معتبر نیست"
+                  });
+              }
+
+              if (enrollment.Student == null ||
+                  enrollment.Student.SupportUserId != userId)
+              {
+                  return NotFound(new
+                  {
+                      message = "ثبت نام مورد نظر پیدا نشد"
+                  });
+              }
+          }
 
         // ----------------------------------------
 // 3.5 بررسی وضعیت ثبت نام
@@ -192,7 +273,7 @@ if (enrollment.Status == "Cancelled" ||
         enrollmentStatus = enrollment.Status
     });
 }
-        
+
         // ----------------------------------------
         // 4. بررسی وجود Course
         // ----------------------------------------
@@ -390,7 +471,7 @@ if (enrollment.Status == "Cancelled" ||
         // ----------------------------------------
 
         var result = new PaymentDto
-           
+
         {
             Id = payment.Id,
 
@@ -412,8 +493,8 @@ if (enrollment.Status == "Cancelled" ||
     }
 
     // تغییر وضعیت پرداخت از Pending به Paid
-[Authorize(Roles = "Admin,Support")]
-[HttpPut("{id}/pay")]
+[Authorize(Roles = "Admin,EducationStaff,Support")]
+  [HttpPut("{id}/pay")]
 public async Task<IActionResult> Pay(int id)
 {
     var payment = await _context.Payments
@@ -423,13 +504,37 @@ public async Task<IActionResult> Pay(int id)
         .ThenInclude(e => e!.CoursePartnerOrganization)
         .FirstOrDefaultAsync(p => p.Id == id);
 
-    if (payment == null)
+
+if (payment == null)
     {
         return NotFound(new
         {
             message = "پرداخت مورد نظر پیدا نشد"
         });
     }
+
+      if (User.IsInRole("Support"))
+      {
+          var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+          if (!int.TryParse(userIdClaim, out var userId))
+          {
+              return Unauthorized(new
+              {
+                  message = "شناسه کاربر معتبر نیست"
+              });
+          }
+
+          if (payment.Enrollment == null ||
+              payment.Enrollment.Student == null ||
+              payment.Enrollment.Student.SupportUserId != userId)
+          {
+              return NotFound(new
+              {
+                  message = "پرداخت مورد نظر پیدا نشد"
+              });
+          }
+      }
 
     if (payment.Status != "Pending")
     {
@@ -440,13 +545,40 @@ public async Task<IActionResult> Pay(int id)
         });
     }
 
-    if (payment.Enrollment == null)
+
+if (payment.Enrollment == null)
     {
         return BadRequest(new
         {
             message = "ثبت نام مربوط به این پرداخت پیدا نشد"
         });
     }
+
+      if (User.IsInRole("Support"))
+      {
+          var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+          if (!int.TryParse(userIdClaim, out var userId))
+          {
+              return Unauthorized(new
+              {
+                  message = "شناسه کاربر معتبر نیست"
+              });
+          }
+
+          var supportStudent = await _context.Students
+              .FirstOrDefaultAsync(s =>
+                  s.Id == payment.Enrollment.StudentId);
+
+          if (supportStudent == null ||
+              supportStudent.SupportUserId != userId)
+          {
+              return NotFound(new
+              {
+                  message = "پرداخت مورد نظر پیدا نشد"
+              });
+          }
+      }
 
     if (payment.Enrollment.Status == "Cancelled" ||
     payment.Enrollment.Status == "Suspended")
@@ -557,12 +689,15 @@ public async Task<IActionResult> Pay(int id)
 }
 
 // تغییر وضعیت پرداخت از Pending به Cancelled
-[Authorize(Roles = "Admin,Support")]
-[HttpPut("{id}/cancel")]
+[Authorize(Roles = "Admin,EducationStaff,Support")]
+  [HttpPut("{id}/cancel")]
 public async Task<IActionResult> Cancel(int id)
 {
-    var payment = await _context.Payments
-        .FirstOrDefaultAsync(p => p.Id == id);
+
+var payment = await _context.Payments
+      .Include(p => p.Enrollment)
+      .ThenInclude(e => e!.Student)
+      .FirstOrDefaultAsync(p => p.Id == id);
 
     if (payment == null)
     {
