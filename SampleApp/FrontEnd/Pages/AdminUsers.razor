@@ -158,10 +158,12 @@
                                 class="admin-input"
                                 @bind="NewUser.Role">
 
-                                <option value="Student">دانشجو</option>
-                                <option value="Instructor">مدرس</option>
-                                <option value="Support">پشتیبان</option>
-                                <option value="Admin">مدیر</option>
+<option value="Student">دانشجو</option>
+<option value="Instructor">مدرس</option>
+<option value="EducationStaff">کارشناس آموزش</option>
+<option value="Marketer">بازاریاب</option>
+<option value="Support">پشتیبان</option>
+<option value="Admin">مدیر</option>
 
                             </select>
                         </div>
@@ -271,10 +273,12 @@
                     class="admin-input"
                     @bind="ChangeRole.Role">
 
-                    <option value="Student">دانشجو</option>
-                    <option value="Instructor">مدرس</option>
-                    <option value="Support">پشتیبان</option>
-                    <option value="Admin">مدیر</option>
+<option value="Student">دانشجو</option>
+<option value="Instructor">مدرس</option>
+<option value="EducationStaff">کارشناس آموزش</option>
+<option value="Marketer">بازاریاب</option>
+<option value="Support">پشتیبان</option>
+<option value="Admin">مدیر</option>
 
                 </select>
             </div>
@@ -495,29 +499,47 @@
                                         <td>
 
                                             @if (user.Role == "Admin")
-                                            {
-                                                <span class="user-role admin">
-                                                    مدیر
-                                                </span>
-                                            }
-                                            else if (user.Role == "Instructor")
-                                            {
-                                                <span class="user-role instructor">
-                                                    مدرس
-                                                </span>
-                                            }
-                                            else if (user.Role == "Support")
-                                            {
-                                                <span class="user-role support">
-                                                    پشتیبان
-                                                </span>
-                                            }
-                                            else
-                                            {
-                                                <span class="user-role student">
-                                                    دانشجو
-                                                </span>
-                                            }
+{
+    <span class="user-role admin">
+        مدیر
+    </span>
+}
+else if (user.Role == "EducationStaff")
+{
+    <span class="user-role education">
+        کارشناس آموزش
+    </span>
+}
+else if (user.Role == "Marketer")
+{
+    <span class="user-role marketer">
+        بازاریاب
+    </span>
+}
+else if (user.Role == "Instructor")
+{
+    <span class="user-role instructor">
+        مدرس
+    </span>
+}
+else if (user.Role == "Support")
+{
+    <span class="user-role support">
+        پشتیبان
+    </span>
+}
+else if (user.Role == "Student")
+{
+    <span class="user-role student">
+        دانشجو
+    </span>
+}
+else
+{
+    <span class="user-role">
+        @user.Role
+    </span>
+}
 
                                         </td>
 

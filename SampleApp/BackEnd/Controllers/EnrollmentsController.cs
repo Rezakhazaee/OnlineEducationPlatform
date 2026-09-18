@@ -346,11 +346,9 @@ public async Task<ActionResult<List<EnrollmentDetailDto>>> GetMySupportEnrollmen
 
     // دریافت لیست ثبت نام ها با اطلاعات دانشجو، دوره، پشتیبان و استاد
     
-    [Authorize(Roles = "Admin,Support,Student")]
-[HttpGet]
-// دریافت لیست ثبت نام ها با اطلاعات دانشجو، دوره، پشتیبان، استاد و وضعیت مالی
-[Authorize(Roles = "Admin,Support,Student")]
-[HttpGet]
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Instructor,Student")]
+  [HttpGet]
+  // دریافت لیست ثبت نام ها با اطلاعات دانشجو، دوره، پشتیبان، استاد و وضعیت مالی
 public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
 {
     var query = _context.Enrollments
@@ -407,7 +405,43 @@ public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
             e.Student.SupportUserId == userId);
     }
 
-    // دریافت ثبت‌نام‌ها
+      // Marketer → فقط ثبت‌نام دانشجویان ارجاع‌شده توسط خودش
+      if (User.IsInRole("Marketer"))
+      {
+          var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+          if (!int.TryParse(userIdClaim, out var userId))
+          {
+              return Unauthorized(new
+              {
+                  message = "شناسه کاربر معتبر نیست"
+              });
+          }
+
+          query = query.Where(e =>
+              e.Student != null &&
+              e.Student.MarketingUserId == userId);
+      }
+
+      // Instructor → فقط ثبت‌نام‌های دوره‌های خودش
+      if (User.IsInRole("Instructor"))
+      {
+          var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+          if (!int.TryParse(userIdClaim, out var userId))
+          {
+              return Unauthorized(new
+              {
+                  message = "شناسه کاربر معتبر نیست"
+              });
+          }
+
+          query = query.Where(e =>
+              e.Course != null &&
+              e.Course.InstructorId == userId);
+      }
+
+      // دریافت ثبت‌نام‌ها
     var enrollmentEntities = await query.ToListAsync();
 
     // دریافت مجموع پرداخت‌های تاییدشده برای ثبت‌نام‌های موجود
@@ -559,7 +593,7 @@ public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
 }
 
     // گزارش مالی یک ثبت نام
-    [Authorize(Roles = "Admin,Support,Student")]
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Instructor,Student")]
 [HttpGet("{id}/financial")]
 public async Task<ActionResult<EnrollmentFinancialDto>> GetFinancial(int id)
 {
@@ -686,7 +720,7 @@ public async Task<ActionResult<EnrollmentFinancialDto>> GetFinancial(int id)
 }
 
     // جزئیات مالی ثبت نام به همراه لیست پرداخت‌ها
-    [Authorize(Roles = "Admin,Support,Student")]
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Instructor,Student")]
 [HttpGet("{id}/financial-details")]
 public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetails(int id)
 {
@@ -826,8 +860,8 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
 }
 
     // ثبت نام دانشجو در دوره
-    [Authorize]
-    [HttpPost]
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Student")]
+      [HttpPost]
     public async Task<ActionResult<EnrollmentDto>> Create(CreateEnrollmentDto dto)
     {
         // بررسی شناسه کاربر از JWT
@@ -858,6 +892,70 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
 
             dto.StudentId = student.Id;
         }
+
+          if (dto.SupportUserId.HasValue ||
+              dto.InstructorId.HasValue)
+          {
+              return BadRequest(new
+              {
+                  message = "دانشجو مجاز به تعیین پشتیبان یا مدرس ثبت نام نیست."
+              });
+          }
+          // Marketer → فقط برای دانشجویان ارجاع‌شده توسط خودش
+          if (User.IsInRole("Marketer"))
+          {
+              var relatedStudent = await _context.Students
+                  .FirstOrDefaultAsync(s =>
+                      s.Id == dto.StudentId &&
+                      s.MarketingUserId == userId);
+
+              if (relatedStudent == null)
+              {
+                  return NotFound(new
+                  {
+                      message = "این دانشجو در فهرست ارجاع‌های شما قرار ندارد."
+                  });
+              }
+
+              if (dto.SupportUserId.HasValue ||
+                  dto.InstructorId.HasValue)
+              {
+                  return BadRequest(new
+                  {
+                      message = "بازاریاب مجاز به تعیین پشتیبان یا مدرس ثبت نام نیست."
+                  });
+              }
+          }
+
+          // Support → فقط برای دانشجویان اختصاص‌یافته به خودش
+          if (User.IsInRole("Support"))
+          {
+              var relatedStudent = await _context.Students
+                  .FirstOrDefaultAsync(s =>
+                      s.Id == dto.StudentId &&
+                      s.SupportUserId == userId);
+
+              if (relatedStudent == null)
+              {
+                  return NotFound(new
+                  {
+                      message = "این دانشجو به شما اختصاص داده نشده است."
+                  });
+              }
+
+              if (dto.SupportUserId.HasValue &&
+                  dto.SupportUserId.Value != userId)
+              {
+                  return BadRequest(new
+                  {
+                      message = "پشتیبان نمی‌تواند ثبت نام را به پشتیبان دیگری اختصاص دهد."
+                  });
+              }
+
+              dto.SupportUserId = userId;
+          }
+
+
 
 
         // بررسی وجود دانشجو
@@ -923,7 +1021,10 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         if (dto.SupportUserId.HasValue)
         {
             var supportExists = await _context.Users
-                .AnyAsync(u => u.Id == dto.SupportUserId.Value);
+                .AnyAsync(u =>
+                      u.Id == dto.SupportUserId.Value &&
+                      u.IsActive &&
+                      u.Role == "Support");
 
             if (!supportExists)
             {
@@ -991,8 +1092,8 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         
     }
         // ویرایش ثبت نام
-    [Authorize(Roles = "Admin,Support")]
-    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,EducationStaff,Support")]
+      [HttpPut("{id}")]
     public async Task<ActionResult<EnrollmentDto>> Update(
         int id,
         UpdateEnrollmentDto dto)
@@ -1013,7 +1114,42 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             });
         }
 
-        // وضعیت های مجاز ثبت نام
+        
+
+          // Support → فقط ثبت‌نام دانشجویان اختصاص‌یافته به خودش
+          if (User.IsInRole("Support"))
+          {
+              var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+              if (!int.TryParse(userIdClaim, out var userId))
+              {
+                  return Unauthorized(new
+                  {
+                      message = "شناسه کاربر معتبر نیست"
+                  });
+              }
+
+              if (enrollment.Student == null ||
+                  enrollment.Student.SupportUserId != userId)
+              {
+                  return NotFound(new
+                  {
+                      message = "ثبت نام مورد نظر پیدا نشد"
+                  });
+              }
+
+              if (dto.SupportUserId.HasValue &&
+                  dto.SupportUserId.Value != userId)
+              {
+                  return BadRequest(new
+                  {
+                      message = "پشتیبان نمی‌تواند ثبت نام را به پشتیبان دیگری اختصاص دهد."
+                  });
+              }
+
+              dto.SupportUserId = userId;
+          }
+// وضعیت های مجاز ثبت نام
         var allowedStatuses = new[]
         {
             "Active",
@@ -1054,7 +1190,8 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             var instructorExists = await _context.Users
                 .AnyAsync(u =>
                     u.Id == dto.InstructorId.Value &&
-                    u.IsActive);
+                      u.IsActive &&
+                      u.Role == "Instructor");
 
             if (!instructorExists)
             {

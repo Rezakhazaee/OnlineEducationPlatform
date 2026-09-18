@@ -114,12 +114,14 @@ public class UsersController : ControllerBase
         UpdateUserRoleDto dto)
     {
         var allowedRoles = new[]
-        {
-            "Admin",
-            "Instructor",
-            "Support",
-            "Student"
-        };
+{
+    "Admin",
+    "EducationStaff",
+    "Marketer",
+    "Support",
+    "Instructor",
+    "Student"
+};
 
         // بررسی Role
         if (!allowedRoles.Contains(dto.Role))
@@ -263,13 +265,15 @@ public async Task<IActionResult> ChangePassword(
         CreateAdminUserDto dto)
     {
         // بررسی Role
-        var allowedRoles = new[]
-        {
-            "Admin",
-            "Instructor",
-            "Support",
-            "Student"
-        };
+      var allowedRoles = new[]
+{
+    "Admin",
+    "EducationStaff",
+    "Marketer",
+    "Support",
+    "Instructor",
+    "Student"
+};
 
         if (!allowedRoles.Contains(dto.Role))
         {

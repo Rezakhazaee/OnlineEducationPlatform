@@ -20,12 +20,16 @@ public class StudentsController : ControllerBase
     }
 
 
+    // ==========================================
     // Student - مشاهده پروفایل خودش
+    // ==========================================
+
     [Authorize(Roles = "Student")]
     [HttpGet("me")]
     public async Task<ActionResult<StudentDto>> GetMyProfile()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        var userIdClaim =
+            User.FindFirst(ClaimTypes.NameIdentifier);
 
         if (userIdClaim == null)
         {
@@ -35,7 +39,9 @@ public class StudentsController : ControllerBase
             });
         }
 
-        if (!int.TryParse(userIdClaim.Value, out var userId))
+        if (!int.TryParse(
+            userIdClaim.Value,
+            out var userId))
         {
             return Unauthorized(new
             {
@@ -44,13 +50,15 @@ public class StudentsController : ControllerBase
         }
 
         var student = await _context.Students
-            .FirstOrDefaultAsync(s => s.UserId == userId);
+            .FirstOrDefaultAsync(s =>
+                s.UserId == userId);
 
         if (student == null)
         {
             return NotFound(new
             {
-                message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
+                message =
+                    "پروفایل دانشجویی برای این کاربر پیدا نشد"
             });
         }
 
@@ -74,11 +82,17 @@ public class StudentsController : ControllerBase
     }
 
 
+    // ==========================================
     // دریافت لیست دانشجویان
+    // ==========================================
+
+    [Authorize(
+        Roles = "Admin,EducationStaff,Marketer,Support,Instructor")]
     [HttpGet]
     public async Task<ActionResult<List<StudentDto>>> Get()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        var userIdClaim =
+            User.FindFirst(ClaimTypes.NameIdentifier);
 
         if (userIdClaim == null)
         {
@@ -88,7 +102,15 @@ public class StudentsController : ControllerBase
             });
         }
 
-        var userId = int.Parse(userIdClaim.Value);
+        if (!int.TryParse(
+            userIdClaim.Value,
+            out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
 
         var currentUser = await _context.Users
             .FirstOrDefaultAsync(u => u.Id == userId);
@@ -101,18 +123,41 @@ public class StudentsController : ControllerBase
             });
         }
 
-        IQueryable<Student> query = _context.Students;
+        IQueryable<Student> query =
+            _context.Students;
 
-        // Admin می‌تواند همه دانشجویان را ببیند
-        if (currentUser.Role == "Admin")
+        // Admin و EducationStaff
+        // همه دانشجویان را می‌بینند.
+        if (currentUser.Role == "Admin" ||
+            currentUser.Role == "EducationStaff")
         {
             query = _context.Students;
         }
-        // Support فقط دانشجویان اختصاص داده شده به خودش را می‌بیند
+
+        // Support فقط دانشجویان اختصاص‌یافته به خودش
         else if (currentUser.Role == "Support")
         {
             query = _context.Students
-                .Where(s => s.SupportUserId == currentUser.Id);
+                .Where(s =>
+                    s.SupportUserId == currentUser.Id);
+        }
+
+        // Marketer فقط دانشجویانی که خودش معرف آنهاست
+        else if (currentUser.Role == "Marketer")
+        {
+            query = _context.Students
+                .Where(s =>
+                    s.MarketingUserId == currentUser.Id);
+        }
+
+        // Instructor فقط دانشجویانی که در دوره‌های خودش ثبت‌نام کرده‌اند
+        else if (currentUser.Role == "Instructor")
+        {
+            query = _context.Students
+                .Where(s =>
+                    _context.Enrollments.Any(e =>
+                        e.StudentId == s.Id &&
+                        e.InstructorId == currentUser.Id));
         }
         else
         {
@@ -141,22 +186,36 @@ public class StudentsController : ControllerBase
     }
 
 
+    // ==========================================
     // ثبت دانشجوی جدید
-    [Authorize(Roles = "Admin")]
+    // ==========================================
+
+    [Authorize(Roles = "Admin,EducationStaff")]
     [HttpPost]
-    public async Task<ActionResult<StudentDto>> Create(CreateStudentDto dto)
+    public async Task<ActionResult<StudentDto>> Create(
+        CreateStudentDto dto)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        var userIdClaim =
+            User.FindFirst(ClaimTypes.NameIdentifier);
 
         if (userIdClaim == null)
         {
             return Unauthorized(new
             {
-                message = "شناسه کاربر در توکن پیدا نشد"
+                message =
+                    "شناسه کاربر در توکن پیدا نشد"
             });
         }
 
-        var userId = int.Parse(userIdClaim.Value);
+        if (!int.TryParse(
+            userIdClaim.Value,
+            out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
 
         var currentUser = await _context.Users
             .FirstOrDefaultAsync(u => u.Id == userId);
@@ -169,8 +228,8 @@ public class StudentsController : ControllerBase
             });
         }
 
-        // فقط Admin می‌تواند دانشجوی جدید ایجاد کند
-        if (currentUser.Role != "Admin")
+        if (currentUser.Role != "Admin" &&
+            currentUser.Role != "EducationStaff")
         {
             return Forbid();
         }
@@ -214,16 +273,19 @@ public class StudentsController : ControllerBase
     }
 
 
-    // اختصاص دانشجو به کارشناس پشتیبانی
+    // ==========================================
+    // اختصاص دانشجو به Support
+    // ==========================================
+
+    [Authorize(Roles = "Admin,EducationStaff")]
     [HttpPut("{studentId}/assign-support")]
-    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AssignSupport(
         int studentId,
         AssignSupportDto dto)
     {
-        // پیدا کردن دانشجو
         var student = await _context.Students
-            .FirstOrDefaultAsync(s => s.Id == studentId);
+            .FirstOrDefaultAsync(
+                s => s.Id == studentId);
 
         if (student == null)
         {
@@ -233,7 +295,6 @@ public class StudentsController : ControllerBase
             });
         }
 
-        // پیدا کردن کارشناس پشتیبانی
         var supportUser = await _context.Users
             .FirstOrDefaultAsync(u =>
                 u.Id == dto.SupportUserId &&
@@ -244,21 +305,27 @@ public class StudentsController : ControllerBase
         {
             return BadRequest(new
             {
-                message = "کارشناس پشتیبانی معتبر پیدا نشد"
+                message =
+                    "کارشناس پشتیبانی معتبر پیدا نشد"
             });
         }
 
-        // اختصاص Support
-        student.SupportUserId = supportUser.Id;
+        student.SupportUserId =
+            supportUser.Id;
 
         await _context.SaveChangesAsync();
 
         return Ok(new
         {
-            message = "دانشجو با موفقیت به کارشناس پشتیبانی اختصاص داده شد",
+            message =
+                "دانشجو با موفقیت به کارشناس پشتیبانی اختصاص داده شد",
+
             studentId = student.Id,
+
             supportUserId = supportUser.Id,
-            supportUserName = supportUser.FullName
+
+            supportUserName =
+                supportUser.FullName
         });
     }
 }

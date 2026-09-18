@@ -9,7 +9,7 @@ namespace BackEnd.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,EducationStaff")]
 public class CoursePartnerOrganizationsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;

@@ -124,7 +124,7 @@ public class CoursesController : ControllerBase
     // =========================
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Instructor")]
+    [Authorize(Roles = "Admin,EducationStaff,Instructor")]
     public async Task<ActionResult<CourseDto>> Update(
         int id,
         UpdateCourseDto dto)
@@ -195,7 +195,7 @@ public class CoursesController : ControllerBase
 // =========================
 
 [HttpPut("{id}/status")]
-[Authorize(Roles = "Admin,Instructor")]
+[Authorize(Roles = "Admin,EducationStaff,Instructor")]
 public async Task<ActionResult<CourseDto>> UpdateStatus(
     int id,
     UpdateCourseStatusDto dto)
@@ -263,7 +263,7 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
     // =========================
 
     [HttpGet("instructors")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,EducationStaff")]
     public async Task<List<InstructorDto>> GetInstructors()
     {
         return await _context.Users
@@ -290,7 +290,7 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
     // =========================
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,EducationStaff")]
     public async Task<ActionResult<CourseDto>> Create(
         CreateCourseDto dto)
     {
