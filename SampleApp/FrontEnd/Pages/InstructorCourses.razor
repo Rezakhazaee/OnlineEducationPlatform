@@ -11,105 +11,300 @@
 
 <div class="support-content">
 
-    <section class="support-content-card">
+    @if (IsLoading)
+    {
+        <section class="support-content-card">
 
-        <div class="support-card-header">
-
-            <div>
-                <span>آموزش</span>
-                <h2>دوره‌های من</h2>
-            </div>
-
-            <a href="/instructor" class="support-outline-btn">
-                ← داشبورد
-            </a>
-
-        </div>
-
-
-        @if (IsLoading)
-        {
             <div class="support-loading">
-                در حال دریافت اطلاعات...
+
+                <div class="support-loading-icon">
+                    ↻
+                </div>
+
+                <h3>
+                    در حال دریافت دوره‌ها...
+                </h3>
+
+                <p>
+                    اطلاعات دوره‌های شما در حال بارگذاری است.
+                </p>
+
             </div>
-        }
-        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
-        {
+
+        </section>
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <section class="support-content-card">
+
             <div class="support-error">
-                <strong>@ErrorMessage</strong>
+
+                <strong>
+                    خطا
+                </strong>
+
+                <p>
+                    @ErrorMessage
+                </p>
+
+                <button
+                    type="button"
+                    class="support-outline-btn"
+                    @onclick="LoadCourses">
+
+                    تلاش مجدد
+
+                </button>
+
+            </div>
+
+        </section>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(SuccessMessage))
+        {
+            <div class="support-success-message">
+                @SuccessMessage
             </div>
         }
-        else if (Courses.Count == 0)
-        {
-            <div class="support-empty-state">
-                <h3>هنوز دوره‌ای به شما اختصاص داده نشده است.</h3>
+
+
+        <section class="support-content-card">
+
+            <div class="support-card-header">
+
+                <div>
+
+                    <span>
+                        آموزش
+                    </span>
+
+                    <h2>
+                        دوره‌های من
+                    </h2>
+
+                </div>
+
+                <a
+                    href="/instructor"
+                    class="support-outline-btn">
+
+                    ← داشبورد
+
+                </a>
+
             </div>
-        }
-        else
-        {
-            <div class="support-enrollments-list">
 
-                @foreach (var course in Courses)
-                {
-                    <div class="support-enrollment-row">
 
-                        <div class="support-enrollment-main">
+            @if (Courses.Count == 0)
+            {
+                <div class="support-empty-state">
 
-                            <strong>
-                                @course.Title
-                            </strong>
+                    <h3>
+                        هنوز دوره‌ای به شما اختصاص داده نشده است.
+                    </h3>
 
-                            <span>
-                                @course.Price.ToString("N0") تومان
-                            </span>
+                    <p>
+                        دوره‌های اختصاص‌یافته به شما در این بخش نمایش داده می‌شوند.
+                    </p>
 
-                            @if (!string.IsNullOrWhiteSpace(course.Description))
-                            {
+                </div>
+            }
+            else
+            {
+                <div class="support-enrollments-list">
+
+                    @foreach (var course in Courses)
+                    {
+                        <div class="support-enrollment-row">
+
+                            <div class="support-enrollment-main">
+
+                                <strong>
+                                    @course.Title
+                                </strong>
+
+                                @if (!string.IsNullOrWhiteSpace(course.Description))
+                                {
+                                    <span>
+                                        @course.Description
+                                    </span>
+                                }
+
                                 <span>
-                                    @course.Description
+                                    قیمت:
+                                    @course.Price.ToString("N0")
+                                    تومان
                                 </span>
-                            }
+
+                            </div>
+
+
+                            <div>
+
+                                <small>
+                                    وضعیت
+                                </small>
+
+                                <span class="@(course.IsActive
+                                    ? "status-active"
+                                    : "status-cancelled")">
+
+                                    @(course.IsActive
+                                        ? "فعال"
+                                        : "غیرفعال")
+
+                                </span>
+
+                            </div>
+
+
+                            <div>
+
+                                <small>
+                                    عملیات
+                                </small>
+
+                                <div class="instructor-course-actions">
+
+                                    <button
+                                        type="button"
+                                        class="support-outline-btn"
+                                        @onclick="() => OpenEditForm(course)">
+
+                                        ویرایش
+
+                                    </button>
+
+
+                                    <button
+                                        type="button"
+                                        class="instructor-status-btn @(course.IsActive
+                                            ? "is-active"
+                                            : "is-inactive")"
+                                        @onclick="() => ToggleCourseStatus(course)">
+
+                                        @(course.IsActive
+                                            ? "غیرفعال کردن"
+                                            : "فعال کردن")
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+            }
+
+        </section>
+
+
+        @if (ShowEditForm)
+        {
+            <section class="support-content-card">
+
+                <div class="support-card-header">
+
+                    <div>
+
+                        <span>
+                            مدیریت دوره
+                        </span>
+
+                        <h2>
+                            ویرایش دوره
+                        </h2>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="support-outline-btn"
+                        @onclick="CloseEditForm">
+
+                        بستن
+
+                    </button>
+
+                </div>
+
+
+                <div class="support-followup-form">
+
+                    <div class="support-form-grid">
+
+                        <div class="support-form-group support-form-wide">
+
+                            <label>
+                                عنوان دوره
+                            </label>
+
+                            <input
+                                class="support-form-input"
+                                @bind="FormTitle" />
 
                         </div>
 
 
-                        <div>
+                        <div class="support-form-group support-form-wide">
 
-                            <small>
-                                وضعیت
-                            </small>
+                            <label>
+                                توضیحات
+                            </label>
 
-                            <span class="@(course.IsActive ? "status-active" : "status-cancelled")">
-                                @(course.IsActive ? "فعال" : "غیرفعال")
-                            </span>
+                            <textarea
+                                class="support-form-input support-form-textarea"
+                                @bind="FormDescription"></textarea>
 
                         </div>
 
 
-                        <div>
+                        <div class="support-form-group">
 
-                            <small>
-                                عملیات
-                            </small>
+                            <label>
+                                قیمت دوره
+                            </label>
 
-                            <button
-                                type="button"
-                                class="support-outline-btn"
-                                @onclick="() => ToggleCourseStatus(course)">
-
-                                @(course.IsActive ? "غیرفعال کردن" : "فعال کردن")
-
-                            </button>
+                            <input
+                                class="support-form-input"
+                                type="number"
+                                min="0"
+                                step="1"
+                                @bind="FormPrice" />
 
                         </div>
 
                     </div>
-                }
 
-            </div>
+
+                    <div class="support-form-actions">
+
+                        <button
+                            type="button"
+                            class="support-primary-btn"
+                            disabled="@IsSaving"
+                            @onclick="SaveCourse">
+
+                            @(IsSaving
+                                ? "در حال ذخیره..."
+                                : "ذخیره تغییرات")
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
         }
 
-    </section>
+    }
 
 </div>
 
@@ -120,7 +315,21 @@
 
     private bool IsLoading { get; set; } = true;
 
+    private bool IsSaving { get; set; }
+
+    private bool ShowEditForm { get; set; }
+
+    private int? EditingCourseId { get; set; }
+
     private string? ErrorMessage { get; set; }
+
+    private string? SuccessMessage { get; set; }
+
+    private string FormTitle { get; set; } = string.Empty;
+
+    private string? FormDescription { get; set; }
+
+    private decimal FormPrice { get; set; }
 
 
     protected override async Task OnInitializedAsync()
@@ -151,7 +360,7 @@
         catch
         {
             ErrorMessage =
-                "ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.";
+                "ارتباط با سرور برقرار نشد.";
         }
         finally
         {
@@ -160,11 +369,186 @@
     }
 
 
-    private async Task ToggleCourseStatus(CourseDto course)
+    private void OpenEditForm(CourseDto course)
     {
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        EditingCourseId = course.Id;
+
+        FormTitle = course.Title;
+        FormDescription = course.Description;
+        FormPrice = course.Price;
+
+        ShowEditForm = true;
+    }
+
+
+    private void CloseEditForm()
+    {
+        ShowEditForm = false;
+        EditingCourseId = null;
+
+        ErrorMessage = null;
+        SuccessMessage = null;
+    }
+
+
+    private async Task SaveCourse()
+    {
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        if (!EditingCourseId.HasValue)
+        {
+            ErrorMessage =
+                "دوره‌ای برای ویرایش انتخاب نشده است.";
+
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormTitle))
+        {
+            ErrorMessage =
+                "عنوان دوره الزامی است.";
+
+            return;
+        }
+
+        if (FormTitle.Trim().Length < 3)
+        {
+            ErrorMessage =
+                "عنوان دوره باید حداقل ۳ کاراکتر باشد.";
+
+            return;
+        }
+
+        if (FormPrice < 0)
+        {
+            ErrorMessage =
+                "قیمت نمی‌تواند منفی باشد.";
+
+            return;
+        }
+
+
+        var course =
+            Courses.FirstOrDefault(
+                x => x.Id == EditingCourseId.Value);
+
+        if (course == null)
+        {
+            ErrorMessage =
+                "دوره پیدا نشد.";
+
+            return;
+        }
+
+
+        IsSaving = true;
+
         try
         {
-            var client = Auth.CreateAuthenticatedClient();
+            var client =
+                Auth.CreateAuthenticatedClient();
+
+
+            var request = new UpdateCourseDto
+            {
+                Title =
+                    FormTitle.Trim(),
+
+                Description =
+                    string.IsNullOrWhiteSpace(FormDescription)
+                        ? null
+                        : FormDescription.Trim(),
+
+                Price =
+                    FormPrice,
+
+                // وضعیت در فرم ویرایش تغییر نمی‌کند
+                IsActive =
+                    course.IsActive
+            };
+
+
+            var response =
+                await client.PutAsJsonAsync(
+                    $"api/Courses/{course.Id}",
+                    request);
+
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage =
+                    await GetErrorMessage(response);
+
+                return;
+            }
+
+
+            var updatedCourse =
+                await response.Content
+                    .ReadFromJsonAsync<CourseDto>();
+
+
+            if (updatedCourse != null)
+            {
+                course.Title =
+                    updatedCourse.Title;
+
+                course.Description =
+                    updatedCourse.Description;
+
+                course.Price =
+                    updatedCourse.Price;
+
+                course.IsActive =
+                    updatedCourse.IsActive;
+            }
+            else
+            {
+                course.Title =
+                    FormTitle.Trim();
+
+                course.Description =
+                    string.IsNullOrWhiteSpace(FormDescription)
+                        ? null
+                        : FormDescription.Trim();
+
+                course.Price =
+                    FormPrice;
+            }
+
+
+            SuccessMessage =
+                "اطلاعات دوره با موفقیت ذخیره شد.";
+
+            ShowEditForm = false;
+            EditingCourseId = null;
+        }
+        catch
+        {
+            ErrorMessage =
+                "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+
+    private async Task ToggleCourseStatus(CourseDto course)
+    {
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        try
+        {
+            var client =
+                Auth.CreateAuthenticatedClient();
+
 
             var response =
                 await client.PutAsJsonAsync(
@@ -174,19 +558,66 @@
                         IsActive = !course.IsActive
                     });
 
+
             if (!response.IsSuccessStatusCode)
             {
-                ErrorMessage = "تغییر وضعیت دوره انجام نشد.";
+                ErrorMessage =
+                    await GetErrorMessage(response);
+
                 return;
             }
 
-            course.IsActive = !course.IsActive;
+
+            var updatedCourse =
+                await response.Content
+                    .ReadFromJsonAsync<CourseDto>();
+
+
+            if (updatedCourse != null)
+            {
+                course.IsActive =
+                    updatedCourse.IsActive;
+            }
+            else
+            {
+                course.IsActive =
+                    !course.IsActive;
+            }
+
+
+            SuccessMessage =
+                course.IsActive
+                    ? "دوره فعال شد."
+                    : "دوره غیرفعال شد.";
         }
         catch
         {
             ErrorMessage =
-                "ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.";
+                "ارتباط با سرور برقرار نشد.";
         }
+    }
+
+
+    private async Task<string> GetErrorMessage(
+        HttpResponseMessage response)
+    {
+        try
+        {
+            var error =
+                await response.Content
+                    .ReadFromJsonAsync<ApiError>();
+
+            if (!string.IsNullOrWhiteSpace(
+                error?.Message))
+            {
+                return error.Message;
+            }
+        }
+        catch
+        {
+        }
+
+        return "عملیات انجام نشد.";
     }
 
 
@@ -194,7 +625,8 @@
     {
         public int Id { get; set; }
 
-        public string Title { get; set; } = string.Empty;
+        public string Title { get; set; } =
+            string.Empty;
 
         public string? Description { get; set; }
 
@@ -206,9 +638,28 @@
     }
 
 
+    public class UpdateCourseDto
+    {
+        public string Title { get; set; } =
+            string.Empty;
+
+        public string? Description { get; set; }
+
+        public decimal Price { get; set; }
+
+        public bool IsActive { get; set; }
+    }
+
+
     public class UpdateCourseStatusDto
     {
         public bool IsActive { get; set; }
+    }
+
+
+    public class ApiError
+    {
+        public string? Message { get; set; }
     }
 
 }

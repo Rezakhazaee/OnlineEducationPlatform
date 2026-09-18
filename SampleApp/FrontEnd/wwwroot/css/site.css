@@ -7661,3 +7661,54 @@ grep -nE 'Admin Students|students-summary|student-summary-card|students-table|st
 
 }
 
+
+/* =========================
+   Instructor Course Actions
+   ========================= */
+
+.instructor-course-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 7px;
+}
+
+.instructor-course-actions .support-outline-btn,
+.instructor-course-actions .support-payment-action-btn {
+    min-height: 34px;
+}
+
+
+/* Instructor course status button */
+.instructor-status-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    min-width: 105px !important;
+    min-height: 34px !important;
+    padding: 0 12px !important;
+    border: 0 !important;
+    border-radius: 8px !important;
+    font-family: inherit !important;
+    font-size: 10px !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+}
+
+.instructor-status-btn.is-active {
+    background: #f6e9e9 !important;
+    color: #9d4d4d !important;
+}
+
+.instructor-status-btn.is-inactive {
+    background: #e8f5ec !important;
+    color: #327449 !important;
+}
+
+.instructor-status-btn:hover {
+    filter: brightness(0.97);
+}
+
