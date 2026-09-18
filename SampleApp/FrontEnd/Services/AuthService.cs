@@ -16,8 +16,27 @@ public class AuthService
     public bool IsLoggedIn =>
         !string.IsNullOrWhiteSpace(Token);
 
+
     public bool IsAdmin =>
         Role == "Admin";
+
+    public bool IsEducationStaff =>
+        Role == "EducationStaff";
+
+    public bool IsMarketer =>
+        Role == "Marketer";
+
+    public bool IsSupport =>
+        Role == "Support";
+
+    public bool IsInstructor =>
+        Role == "Instructor";
+
+    public bool IsStudent =>
+        Role == "Student";
+
+    public bool IsManagementPanelUser =>
+        IsAdmin || IsEducationStaff;
 
     public AuthService(IHttpClientFactory httpClientFactory)
     {

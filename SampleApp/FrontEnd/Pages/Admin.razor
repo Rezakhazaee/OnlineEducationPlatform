@@ -31,11 +31,13 @@
                 <span>▣</span>
                 دوره‌ها
             </a>
-
-            <a href="/admin/users">
-                <span>♙</span>
-                کاربران
-            </a>
+                @if (Auth.IsAdmin)
+                {
+                    <a href="/admin/users">
+                        <span>♙</span>
+                        کاربران
+                    </a>
+                }
 
             <a href="/admin/enrollments">
                 <span>✓</span>
@@ -56,10 +58,13 @@
                 <span>▤</span>
                 گزارش‌ها
             </a>
-            <a href="/admin/organizations">
-            <span>◈</span>
-            سازمان‌ها و ظاهر  
-            </a>
+                @if (Auth.IsAdmin)
+                {
+                    <a href="/admin/organizations">
+                        <span>◈</span>
+                        سازمان‌ها و ظاهر
+                    </a>
+                }
 
         </nav>
 
@@ -99,9 +104,7 @@
                         @(Auth.FullName ?? "مدیر سیستم")
                     </strong>
 
-                    <small>
-                        Administrator
-                    </small>
+                    <small>@(Auth.Role == "Admin" ? "مدیر سیستم" : "کارشناس آموزش")</small>
                 </div>
 
             </div>
@@ -286,7 +289,7 @@
 
             </section>
 
-        
+
         <section class="admin-content-card">
 
             <div class="admin-card-header">

@@ -160,8 +160,8 @@
             }
 
 
-            // اگر مدیر است → پنل مدیریت
-            if (Auth.IsAdmin)
+            // مدیر و کارشناس آموزش → پنل عملیاتی
+              if (Auth.IsManagementPanelUser)
             {
                 Navigation.NavigateTo("/admin");
                 return;
