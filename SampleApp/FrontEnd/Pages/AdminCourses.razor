@@ -223,6 +223,31 @@
                             <div class="form-group">
 
                                 <label>
+                                    نوع برگزاری دوره
+                                </label>
+
+                                <select @bind="FormDeliveryType">
+
+                                    <option value="Online">
+                                        آنلاین
+                                    </option>
+
+                                    <option value="InPerson">
+                                        حضوری
+                                    </option>
+
+                                    <option value="Hybrid">
+                                        ترکیبی
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
                                     قیمت دوره
                                 </label>
 
@@ -1000,6 +1025,8 @@ private string FormPartnerDescription { get; set; } = string.Empty;
 
     private decimal FormPrice { get; set; }
 
+    private string FormDeliveryType { get; set; } = "Online";
+
     private string FormInstructorId { get; set; } = string.Empty;
 
     private bool FormIsActive { get; set; } = true;
@@ -1413,6 +1440,7 @@ private async Task DeletePartnerOrganization(
         FormTitle = string.Empty;
         FormDescription = string.Empty;
         FormPrice = 0;
+        FormDeliveryType = "Online";
         FormInstructorId = string.Empty;
         FormIsActive = true;
 
@@ -1431,6 +1459,9 @@ private void EditCourse(CourseDto course)
     FormInstructorId =
         course.InstructorId?.ToString()
         ?? string.Empty;
+
+    FormDeliveryType =
+        course.DeliveryType ?? "Online";
 
     FormIsActive = course.IsActive;
 
@@ -1496,6 +1527,7 @@ private void EditCourse(CourseDto course)
                     Title = FormTitle,
                     Description = FormDescription,
                     Price = FormPrice,
+                    DeliveryType = FormDeliveryType,
                     InstructorId = instructorId,
                     IsActive = FormIsActive
                 };
@@ -1521,6 +1553,7 @@ private void EditCourse(CourseDto course)
                     Title = FormTitle,
                     Description = FormDescription,
                     Price = FormPrice,
+                    DeliveryType = FormDeliveryType,
                     IsActive = FormIsActive
                 };
 
@@ -1602,6 +1635,8 @@ private void EditCourse(CourseDto course)
 
         public decimal Price { get; set; }
 
+        public string DeliveryType { get; set; } = "Online";
+
         public int? InstructorId { get; set; }
 
         public bool IsActive { get; set; }
@@ -1632,6 +1667,8 @@ private void EditCourse(CourseDto course)
 
         public decimal Price { get; set; }
 
+        public string DeliveryType { get; set; } = "Online";
+
         public int? InstructorId { get; set; }
 
         public bool IsActive { get; set; } = true;
@@ -1645,6 +1682,8 @@ private void EditCourse(CourseDto course)
         public string? Description { get; set; }
 
         public decimal Price { get; set; }
+
+        public string DeliveryType { get; set; } = "Online";
 
         public bool IsActive { get; set; }
     }

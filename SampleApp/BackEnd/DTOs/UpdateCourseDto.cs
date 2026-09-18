@@ -13,5 +13,10 @@ public class UpdateCourseDto
     [Range(0, double.MaxValue, ErrorMessage = "قیمت نمی‌تواند منفی باشد")]
     public decimal Price { get; set; }
 
+    [RegularExpression(
+        "^(Online|InPerson|Hybrid)$",
+        ErrorMessage = "نوع برگزاری دوره نامعتبر است")]
+    public string DeliveryType { get; set; } = "Online";
+
     public bool IsActive { get; set; }
 }

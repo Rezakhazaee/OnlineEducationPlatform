@@ -10,6 +10,8 @@ public class CourseDto
 
     public decimal Price { get; set; }
 
+    public string DeliveryType { get; set; } = "Online";
+
     public int? InstructorId { get; set; }
 
     public bool IsActive { get; set; }

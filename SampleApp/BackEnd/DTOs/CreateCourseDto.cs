@@ -8,16 +8,17 @@ public class CreateCourseDto
     [MinLength(3, ErrorMessage = "عنوان دوره باید حداقل ۳ کاراکتر باشد")]
     public string Title { get; set; } = string.Empty;
 
-
     public string? Description { get; set; }
-
 
     [Range(0, double.MaxValue, ErrorMessage = "قیمت دوره نمی‌تواند منفی باشد")]
     public decimal Price { get; set; }
 
+    [RegularExpression(
+        "^(Online|InPerson|Hybrid)$",
+        ErrorMessage = "نوع برگزاری دوره نامعتبر است")]
+    public string DeliveryType { get; set; } = "Online";
 
     public int? InstructorId { get; set; }
-
 
     public bool IsActive { get; set; } = true;
 }

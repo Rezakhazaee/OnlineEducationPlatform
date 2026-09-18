@@ -51,6 +51,7 @@ public class CoursesController : ControllerBase
                 Title = c.Title,
                 Description = c.Description,
                 Price = c.Price,
+                DeliveryType = c.DeliveryType,
                 InstructorId = c.InstructorId,
                 IsActive = c.IsActive
             })
@@ -110,6 +111,7 @@ public class CoursesController : ControllerBase
             Title = course.Title,
             Description = course.Description,
             Price = course.Price,
+            DeliveryType = course.DeliveryType,
             InstructorId = course.InstructorId,
             IsActive = course.IsActive
         };
@@ -170,6 +172,7 @@ public class CoursesController : ControllerBase
         course.Title = dto.Title;
         course.Description = dto.Description;
         course.Price = dto.Price;
+        course.DeliveryType = dto.DeliveryType;
         course.IsActive = dto.IsActive;
 
         await _context.SaveChangesAsync();
@@ -180,6 +183,7 @@ public class CoursesController : ControllerBase
             Title = course.Title,
             Description = course.Description,
             Price = course.Price,
+            DeliveryType = course.DeliveryType,
             InstructorId = course.InstructorId,
             IsActive = course.IsActive
         };
@@ -334,6 +338,7 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
             Title = dto.Title,
             Description = dto.Description,
             Price = dto.Price,
+            DeliveryType = dto.DeliveryType,
             InstructorId = dto.InstructorId,
             IsActive = dto.IsActive
         };
@@ -348,6 +353,7 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
             Title = course.Title,
             Description = course.Description,
             Price = course.Price,
+            DeliveryType = course.DeliveryType,
             InstructorId = course.InstructorId,
             IsActive = course.IsActive
         };
