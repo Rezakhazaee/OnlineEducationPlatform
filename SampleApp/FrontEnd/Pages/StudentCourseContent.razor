@@ -10,124 +10,236 @@
 
 <PageTitle>محتوای دوره | آموزش‌یار</PageTitle>
 
-<div style="padding:30px;">
+<div class="student-page">
 
     @if (IsLoading)
     {
-        <h2>در حال بارگذاری محتوای دوره...</h2>
+        <section class="student-content-card">
+            <div class="student-loading">
+                در حال بارگذاری محتوای دوره...
+            </div>
+        </section>
     }
     else if (!string.IsNullOrWhiteSpace(ErrorMessage))
     {
-        <h2>خطا</h2>
+        <section class="student-content-card">
+            <div class="student-error">
 
-        <p>@ErrorMessage</p>
+                <strong>
+                    خطا
+                </strong>
 
-        <a href="/student/courses">
-            ← بازگشت به دوره‌ها
-        </a>
+                <p>
+                    @ErrorMessage
+                </p>
+
+                <a
+                    href="/student/courses"
+                    class="student-course-details-btn">
+
+                    ← بازگشت به دوره‌ها
+
+                </a>
+
+            </div>
+        </section>
     }
-    else if (Content == null)
+    else if (Content != null)
     {
-        <h2>محتوای دوره پیدا نشد.</h2>
+        <section class="student-content-card">
 
-        <a href="/student/courses">
-            ← بازگشت به دوره‌ها
-        </a>
-    }
-    else
-    {
-        <h1>
-            @Content.CourseTitle
-        </h1>
+            <div class="student-content-header">
 
-        <p>
-            نوع دوره:
-            @GetDeliveryTypeText(Content.DeliveryType)
-        </p>
+                <div>
 
-        <hr />
+                    <small>
+                        محتوای آموزشی
+                    </small>
+
+                    <h1>
+                        @Content.CourseTitle
+                    </h1>
+
+                    <p>
+                        نوع دوره:
+                        @GetDeliveryTypeText(Content.DeliveryType)
+                    </p>
+
+                </div>
+
+                <a
+                    href="/student/courses"
+                    class="student-course-details-btn">
+
+                    ← دوره‌های من
+
+                </a>
+
+            </div>
+
+
+            <div style="margin-top:20px;">
+
+                <strong>
+                    پیشرفت دوره:
+                </strong>
+
+                @CompletedLessonCount از @TotalLessonCount درس تکمیل شده
+
+            </div>
+
+        </section>
+
 
         @if (Content.Modules.Count == 0)
         {
-            <h3>
-                هنوز سرفصلی برای این دوره ثبت نشده است.
-            </h3>
+            <section class="student-content-card">
+
+                <div class="student-empty-state">
+
+                    <h3>
+                        هنوز محتوایی برای این دوره منتشر نشده است.
+                    </h3>
+
+                </div>
+
+            </section>
         }
         else
         {
             @foreach (var module in Content.Modules)
             {
-                <section style="margin:25px 0;">
+                <section class="student-content-card">
 
-                    <h2>
-                        سرفصل @module.SortOrder:
-                        @module.Title
-                    </h2>
+                    <div class="student-module-header">
+
+                        <div>
+
+                            <small>
+                                سرفصل @module.SortOrder
+                            </small>
+
+                            <h2>
+                                @module.Title
+                            </h2>
+
+                        </div>
+
+                        <span>
+                            @module.Lessons.Count درس
+                        </span>
+
+                    </div>
+
 
                     @if (module.Lessons.Count == 0)
                     {
-                        <p>
-                            درسی در این سرفصل منتشر نشده است.
-                        </p>
+                        <div class="student-empty-state">
+
+                            <p>
+                                درسی در این سرفصل منتشر نشده است.
+                            </p>
+
+                        </div>
                     }
                     else
                     {
-                        @foreach (var lesson in module.Lessons)
-                        {
-                            <div style="border:1px solid #ddd; padding:15px; margin:10px 0;">
+                        <div class="student-lessons-list">
 
-                                <h3>
-                                    @lesson.SortOrder.
-                                    @lesson.Title
-                                </h3>
+                            @foreach (var lesson in module.Lessons)
+                            {
+                                var completed =
+                                    Progress.TryGetValue(
+                                        lesson.Id,
+                                        out var isCompleted)
+                                    && isCompleted;
 
-                                @if (!string.IsNullOrWhiteSpace(lesson.Description))
-                                {
-                                    <p>
-                                        @lesson.Description
-                                    </p>
-                                }
+                                <article
+                                    class="student-lesson-row">
 
-                                <p>
-                                    نوع محتوا:
-                                    @(lesson.ContentType == "Video"
-                                        ? "ویدئو"
-                                        : "متن")
-                                </p>
+                                    <div class="student-lesson-main">
 
-                                @if (lesson.DurationMinutes > 0)
-                                {
-                                    <p>
-                                        مدت:
-                                        @lesson.DurationMinutes دقیقه
-                                    </p>
-                                }
+                                        <strong>
+                                            @lesson.SortOrder.
+                                            @lesson.Title
+                                        </strong>
 
-                                @if (!string.IsNullOrWhiteSpace(lesson.ContentUrl))
-                                {
-                                    <a
-                                        href="@lesson.ContentUrl"
-                                        target="_blank"
-                                        rel="noopener noreferrer">
+                                        @if (!string.IsNullOrWhiteSpace(lesson.Description))
+                                        {
+                                            <p>
+                                                @lesson.Description
+                                            </p>
+                                        }
 
-                                        مشاهده محتوا
+                                        <small>
 
-                                    </a>
-                                }
+                                            نوع محتوا:
+                                            @(lesson.ContentType == "Video"
+                                                ? "ویدئو"
+                                                : "متن")
 
-                            </div>
-                        }
+                                            @if (lesson.DurationMinutes > 0)
+                                            {
+                                                <text>
+                                                    | مدت:
+                                                    @lesson.DurationMinutes دقیقه
+                                                </text>
+                                            }
+
+                                            @if (lesson.IsFreePreview)
+                                            {
+                                                <text>
+                                                    | پیش‌نمایش رایگان
+                                                </text>
+                                            }
+
+                                        </small>
+
+                                    </div>
+
+
+                                    <div>
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                            lesson.ContentUrl))
+                                        {
+                                            <a
+                                                href="@lesson.ContentUrl"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                class="student-course-details-btn">
+
+                                                مشاهده محتوا
+
+                                            </a>
+                                        }
+
+
+                                        <button
+                                            type="button"
+                                            class="student-course-details-btn"
+                                            disabled="@IsSavingProgress"
+                                            @onclick="() => ToggleLessonProgress(
+                                                lesson.Id,
+                                                completed)">
+
+                                            @(completed
+                                                ? "✓ تکمیل‌شده"
+                                                : "علامت‌گذاری به‌عنوان تکمیل‌شده")
+
+                                        </button>
+
+                                    </div>
+
+                                </article>
+                            }
+
+                        </div>
                     }
 
                 </section>
             }
         }
-
-        <hr />
-
-        <a href="/student/courses">
-            ← بازگشت به دوره‌های من
-        </a>
     }
 
 </div>
@@ -138,67 +250,165 @@
     [Parameter]
     public int CourseId { get; set; }
 
+
+    private StudentCourseContentDto? Content { get; set; }
+
+    private int EnrollmentId { get; set; }
+
     private bool IsLoading { get; set; } = true;
+
+    private bool IsSavingProgress { get; set; }
 
     private string? ErrorMessage { get; set; }
 
-    private StudentCourseContentDto? Content { get; set; }
+    private Dictionary<int, bool> Progress { get; set; } = new();
+
+
+    private int TotalLessonCount =>
+        Content?.Modules.Sum(x => x.Lessons.Count) ?? 0;
+
+
+    private int CompletedLessonCount =>
+        Progress.Count(x => x.Value);
 
 
     protected override async Task OnInitializedAsync()
     {
-        if (!Auth.IsLoggedIn)
+        if (!Auth.IsLoggedIn || !Auth.IsStudent)
         {
             Navigation.NavigateTo("/login", true);
             return;
         }
 
-        if (!Auth.IsStudent)
-        {
-            Navigation.NavigateTo("/student", true);
-            return;
-        }
-
-        await LoadContent();
+        await LoadData();
     }
 
 
-    private async Task LoadContent()
+    private async Task LoadData()
     {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+
+            var enrollments =
+                await client.GetFromJsonAsync<List<EnrollmentDto>>(
+                    "api/Enrollments/my")
+                ?? new List<EnrollmentDto>();
+
+
+            var enrollment =
+                enrollments.FirstOrDefault(x =>
+                    x.CourseId == CourseId &&
+                    x.Status != "Cancelled");
+
+
+            if (enrollment == null)
+            {
+                ErrorMessage =
+                    "شما در این دوره ثبت‌نام فعال ندارید.";
+
+                return;
+            }
+
+
+            EnrollmentId = enrollment.Id;
+
+
+            Content =
+                await client.GetFromJsonAsync<StudentCourseContentDto>(
+                    $"api/StudentCourseContent/{CourseId}");
+
+
+            if (Content == null)
+            {
+                ErrorMessage =
+                    "محتوای دوره پیدا نشد.";
+
+                return;
+            }
+
+
+            var progress =
+                await client.GetFromJsonAsync<List<LessonProgressDto>>(
+                    $"api/LessonProgress/enrollment/{EnrollmentId}")
+                ?? new List<LessonProgressDto>();
+
+
+            Progress = progress.ToDictionary(
+                x => x.CourseLessonId,
+                x => x.IsCompleted);
+        }
+        catch
+        {
+            ErrorMessage =
+                "دریافت محتوای دوره با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+
+    private async Task ToggleLessonProgress(
+        int lessonId,
+        bool currentlyCompleted)
+    {
+        if (EnrollmentId <= 0)
+        {
+            return;
+        }
+
+        ErrorMessage = null;
+        IsSavingProgress = true;
+
         try
         {
             var client = Auth.CreateAuthenticatedClient();
 
             var response =
-                await client.GetAsync(
-                    $"api/StudentCourseContent/{CourseId}");
+                await client.PutAsJsonAsync(
+                    "api/LessonProgress",
+                    new UpdateLessonProgressDto
+                    {
+                        EnrollmentId = EnrollmentId,
+                        CourseLessonId = lessonId,
+                        IsCompleted = !currentlyCompleted
+                    });
+
 
             if (!response.IsSuccessStatusCode)
             {
                 ErrorMessage =
-                    $"دریافت محتوای دوره ناموفق بود. کد: {(int)response.StatusCode}";
+                    await GetErrorMessage(response);
 
                 return;
             }
 
-            Content =
-                await response.Content
-                    .ReadFromJsonAsync<StudentCourseContentDto>();
 
-            if (Content == null)
+            var result =
+                await response.Content
+                    .ReadFromJsonAsync<LessonProgressDto>();
+
+
+            if (result != null)
             {
-                ErrorMessage =
-                    "اطلاعات محتوای دوره خالی است.";
+                Progress[result.CourseLessonId] =
+                    result.IsCompleted;
             }
         }
-        catch (Exception ex)
+        catch
         {
             ErrorMessage =
-                $"خطای دریافت محتوا: {ex.Message}";
+                "ذخیره پیشرفت درس با خطا مواجه شد.";
         }
         finally
         {
-            IsLoading = false;
+            IsSavingProgress = false;
         }
     }
 
@@ -212,6 +422,28 @@
             "Hybrid" => "ترکیبی",
             _ => "نامشخص"
         };
+    }
+
+
+    private async Task<string> GetErrorMessage(
+        HttpResponseMessage response)
+    {
+        try
+        {
+            var error =
+                await response.Content
+                    .ReadFromJsonAsync<ApiError>();
+
+            if (!string.IsNullOrWhiteSpace(error?.Message))
+            {
+                return error.Message;
+            }
+        }
+        catch
+        {
+        }
+
+        return "عملیات انجام نشد.";
     }
 
 
@@ -256,6 +488,44 @@
         public int SortOrder { get; set; }
 
         public bool IsFreePreview { get; set; }
+    }
+
+
+    public class EnrollmentDto
+    {
+        public int Id { get; set; }
+
+        public int CourseId { get; set; }
+
+        public string? CourseTitle { get; set; }
+
+        public string Status { get; set; } = string.Empty;
+    }
+
+
+    public class LessonProgressDto
+    {
+        public int CourseLessonId { get; set; }
+
+        public bool IsCompleted { get; set; }
+
+        public DateTime? CompletedAt { get; set; }
+    }
+
+
+    public class UpdateLessonProgressDto
+    {
+        public int EnrollmentId { get; set; }
+
+        public int CourseLessonId { get; set; }
+
+        public bool IsCompleted { get; set; }
+    }
+
+
+    public class ApiError
+    {
+        public string? Message { get; set; }
     }
 
 }
