@@ -4,6 +4,7 @@
 @using FrontEnd.Services
 
 @inject AuthService Auth
+@inject NavigationManager Navigation
 
 <PageTitle>مدیریت دوره‌ها | آموزش‌یار</PageTitle>
 
@@ -156,13 +157,16 @@
                         </h2>
                     </div>
 
-                    <button
-                        class="admin-primary-btn"
-                        @onclick="OpenCreateForm">
+                      @if (Auth.IsAdmin || Auth.IsEducationStaff)
+                      {
+                          <button
+                              class="admin-primary-btn"
+                              @onclick="OpenCreateForm">
 
-                        + افزودن دوره
+                              + افزودن دوره
 
-                    </button>
+                          </button>
+                      }
 
                 </div>
 
@@ -246,28 +250,31 @@
                             </div>
 
 
-                            <div class="form-group">
+                              @if (Auth.IsAdmin || Auth.IsEducationStaff)
+                              {
+                                  <div class="form-group">
 
-                                <label>
-                                    مدرس دوره
-                                </label>
+                                      <label>
+                                          مدرس دوره
+                                      </label>
 
-                                <select @bind="FormInstructorId">
+                                      <select @bind="FormInstructorId">
 
-                                    <option value="">
-                                        بدون مدرس
-                                    </option>
+                                          <option value="">
+                                              بدون مدرس
+                                          </option>
 
-                                    @foreach (var instructor in Instructors)
-                                    {
-                                        <option value="@instructor.Id">
-                                            @instructor.FullName
-                                        </option>
-                                    }
+                                          @foreach (var instructor in Instructors)
+                                          {
+                                              <option value="@instructor.Id">
+                                                  @instructor.FullName
+                                              </option>
+                                          }
 
-                                </select>
+                                      </select>
 
-                            </div>
+                                  </div>
+                              }
 
 
                             <div class="course-active-option">
@@ -341,13 +348,16 @@
                             برای شروع، اولین دوره آموزشی را اضافه کنید.
                         </p>
 
-                        <button
-                            class="admin-primary-btn"
-                            @onclick="OpenCreateForm">
+                          @if (Auth.IsAdmin || Auth.IsEducationStaff)
+                          {
+                              <button
+                                  class="admin-primary-btn"
+                                  @onclick="OpenCreateForm">
 
-                            + افزودن اولین دوره
+                                  + افزودن اولین دوره
 
-                        </button>
+                              </button>
+                          }
 
                     </div>
                 }
@@ -453,14 +463,17 @@
 
     <div class="course-row-actions">
 
- <button
-    type="button"
-    class="course-contract-btn"
-    @onclick="@(() => OpenPartnerOrganizations(course.Id))">
+                        @if (Auth.IsAdmin || Auth.IsEducationStaff)
+                        {
+                            <button
+                                type="button"
+                                class="course-contract-btn"
+                                @onclick="@(() => OpenPartnerOrganizations(course.Id))">
 
-    قراردادها
+                                قراردادها
 
-</button>
+                            </button>
+                        }
 
         <button
             type="button"
@@ -551,19 +564,22 @@
                 {
                     <div class="course-contract-actions">
 
-                        <button
-                            type="button"
-                            class="admin-primary-btn"
-                            @onclick="OpenCreatePartnerOrganizationForm">
+                        @if (Auth.IsAdmin || Auth.IsEducationStaff)
+                        {
+                            <button
+                                type="button"
+                                class="admin-primary-btn"
+                                @onclick="OpenCreatePartnerOrganizationForm">
 
-                            + افزودن قرارداد
+                                + افزودن قرارداد
 
-                        </button>
+                            </button>
+                        }
 
                     </div>
 
 
-                    @if (EditingCoursePartnerOrganizationId != null)
+                    @if (EditingCoursePartnerOrganizationId != null || IsPartnerOrganizationFormOpen)
                     {
                         <div class="course-contract-form">
 
@@ -867,23 +883,26 @@
 
                                                 <div class="admin-row-actions">
 
-                                                    <button
-                                                        type="button"
-                                                        class="admin-action-btn"
-                                                        @onclick="() => EditPartnerOrganization(contract)">
+                                                      @if (Auth.IsAdmin || Auth.IsEducationStaff)
+                                                      {
+                                                          <button
+                                                              type="button"
+                                                              class="admin-action-btn"
+                                                              @onclick="() => EditPartnerOrganization(contract)">
 
-                                                        ویرایش
+                                                              ویرایش
 
-                                                    </button>
+                                                          </button>
 
-                                                    <button
-                                                        type="button"
-                                                        class="admin-action-btn danger"
-                                                        @onclick="() => DeletePartnerOrganization(contract)">
+                                                          <button
+                                                              type="button"
+                                                              class="admin-action-btn danger"
+                                                              @onclick="() => DeletePartnerOrganization(contract)">
 
-                                                        حذف
+                                                              حذف
 
-                                                    </button>
+                                                          </button>
+                                                      }
 
                                                 </div>
 
@@ -945,6 +964,7 @@ private string? PartnerOrganizationError { get; set; }
 private string? PartnerOrganizationSuccess { get; set; }
 
 private int? EditingCoursePartnerOrganizationId { get; set; }
+private bool IsPartnerOrganizationFormOpen { get; set; }
 
 private string FormPartnerOrganizationId { get; set; } = string.Empty;
 
@@ -983,11 +1003,22 @@ private string FormPartnerDescription { get; set; } = string.Empty;
     private bool FormIsActive { get; set; } = true;
 
 protected override async Task OnInitializedAsync()
-{
-    await LoadCourses();
-    await LoadInstructors();
-    await LoadPartnerOrganizations();
-}
+    {
+        if (!Auth.IsLoggedIn ||
+            !(Auth.IsAdmin || Auth.IsEducationStaff || Auth.IsInstructor))
+        {
+            Navigation.NavigateTo(Auth.IsLoggedIn ? "/admin" : "/login");
+            return;
+        }
+
+        await LoadCourses();
+
+        if (Auth.IsAdmin || Auth.IsEducationStaff)
+        {
+            await LoadInstructors();
+            await LoadPartnerOrganizations();
+        }
+    }
 
 
     private async Task LoadCourses()
@@ -1109,6 +1140,7 @@ private async Task LoadCoursePartnerOrganizations(int courseId)
 private void ResetPartnerOrganizationForm()
 {
     EditingCoursePartnerOrganizationId = null;
+    IsPartnerOrganizationFormOpen = false;
 
     FormPartnerOrganizationId = string.Empty;
 
@@ -1147,6 +1179,7 @@ private void OpenCreatePartnerOrganizationForm()
     EditingCoursePartnerOrganizationId = null;
 
     ResetPartnerOrganizationForm();
+    IsPartnerOrganizationFormOpen = true;
 
     if (SelectedCourseForPartnersId.HasValue)
     {
