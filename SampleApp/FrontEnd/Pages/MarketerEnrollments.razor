@@ -11,60 +11,308 @@
 
 <div class="support-content">
 
+    @if (!string.IsNullOrWhiteSpace(SuccessMessage))
+    {
+        <div class="support-success-message">
+            @SuccessMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(FormErrorMessage))
+    {
+        <div class="support-error-message">
+            @FormErrorMessage
+        </div>
+    }
+
+
     <section class="support-content-card">
 
         <div class="support-card-header">
+
             <div>
                 <span>ثبت‌نام</span>
-                <h2>ثبت‌نام‌های دانشجویان ارجاع‌شده</h2>
+                <h2>ثبت‌نام دانشجوی ارجاع‌شده</h2>
             </div>
 
-            <a href="/marketer" class="support-outline-btn">
+            <a
+                href="/marketer"
+                class="support-outline-btn">
+
                 ← داشبورد
+
             </a>
+
         </div>
+
+
+        <div class="support-followup-form">
+
+            <div class="support-form-grid">
+
+                <div class="support-form-group">
+
+                    <label>
+                        دانشجو
+                    </label>
+
+                    <select
+                        class="support-form-input"
+                        @bind="FormStudentId">
+
+                        <option value="0">
+                            انتخاب دانشجو
+                        </option>
+
+                        @foreach (var student in Students)
+                        {
+                            <option value="@student.Id">
+                                @student.FirstName @student.LastName
+                            </option>
+                        }
+
+                    </select>
+
+                </div>
+
+
+                <div class="support-form-group">
+
+                    <label>
+                        دوره
+                    </label>
+
+                    <select
+                        class="support-form-input"
+                        @bind="FormCourseId">
+
+                        <option value="0">
+                            انتخاب دوره
+                        </option>
+
+                        @foreach (var course in Courses.Where(x => x.IsActive))
+                        {
+                            <option value="@course.Id">
+                                @course.Title
+                                -
+                                @course.Price.ToString("N0")
+                                تومان
+                            </option>
+                        }
+
+                    </select>
+
+                </div>
+
+
+                <div class="support-form-group">
+
+                    <label>
+                        تاریخ شروع
+                    </label>
+
+                    <input
+                        type="date"
+                        class="support-form-input"
+                        @bind="FormStartDate" />
+
+                </div>
+
+
+                <div class="support-form-group">
+
+                    <label>
+                        وضعیت ثبت‌نام
+                    </label>
+
+                    <select
+                        class="support-form-input"
+                        @bind="FormStatus">
+
+                        <option value="Active">
+                            فعال
+                        </option>
+
+                        <option value="Suspended">
+                            معلق
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="support-form-group support-form-wide">
+
+                    <label>
+                        توضیحات
+                    </label>
+
+                    <textarea
+                        class="support-form-input support-form-textarea"
+                        @bind="FormDescription"
+                        placeholder="توضیحات ثبت‌نام...">
+                    </textarea>
+
+                </div>
+
+            </div>
+
+
+            @if (SelectedCourse != null)
+            {
+                <div class="support-payment-summary">
+
+                    <span>
+                        دوره انتخاب‌شده
+                    </span>
+
+                    <strong>
+                        @SelectedCourse.Title
+                    </strong>
+
+                    <div class="support-payment-summary-grid">
+
+                        <div>
+                            <small>قیمت دوره</small>
+
+                            <strong>
+                                @SelectedCourse.Price.ToString("N0")
+                                تومان
+                            </strong>
+                        </div>
+
+                        <div>
+                            <small>دانشجو</small>
+
+                            <strong>
+                                @(SelectedStudent == null
+                                    ? "انتخاب نشده"
+                                    : $"{SelectedStudent.FirstName} {SelectedStudent.LastName}")
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+
+            <div class="support-form-actions">
+
+                <button
+                    type="button"
+                    class="support-primary-btn"
+                    disabled="@IsSaving"
+                    @onclick="CreateEnrollment">
+
+                    @(IsSaving
+                        ? "در حال ثبت..."
+                        : "ثبت‌نام دانشجو")
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="support-content-card">
+
+        <div class="support-card-header">
+
+            <div>
+                <span>
+                    سوابق
+                </span>
+
+                <h2>
+                    ثبت‌نام‌های دانشجویان ارجاع‌شده
+                </h2>
+
+            </div>
+
+        </div>
+
 
         @if (IsLoading)
         {
-            <div class="support-loading">در حال دریافت اطلاعات...</div>
-        }
-        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
-        {
-            <div class="support-error"><strong>@ErrorMessage</strong></div>
+            <div class="support-loading">
+                در حال دریافت اطلاعات...
+            </div>
         }
         else if (Enrollments.Count == 0)
         {
             <div class="support-empty-state">
-                <h3>هنوز ثبت‌نامی برای دانشجویان ارجاع‌شده وجود ندارد.</h3>
+
+                <h3>
+                    هنوز ثبت‌نامی برای دانشجویان ارجاع‌شده وجود ندارد.
+                </h3>
+
             </div>
         }
         else
         {
             <div class="support-enrollments-list">
 
-                @foreach (var enrollment in Enrollments.OrderByDescending(x => x.StartDate))
+                @foreach (var enrollment in Enrollments
+                    .OrderByDescending(x => x.StartDate))
                 {
                     <div class="support-enrollment-row">
 
                         <div class="support-enrollment-main">
-                            <strong>@enrollment.StudentName</strong>
-                            <span>@enrollment.CourseTitle</span>
-                            <span>شروع: @enrollment.StartDate.ToString("yyyy/MM/dd")</span>
+
+                            <strong>
+                                @enrollment.StudentName
+                            </strong>
+
+                            <span>
+                                @enrollment.CourseTitle
+                            </span>
+
+                            <span>
+                                شروع:
+                                @enrollment.StartDate.ToString("yyyy/MM/dd")
+                            </span>
+
                         </div>
 
+
                         <div>
-                            <small>وضعیت</small>
+
+                            <small>
+                                وضعیت
+                            </small>
+
                             <span class="@GetEnrollmentStatusClass(enrollment.Status)">
                                 @GetEnrollmentStatusText(enrollment.Status)
                             </span>
+
                         </div>
 
-                        <div>
-                            <small>پرداخت‌شده</small>
-                            <strong>@enrollment.TotalPaid.ToString("N0") تومان</strong>
 
-                            <small style="margin-top:8px;">باقی‌مانده</small>
-                            <strong>@enrollment.RemainingAmount.ToString("N0") تومان</strong>
+                        <div class="support-enrollment-money">
+
+                            <small>
+                                پرداخت‌شده
+                            </small>
+
+                            <strong>
+                                @enrollment.TotalPaid.ToString("N0")
+                                تومان
+                            </strong>
+
+                            <small style="margin-top:8px;">
+                                باقی‌مانده
+                            </small>
+
+                            <strong>
+                                @enrollment.RemainingAmount.ToString("N0")
+                                تومان
+                            </strong>
+
                         </div>
 
                     </div>
@@ -77,36 +325,242 @@
 
 </div>
 
+
 @code {
+
+    private List<StudentDto> Students { get; set; } = new();
+
+    private List<CourseDto> Courses { get; set; } = new();
 
     private List<EnrollmentDto> Enrollments { get; set; } = new();
 
     private bool IsLoading { get; set; } = true;
 
-    private string? ErrorMessage { get; set; }
+    private bool IsSaving { get; set; }
+
+    private int FormStudentId { get; set; }
+
+    private int FormCourseId { get; set; }
+
+    private DateTime FormStartDate { get; set; } = DateTime.Today;
+
+    private string FormStatus { get; set; } = "Active";
+
+    private string FormDescription { get; set; } = string.Empty;
+
+    private string? FormErrorMessage { get; set; }
+
+    private string? SuccessMessage { get; set; }
+
+
+    private StudentDto? SelectedStudent =>
+        FormStudentId > 0
+            ? Students.FirstOrDefault(
+                x => x.Id == FormStudentId)
+            : null;
+
+
+    private CourseDto? SelectedCourse =>
+        FormCourseId > 0
+            ? Courses.FirstOrDefault(
+                x => x.Id == FormCourseId)
+            : null;
+
 
     protected override async Task OnInitializedAsync()
     {
         if (!Auth.IsLoggedIn || !Auth.IsMarketer)
+        {
             return;
+        }
+
+        await LoadData();
+    }
+
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        FormErrorMessage = null;
 
         try
         {
             var client = Auth.CreateAuthenticatedClient();
 
+            var studentsTask =
+                client.GetFromJsonAsync<List<StudentDto>>(
+                    "api/Students");
+
+            var coursesTask =
+                client.GetFromJsonAsync<List<CourseDto>>(
+                    "api/Courses");
+
+            var enrollmentsTask =
+                client.GetFromJsonAsync<List<EnrollmentDto>>(
+                    "api/Enrollments");
+
+            await Task.WhenAll(
+                studentsTask,
+                coursesTask,
+                enrollmentsTask);
+
+            Students =
+                studentsTask.Result
+                ?? new List<StudentDto>();
+
+            Courses =
+                coursesTask.Result
+                ?? new List<CourseDto>();
+
             Enrollments =
-                await client.GetFromJsonAsync<List<EnrollmentDto>>("api/Enrollments")
+                enrollmentsTask.Result
                 ?? new List<EnrollmentDto>();
         }
         catch
         {
-            ErrorMessage = "ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.";
+            FormErrorMessage =
+                "ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.";
         }
         finally
         {
             IsLoading = false;
         }
     }
+
+
+    private async Task CreateEnrollment()
+    {
+        FormErrorMessage = null;
+        SuccessMessage = null;
+
+        if (FormStudentId <= 0)
+        {
+            FormErrorMessage =
+                "لطفاً دانشجو را انتخاب کنید.";
+
+            return;
+        }
+
+        if (FormCourseId <= 0)
+        {
+            FormErrorMessage =
+                "لطفاً دوره را انتخاب کنید.";
+
+            return;
+        }
+
+        var student = SelectedStudent;
+
+        if (student == null)
+        {
+            FormErrorMessage =
+                "دانشجوی انتخاب‌شده پیدا نشد.";
+
+            return;
+        }
+
+        var course = SelectedCourse;
+
+        if (course == null)
+        {
+            FormErrorMessage =
+                "دوره انتخاب‌شده پیدا نشد.";
+
+            return;
+        }
+
+        if (!course.IsActive)
+        {
+            FormErrorMessage =
+                "ثبت‌نام در دوره غیرفعال امکان‌پذیر نیست.";
+
+            return;
+        }
+
+        IsSaving = true;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var request = new CreateEnrollmentDto
+            {
+                StudentId = FormStudentId,
+                CourseId = FormCourseId,
+                CoursePartnerOrganizationId = null,
+                SupportUserId = null,
+                InstructorId = null,
+                StartDate = FormStartDate,
+                Status = FormStatus,
+                Description =
+                    string.IsNullOrWhiteSpace(FormDescription)
+                        ? null
+                        : FormDescription.Trim()
+            };
+
+            var response =
+                await client.PostAsJsonAsync(
+                    "api/Enrollments",
+                    request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                FormErrorMessage =
+                    await GetErrorMessage(response);
+
+                return;
+            }
+
+            SuccessMessage =
+                "ثبت‌نام با موفقیت ایجاد شد.";
+
+            ResetForm();
+
+            await LoadData();
+        }
+        catch
+        {
+            FormErrorMessage =
+                "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+
+    private void ResetForm()
+    {
+        FormStudentId = 0;
+        FormCourseId = 0;
+        FormStartDate = DateTime.Today;
+        FormStatus = "Active";
+        FormDescription = string.Empty;
+    }
+
+
+    private async Task<string> GetErrorMessage(
+        HttpResponseMessage response)
+    {
+        try
+        {
+            var error =
+                await response.Content
+                    .ReadFromJsonAsync<ApiError>();
+
+            if (!string.IsNullOrWhiteSpace(error?.Message))
+            {
+                return error.Message;
+            }
+        }
+        catch
+        {
+        }
+
+        return "ثبت‌نام انجام نشد.";
+    }
+
 
     private string GetEnrollmentStatusText(string status)
     {
@@ -120,6 +574,7 @@
         };
     }
 
+
     private string GetEnrollmentStatusClass(string status)
     {
         return status switch
@@ -132,15 +587,76 @@
         };
     }
 
+
+    public class StudentDto
+    {
+        public int Id { get; set; }
+
+        public string FirstName { get; set; } =
+            string.Empty;
+
+        public string LastName { get; set; } =
+            string.Empty;
+    }
+
+
+    public class CourseDto
+    {
+        public int Id { get; set; }
+
+        public string Title { get; set; } =
+            string.Empty;
+
+        public decimal Price { get; set; }
+
+        public bool IsActive { get; set; }
+    }
+
+
     public class EnrollmentDto
     {
         public int Id { get; set; }
-        public string StudentName { get; set; } = string.Empty;
-        public string CourseTitle { get; set; } = string.Empty;
+
+        public string StudentName { get; set; } =
+            string.Empty;
+
+        public string CourseTitle { get; set; } =
+            string.Empty;
+
         public decimal TotalPaid { get; set; }
+
         public decimal RemainingAmount { get; set; }
+
         public DateTime StartDate { get; set; }
-        public string Status { get; set; } = string.Empty;
+
+        public string Status { get; set; } =
+            string.Empty;
+    }
+
+
+    public class CreateEnrollmentDto
+    {
+        public int StudentId { get; set; }
+
+        public int CourseId { get; set; }
+
+        public int? CoursePartnerOrganizationId { get; set; }
+
+        public int? SupportUserId { get; set; }
+
+        public int? InstructorId { get; set; }
+
+        public DateTime StartDate { get; set; }
+
+        public string Status { get; set; } = "Active";
+
+        public string? Description { get; set; }
+    }
+
+
+    public class ApiError
+    {
+        public string? Message { get; set; }
     }
 
 }
