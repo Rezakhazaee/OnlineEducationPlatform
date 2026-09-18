@@ -4,6 +4,7 @@
 @using FrontEnd.Services
 
 @inject AuthService Auth
+@inject NavigationManager Navigation
 
 <PageTitle>پرداخت‌ها | آموزش‌یار</PageTitle>
 
@@ -600,6 +601,12 @@ private EnrollmentDto? SelectedEnrollment =>
 
 protected override async Task OnInitializedAsync()
 {
+    if (!Auth.IsLoggedIn || !Auth.IsManagementPanelUser)
+    {
+        Navigation.NavigateTo(Auth.IsLoggedIn ? "/admin" : "/login");
+        return;
+    }
+
     await LoadData();
 }
 

@@ -4,6 +4,7 @@
 @using FrontEnd.Services
 
 @inject AuthService Auth
+@inject NavigationManager Navigation
 
 <PageTitle>گزارش‌ها | آموزش‌یار</PageTitle>
 
@@ -303,6 +304,12 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (!Auth.IsLoggedIn || !Auth.IsManagementPanelUser)
+        {
+            Navigation.NavigateTo(Auth.IsLoggedIn ? "/admin" : "/login");
+            return;
+        }
+
         await LoadReport();
     }
 
