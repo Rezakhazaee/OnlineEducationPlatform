@@ -1,0 +1,567 @@
+@page "/courses/{CourseId:int}/enroll"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>ثبت‌نام در دوره | آموزش‌یار</PageTitle>
+
+<div class="course-enrollment-page">
+
+    @if (IsLoading)
+    {
+        <section class="course-enrollment-card">
+
+            <div class="course-enrollment-loading">
+                ↻
+            </div>
+
+            <h2>
+                در حال بررسی اطلاعات دوره...
+            </h2>
+
+        </section>
+    }
+    else if (!Auth.IsLoggedIn || !Auth.IsStudent)
+    {
+        <section class="course-enrollment-card">
+
+            <span class="course-enrollment-label">
+                ثبت‌نام در دوره
+            </span>
+
+            <h1>
+                @(Course?.Title ?? "دوره آموزشی")
+            </h1>
+
+            <p>
+                برای ثبت‌نام در این دوره ابتدا باید با حساب دانشجویی وارد شوید.
+            </p>
+
+            <div class="course-enrollment-actions">
+
+                <a
+                    href="/login?returnUrl=/courses//enroll"
+                    class="course-enrollment-primary">
+
+                    ورود به حساب
+
+                </a>
+
+                <a
+                    href="/register?returnUrl=/courses//enroll"
+                    class="course-enrollment-secondary">
+
+                    ایجاد حساب
+
+                </a>
+
+                <a
+                    href="/courses/@CourseId"
+                    class="course-enrollment-back">
+
+                    ← بازگشت به دوره
+
+                </a>
+
+            </div>
+
+        </section>
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <section class="course-enrollment-card">
+
+            <span class="course-enrollment-error-title">
+                ثبت‌نام انجام نشد
+            </span>
+
+            <p>
+                @ErrorMessage
+            </p>
+
+            <a
+                href="/courses/@CourseId"
+                class="course-enrollment-primary">
+
+                بازگشت به دوره
+
+            </a>
+
+        </section>
+    }
+    else if (Course != null)
+    {
+        <section class="course-enrollment-card">
+
+            <span class="course-enrollment-label">
+                ثبت‌نام در دوره
+            </span>
+
+            <h1>
+                @Course.Title
+            </h1>
+
+            <div class="course-enrollment-info">
+
+                <div>
+                    <span>
+                        مدرس
+                    </span>
+
+                    <strong>
+                        @(string.IsNullOrWhiteSpace(Course.InstructorName)
+                            ? "تعیین نشده"
+                            : Course.InstructorName)
+                    </strong>
+                </div>
+
+                <div>
+                    <span>
+                        نوع برگزاری
+                    </span>
+
+                    <strong>
+                        @GetDeliveryType(Course.DeliveryType)
+                    </strong>
+                </div>
+
+                <div>
+                    <span>
+                        هزینه
+                    </span>
+
+                    <strong>
+                        @Course.Price.ToString("N0")
+                        تومان
+                    </strong>
+                </div>
+
+            </div>
+
+
+            @if (AlreadyEnrolled)
+            {
+                <div class="course-enrollment-warning">
+
+                    این دوره قبلاً در «دوره‌های من» شما ثبت شده است.
+
+                </div>
+
+                <a
+                    href="/student/courses"
+                    class="course-enrollment-primary">
+
+                    مشاهده دوره‌های من
+
+                </a>
+            }
+            else
+            {
+                <p>
+                    با تأیید ثبت‌نام، این دوره به فهرست دوره‌های شما اضافه می‌شود.
+                </p>
+
+                <button
+                    type="button"
+                    class="course-enrollment-primary"
+                    @onclick="Enroll"
+                    disabled="@IsEnrolling">
+
+                    @(IsEnrolling
+                        ? "در حال ثبت‌نام..."
+                        : "ثبت‌نام در این دوره")
+
+                </button>
+
+                <a
+                    href="/courses/@CourseId"
+                    class="course-enrollment-back">
+
+                    ← بازگشت به دوره
+
+                </a>
+            }
+
+        </section>
+    }
+
+</div>
+
+
+<style>
+
+    .course-enrollment-page {
+        min-height: 70vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 70px 5%;
+        background: #f5f8fa;
+    }
+
+    .course-enrollment-card {
+        width: min(700px, 100%);
+        background: white;
+        border: 1px solid #e2e9ec;
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 0 15px 40px rgba(0,0,0,.06);
+        text-align: center;
+    }
+
+    .course-enrollment-label {
+        color: var(--theme-primary, #568fa8);
+        font-size: 13px;
+    }
+
+    .course-enrollment-card h1 {
+        margin: 10px 0 18px;
+        color: var(--theme-secondary, #263d4a);
+        line-height: 1.5;
+    }
+
+    .course-enrollment-card h2 {
+        color: var(--theme-secondary, #263d4a);
+    }
+
+    .course-enrollment-card p {
+        color: #6c7d84;
+        line-height: 2;
+    }
+
+    .course-enrollment-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 28px;
+    }
+
+    .course-enrollment-primary,
+    .course-enrollment-secondary,
+    .course-enrollment-back {
+        min-height: 48px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 18px;
+        text-decoration: none;
+        font-family: inherit;
+        cursor: pointer;
+    }
+
+    .course-enrollment-primary {
+        border: 0;
+        background: var(--theme-primary, #568fa8);
+        color: white;
+    }
+
+    .course-enrollment-secondary {
+        background: #edf4f7;
+        color: var(--theme-secondary, #263d4a);
+    }
+
+    .course-enrollment-back {
+        color: #718189;
+        font-size: 13px;
+        background: transparent;
+    }
+
+    .course-enrollment-primary:disabled {
+        opacity: .65;
+        cursor: wait;
+    }
+
+    .course-enrollment-info {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin: 30px 0;
+    }
+
+    .course-enrollment-info div {
+        background: #f7fafb;
+        border-radius: 14px;
+        padding: 15px;
+    }
+
+    .course-enrollment-info span {
+        display: block;
+        color: #7c8c92;
+        font-size: 11px;
+        margin-bottom: 7px;
+    }
+
+    .course-enrollment-info strong {
+        color: var(--theme-secondary, #263d4a);
+        font-size: 13px;
+    }
+
+    .course-enrollment-warning {
+        background: #fff8e8;
+        color: #8a691c;
+        border-radius: 12px;
+        padding: 14px;
+        margin: 20px 0;
+        line-height: 1.8;
+    }
+
+    .course-enrollment-error-title {
+        color: #8a3434;
+        font-weight: 700;
+    }
+
+    .course-enrollment-loading {
+        font-size: 36px;
+        color: var(--theme-primary, #568fa8);
+    }
+
+    @@media (max-width: 650px) {
+
+        .course-enrollment-card {
+            padding: 28px 20px;
+        }
+
+        .course-enrollment-info {
+            grid-template-columns: 1fr;
+        }
+
+    }
+
+</style>
+
+
+@code {
+
+    [Parameter]
+    public int CourseId { get; set; }
+
+
+    private PublicCourseDto? Course { get; set; }
+
+    private bool IsLoading { get; set; } = true;
+
+    private bool IsEnrolling { get; set; }
+
+    private bool AlreadyEnrolled { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Course =
+                await client.GetFromJsonAsync<PublicCourseDto>(
+                    $"api/PublicCourses/{CourseId}");
+
+            if (Course == null)
+            {
+                ErrorMessage = "دوره موردنظر پیدا نشد.";
+                return;
+            }
+
+            if (Auth.IsLoggedIn && Auth.IsStudent)
+            {
+                var enrollments =
+                    await client.GetFromJsonAsync<List<EnrollmentDto>>(
+                        "api/Enrollments/my")
+                    ?? new List<EnrollmentDto>();
+
+                AlreadyEnrolled =
+                    enrollments.Any(e =>
+                        e.CourseId == CourseId &&
+                        !string.Equals(
+                            e.Status,
+                            "Cancelled",
+                            StringComparison.OrdinalIgnoreCase));
+            }
+        }
+        catch
+        {
+            ErrorMessage =
+                "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+
+    private async Task Enroll()
+    {
+        if (!Auth.IsLoggedIn || !Auth.IsStudent)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        IsEnrolling = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var response =
+                await client.PostAsJsonAsync(
+                    "api/Enrollments",
+                    new CreateEnrollmentDto
+                    {
+                        CourseId = CourseId,
+                        StartDate = DateTime.Today,
+                        Status = "Active",
+                        Description =
+                            "ثبت‌نام از صفحه عمومی دوره"
+                    });
+
+            if (response.IsSuccessStatusCode)
+            {
+                Navigation.NavigateTo(
+                    "/student/courses");
+                return;
+            }
+
+            try
+            {
+                var error =
+                    await response.Content
+                        .ReadFromJsonAsync<ApiError>();
+
+                ErrorMessage =
+                    error?.Message ??
+                    "ثبت‌نام انجام نشد.";
+            }
+            catch
+            {
+                ErrorMessage =
+                    "ثبت‌نام انجام نشد.";
+            }
+        }
+        catch
+        {
+            ErrorMessage =
+                "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            IsEnrolling = false;
+        }
+    }
+
+
+    private string GetDeliveryType(
+        string deliveryType)
+    {
+        return deliveryType switch
+        {
+            "Online" => "آنلاین",
+            "InPerson" => "حضوری",
+            "Hybrid" => "ترکیبی",
+            _ => "نامشخص"
+        };
+    }
+
+
+    public class PublicCourseDto
+    {
+        public int Id { get; set; }
+
+        public string Title { get; set; } =
+            string.Empty;
+
+        public string? Description { get; set; }
+
+        public decimal Price { get; set; }
+
+        public string DeliveryType { get; set; } =
+            "Online";
+
+        public string? InstructorName { get; set; }
+
+        public List<PublicCourseModuleDto> Modules { get; set; } =
+            new();
+    }
+
+
+    public class PublicCourseModuleDto
+    {
+        public int Id { get; set; }
+
+        public string Title { get; set; } =
+            string.Empty;
+
+        public int SortOrder { get; set; }
+
+        public List<PublicCourseLessonDto> Lessons { get; set; } =
+            new();
+    }
+
+
+    public class PublicCourseLessonDto
+    {
+        public int Id { get; set; }
+
+        public string Title { get; set; } =
+            string.Empty;
+
+        public string? Description { get; set; }
+
+        public string ContentType { get; set; } =
+            "Video";
+
+        public string? ContentUrl { get; set; }
+
+        public int DurationMinutes { get; set; }
+
+        public int SortOrder { get; set; }
+
+        public bool IsFreePreview { get; set; }
+    }
+
+
+    public class EnrollmentDto
+    {
+        public int Id { get; set; }
+
+        public int CourseId { get; set; }
+
+        public string? Status { get; set; }
+    }
+
+
+    public class CreateEnrollmentDto
+    {
+        public int CourseId { get; set; }
+
+        public DateTime? StartDate { get; set; }
+
+        public string Status { get; set; } =
+            "Active";
+
+        public string? Description { get; set; }
+    }
+
+
+    public class ApiError
+    {
+        public string? Message { get; set; }
+    }
+
+}

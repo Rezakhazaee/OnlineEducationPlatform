@@ -3,6 +3,8 @@
 @inject AuthService Auth
 @inject NavigationManager Navigation
 
+ Microsoft.AspNetCore.Components
+
 <PageTitle>ورود | آموزش‌یار</PageTitle>
 
 <div class="login-page">
@@ -130,6 +132,9 @@
 
     private bool IsLoading { get; set; }
 
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    private string? ReturnUrl { get; set; }
+
 
     private async Task HandleLogin()
     {
@@ -161,7 +166,13 @@
 
 
             // مدیر و کارشناس آموزش → پنل عملیاتی
-              if (Auth.IsManagementPanelUser)
+              if (IsSafeLocalUrl(ReturnUrl))
+            {
+                Navigation.NavigateTo(ReturnUrl!);
+                return;
+            }
+
+            if (Auth.IsManagementPanelUser)
               {
                   Navigation.NavigateTo("/admin");
                   return;
@@ -170,7 +181,7 @@
               // دانشجو → پنل دانشجو
               if (Auth.IsStudent)
               {
-                  Navigation.NavigateTo("/student");
+                  Navigation.NavigateTo(GetSafeReturnUrl() ?? "/student");
                   return;
               }
 
@@ -208,4 +219,41 @@
             IsLoading = false;
         }
     }
+
+
+    private static bool IsSafeLocalUrl(string? url)
+    {
+        return !string.IsNullOrWhiteSpace(url)
+               && url.StartsWith("/")
+               && !url.StartsWith("//");
+    }
+
+    private string? GetSafeReturnUrl()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = uri.Query;
+
+        const string key = "returnUrl=";
+        var index = query.IndexOf(key, StringComparison.OrdinalIgnoreCase);
+
+        if (index < 0)
+            return null;
+
+        var value = query[(index + key.Length)..];
+
+        var ampIndex = value.IndexOf('&');
+
+        if (ampIndex >= 0)
+            value = value[..ampIndex];
+
+        value = Uri.UnescapeDataString(value);
+
+        if (string.IsNullOrWhiteSpace(value) ||
+            !value.StartsWith("/") ||
+            value.StartsWith("//"))
+            return null;
+
+        return value;
+    }
+
 }
