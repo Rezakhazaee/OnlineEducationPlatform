@@ -1,0 +1,967 @@
+@page "/courses/{CourseId:int}"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+
+<PageTitle>
+    @(Course?.Title ?? "جزئیات دوره") | آموزش‌یار
+</PageTitle>
+
+<div class="public-course-page">
+
+    @if (IsLoading)
+    {
+        <section class="public-course-loading">
+
+            <div class="public-course-loading-icon">
+                ↻
+            </div>
+
+            <h3>
+                در حال دریافت اطلاعات دوره...
+            </h3>
+
+        </section>
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <section class="public-course-error">
+
+            <h2>
+                دوره قابل نمایش نیست
+            </h2>
+
+            <p>
+                @ErrorMessage
+            </p>
+
+            <a
+                href="/courses"
+                class="public-course-secondary-btn">
+
+                بازگشت به دوره‌ها
+
+            </a>
+
+        </section>
+    }
+    else if (Course != null)
+    {
+        <!-- =================================================
+             HERO
+             ================================================= -->
+
+        <section class="public-course-hero">
+
+            <div class="public-course-breadcrumb">
+
+                <a href="/">
+                    خانه
+                </a>
+
+                <span>
+                    /
+                </span>
+
+                <a href="/courses">
+                    دوره‌ها
+                </a>
+
+                <span>
+                    /
+                </span>
+
+                <strong>
+                    @Course.Title
+                </strong>
+
+            </div>
+
+
+            <div class="public-course-hero-grid">
+
+                <div class="public-course-hero-content">
+
+                    <div class="public-course-eyebrow">
+                        دوره آموزشی
+                    </div>
+
+                    <h1>
+                        @Course.Title
+                    </h1>
+
+
+                    @if (!string.IsNullOrWhiteSpace(Course.Description))
+                    {
+                        <p class="public-course-description">
+                            @Course.Description
+                        </p>
+                    }
+
+
+                    <div class="public-course-meta">
+
+                        <div class="public-course-meta-item">
+
+                            <span>
+                                نوع برگزاری
+                            </span>
+
+                            <strong>
+                                @GetDeliveryType(Course.DeliveryType)
+                            </strong>
+
+                        </div>
+
+
+                        <div class="public-course-meta-item">
+
+                            <span>
+                                مدرس
+                            </span>
+
+                            <strong>
+                                @(string.IsNullOrWhiteSpace(Course.InstructorName)
+                                    ? "مدرس تعیین نشده"
+                                    : Course.InstructorName)
+                            </strong>
+
+                        </div>
+
+
+                        <div class="public-course-meta-item">
+
+                            <span>
+                                سرفصل
+                            </span>
+
+                            <strong>
+                                @Course.Modules.Count
+                            </strong>
+
+                        </div>
+
+
+                        <div class="public-course-meta-item">
+
+                            <span>
+                                تعداد درس
+                            </span>
+
+                            <strong>
+                                @TotalLessonCount
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     PURCHASE CARD
+                     ================================================= -->
+
+                <aside class="public-course-price-card">
+
+                    <div class="public-course-price-label">
+                        هزینه دوره
+                    </div>
+
+
+                    <div class="public-course-price">
+                        @Course.Price.ToString("N0")
+                        <span>
+                            تومان
+                        </span>
+                    </div>
+
+
+                    <div class="public-course-price-line">
+                    </div>
+
+
+                    <a
+                        href="/login"
+                        class="public-course-primary-btn">
+
+                        ورود برای ثبت‌نام
+
+                    </a>
+
+
+                    <a
+                        href="/register"
+                        class="public-course-secondary-btn">
+
+                        ساخت حساب کاربری
+
+                    </a>
+
+
+                    <div class="public-course-price-note">
+
+                        برای ثبت‌نام در دوره ابتدا وارد حساب کاربری شوید.
+
+                    </div>
+
+                </aside>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             CONTENT
+             ================================================= -->
+
+        <main class="public-course-content">
+
+            <section class="public-course-section">
+
+                <div class="public-course-section-title">
+
+                    <span>
+                        محتوای آموزشی
+                    </span>
+
+                    <h2>
+                        سرفصل‌های دوره
+                    </h2>
+
+                    <p>
+                        ساختار دوره و درس‌های آموزشی را قبل از ثبت‌نام مشاهده کنید.
+                    </p>
+
+                </div>
+
+
+                @if (Course.Modules.Count == 0)
+                {
+                    <div class="public-course-empty">
+
+                        هنوز محتوای آموزشی این دوره منتشر نشده است.
+
+                    </div>
+                }
+                else
+                {
+                    <div class="public-course-modules">
+
+                        @foreach (var module in Course.Modules)
+                        {
+                            <article class="public-course-module">
+
+                                <div class="public-course-module-header">
+
+                                    <div>
+
+                                        <span class="public-course-module-number">
+                                            فصل @module.SortOrder
+                                        </span>
+
+                                        <h3>
+                                            @module.Title
+                                        </h3>
+
+                                    </div>
+
+                                    <div class="public-course-module-count">
+
+                                        @module.Lessons.Count
+                                        درس
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="public-course-lessons">
+
+                                    @foreach (var lesson in module.Lessons)
+                                    {
+                                        <div class="public-course-lesson">
+
+                                            <div class="public-course-lesson-number">
+                                                @lesson.SortOrder
+                                            </div>
+
+
+                                            <div class="public-course-lesson-main">
+
+                                                <strong>
+                                                    @lesson.Title
+                                                </strong>
+
+
+                                                @if (!string.IsNullOrWhiteSpace(lesson.Description))
+                                                {
+                                                    <p>
+                                                        @lesson.Description
+                                                    </p>
+                                                }
+
+
+                                                <div class="public-course-lesson-meta">
+
+                                                    <span>
+                                                        @(lesson.ContentType == "Video"
+                                                            ? "ویدئو"
+                                                            : "متن")
+                                                    </span>
+
+
+                                                    @if (lesson.DurationMinutes > 0)
+                                                    {
+                                                        <span>
+                                                            @lesson.DurationMinutes دقیقه
+                                                        </span>
+                                                    }
+
+
+                                                    @if (lesson.IsFreePreview)
+                                                    {
+                                                        <span class="public-course-preview-badge">
+                                                            پیش‌نمایش رایگان
+                                                        </span>
+                                                    }
+
+                                                </div>
+
+                                            </div>
+
+
+                                            <div class="public-course-lesson-action">
+
+                                                @if (lesson.IsFreePreview &&
+                                                     !string.IsNullOrWhiteSpace(lesson.ContentUrl))
+                                                {
+                                                    <a
+                                                        href="@lesson.ContentUrl"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        class="public-course-preview-btn">
+
+                                                        مشاهده پیش‌نمایش
+
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <span class="public-course-locked">
+                                                        🔒
+                                                    </span>
+                                                }
+
+                                            </div>
+
+                                        </div>
+                                    }
+
+                                </div>
+
+                            </article>
+                        }
+
+                    </div>
+                }
+
+            </section>
+
+
+            <!-- =================================================
+                 FINAL CTA
+                 ================================================= -->
+
+            <section class="public-course-final-cta">
+
+                <div>
+
+                    <span>
+                        آماده شروع یادگیری هستی؟
+                    </span>
+
+                    <h2>
+                        همین حالا مسیر یادگیری خودت را شروع کن.
+                    </h2>
+
+                </div>
+
+
+                <div class="public-course-final-actions">
+
+                    <a
+                        href="/register"
+                        class="public-course-primary-btn">
+
+                        ثبت‌نام
+
+                    </a>
+
+                    <a
+                        href="/courses"
+                        class="public-course-secondary-btn">
+
+                        مشاهده سایر دوره‌ها
+
+                    </a>
+
+                </div>
+
+            </section>
+
+        </main>
+    }
+
+</div>
+
+
+<style>
+
+    .public-course-page {
+        width: 100%;
+    }
+
+    .public-course-hero {
+        padding: 48px 6% 56px;
+        background:
+            linear-gradient(
+                135deg,
+                var(--theme-primary, #568fa8),
+                var(--theme-secondary, #263d4a)
+            );
+        color: white;
+    }
+
+    .public-course-breadcrumb {
+        max-width: 1200px;
+        margin: 0 auto 35px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        font-size: 14px;
+        opacity: .9;
+    }
+
+    .public-course-breadcrumb a {
+        color: white;
+        text-decoration: none;
+    }
+
+    .public-course-breadcrumb strong {
+        font-weight: 600;
+    }
+
+    .public-course-hero-grid {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        gap: 48px;
+        align-items: start;
+    }
+
+    .public-course-eyebrow {
+        font-size: 14px;
+        opacity: .8;
+        margin-bottom: 14px;
+    }
+
+    .public-course-hero-content h1 {
+        margin: 0 0 20px;
+        font-size: clamp(32px, 5vw, 52px);
+        line-height: 1.25;
+    }
+
+    .public-course-description {
+        max-width: 760px;
+        line-height: 2;
+        font-size: 17px;
+        opacity: .93;
+        margin-bottom: 32px;
+    }
+
+    .public-course-meta {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .public-course-meta-item {
+        padding: 16px;
+        border: 1px solid rgba(255,255,255,.18);
+        border-radius: 16px;
+        background: rgba(255,255,255,.08);
+    }
+
+    .public-course-meta-item span {
+        display: block;
+        font-size: 12px;
+        opacity: .75;
+        margin-bottom: 7px;
+    }
+
+    .public-course-meta-item strong {
+        font-size: 15px;
+    }
+
+    .public-course-price-card {
+        background: white;
+        color: var(--theme-text, #263d4a);
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: 0 20px 50px rgba(0,0,0,.18);
+    }
+
+    .public-course-price-label {
+        font-size: 14px;
+        opacity: .7;
+        margin-bottom: 8px;
+    }
+
+    .public-course-price {
+        font-size: 31px;
+        font-weight: 800;
+    }
+
+    .public-course-price span {
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .public-course-price-line {
+        height: 1px;
+        background: #e6ecef;
+        margin: 22px 0;
+    }
+
+    .public-course-primary-btn,
+    .public-course-secondary-btn,
+    .public-course-preview-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        border-radius: 13px;
+        min-height: 48px;
+        padding: 10px 18px;
+        transition: .2s ease;
+    }
+
+    .public-course-primary-btn {
+        background: var(--theme-primary, #568fa8);
+        color: white;
+    }
+
+    .public-course-primary-btn:hover {
+        transform: translateY(-1px);
+        opacity: .93;
+    }
+
+    .public-course-secondary-btn {
+        margin-top: 10px;
+        background: #eef4f6;
+        color: var(--theme-text, #263d4a);
+    }
+
+    .public-course-secondary-btn:hover {
+        background: #e2ecef;
+    }
+
+    .public-course-price-note {
+        margin-top: 16px;
+        font-size: 12px;
+        line-height: 1.8;
+        text-align: center;
+        opacity: .65;
+    }
+
+    .public-course-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 60px 6% 80px;
+    }
+
+    .public-course-section-title {
+        margin-bottom: 30px;
+    }
+
+    .public-course-section-title > span {
+        font-size: 13px;
+        color: var(--theme-primary, #568fa8);
+    }
+
+    .public-course-section-title h2 {
+        margin: 8px 0 10px;
+        font-size: 32px;
+        color: var(--theme-text, #263d4a);
+    }
+
+    .public-course-section-title p {
+        margin: 0;
+        color: #6b7c84;
+    }
+
+    .public-course-modules {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .public-course-module {
+        border: 1px solid #e4ebee;
+        border-radius: 20px;
+        overflow: hidden;
+        background: white;
+        box-shadow: 0 8px 25px rgba(0,0,0,.04);
+    }
+
+    .public-course-module-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: center;
+        padding: 22px 24px;
+        background: #f7fafb;
+        border-bottom: 1px solid #e4ebee;
+    }
+
+    .public-course-module-number {
+        display: block;
+        font-size: 12px;
+        color: var(--theme-primary, #568fa8);
+        margin-bottom: 5px;
+    }
+
+    .public-course-module-header h3 {
+        margin: 0;
+        color: var(--theme-text, #263d4a);
+        font-size: 19px;
+    }
+
+    .public-course-module-count {
+        white-space: nowrap;
+        font-size: 13px;
+        color: #667880;
+    }
+
+    .public-course-lessons {
+        padding: 8px 20px;
+    }
+
+    .public-course-lesson {
+        display: grid;
+        grid-template-columns: 42px minmax(0,1fr) auto;
+        gap: 15px;
+        align-items: center;
+        padding: 18px 4px;
+        border-bottom: 1px solid #edf1f2;
+    }
+
+    .public-course-lesson:last-child {
+        border-bottom: 0;
+    }
+
+    .public-course-lesson-number {
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #edf5f8;
+        color: var(--theme-primary, #568fa8);
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .public-course-lesson-main strong {
+        color: var(--theme-text, #263d4a);
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .public-course-lesson-main p {
+        margin: 0 0 8px;
+        color: #697b83;
+        font-size: 13px;
+        line-height: 1.8;
+    }
+
+    .public-course-lesson-meta {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        font-size: 12px;
+        color: #76888f;
+    }
+
+    .public-course-preview-badge {
+        padding: 4px 9px;
+        border-radius: 999px;
+        background: #edf7ef;
+        color: #2d7343;
+    }
+
+    .public-course-preview-btn {
+        min-height: 38px;
+        background: #edf5f8;
+        color: var(--theme-primary, #568fa8);
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .public-course-locked {
+        opacity: .45;
+        font-size: 18px;
+    }
+
+    .public-course-empty,
+    .public-course-loading,
+    .public-course-error {
+        border-radius: 20px;
+        padding: 45px 30px;
+        text-align: center;
+        background: #f7fafb;
+        color: #687b83;
+    }
+
+    .public-course-loading-icon {
+        font-size: 35px;
+        margin-bottom: 10px;
+    }
+
+    .public-course-error {
+        margin: 50px 6%;
+    }
+
+    .public-course-error h2 {
+        color: var(--theme-text, #263d4a);
+    }
+
+    .public-course-final-cta {
+        margin-top: 60px;
+        padding: 35px;
+        border-radius: 24px;
+        background: #f3f8fa;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 25px;
+    }
+
+    .public-course-final-cta span {
+        color: var(--theme-primary, #568fa8);
+        font-size: 13px;
+    }
+
+    .public-course-final-cta h2 {
+        margin: 8px 0 0;
+        color: var(--theme-text, #263d4a);
+        font-size: 25px;
+    }
+
+    .public-course-final-actions {
+        display: flex;
+        gap: 10px;
+        min-width: 260px;
+    }
+
+    .public-course-final-actions .public-course-secondary-btn {
+        margin-top: 0;
+        flex: 1;
+    }
+
+    .public-course-final-actions .public-course-primary-btn {
+        flex: 1;
+    }
+
+    @@media (max-width: 900px) {
+
+        .public-course-hero-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .public-course-meta {
+            grid-template-columns: repeat(2, minmax(0,1fr));
+        }
+
+        .public-course-final-cta {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .public-course-final-actions {
+            min-width: 0;
+        }
+    }
+
+    @@media (max-width: 600px) {
+
+        .public-course-hero {
+            padding: 30px 5% 40px;
+        }
+
+        .public-course-content {
+            padding-left: 5%;
+            padding-right: 5%;
+        }
+
+        .public-course-meta {
+            grid-template-columns: 1fr;
+        }
+
+        .public-course-module-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .public-course-lesson {
+            grid-template-columns: 36px minmax(0,1fr);
+        }
+
+        .public-course-lesson-action {
+            grid-column: 2;
+        }
+
+        .public-course-final-actions {
+            flex-direction: column;
+        }
+    }
+
+</style>
+
+
+@code {
+
+    [Parameter]
+    public int CourseId { get; set; }
+
+
+    private PublicCourseDto? Course { get; set; }
+
+
+    private bool IsLoading { get; set; } = true;
+
+
+    private string? ErrorMessage { get; set; }
+
+
+    private int TotalLessonCount =>
+        Course?.Modules.Sum(
+            m => m.Lessons.Count) ?? 0;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCourse();
+    }
+
+
+    private async Task LoadCourse()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client =
+                Auth.CreateAuthenticatedClient();
+
+            Course =
+                await client.GetFromJsonAsync<PublicCourseDto>(
+                    $"api/PublicCourses/{CourseId}");
+
+            if (Course == null)
+            {
+                ErrorMessage =
+                    "دوره موردنظر پیدا نشد.";
+            }
+        }
+        catch
+        {
+            ErrorMessage =
+                "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+
+    private string GetDeliveryType(
+        string deliveryType)
+    {
+        return deliveryType switch
+        {
+            "Online" => "آنلاین",
+            "InPerson" => "حضوری",
+            "Hybrid" => "ترکیبی",
+            _ => "نامشخص"
+        };
+    }
+
+
+    public class PublicCourseDto
+    {
+        public int Id { get; set; }
+
+        public string Title { get; set; } =
+            string.Empty;
+
+        public string? Description { get; set; }
+
+        public decimal Price { get; set; }
+
+        public string DeliveryType { get; set; } =
+            "Online";
+
+        public string? InstructorName { get; set; }
+
+        public List<PublicCourseModuleDto> Modules { get; set; }
+            = new();
+    }
+
+
+    public class PublicCourseModuleDto
+    {
+        public int Id { get; set; }
+
+        public string Title { get; set; } =
+            string.Empty;
+
+        public int SortOrder { get; set; }
+
+        public List<PublicCourseLessonDto> Lessons { get; set; }
+            = new();
+    }
+
+
+    public class PublicCourseLessonDto
+    {
+        public int Id { get; set; }
+
+        
+        public int SortOrder { get; set; }
+public string Title { get; set; } =
+            string.Empty;
+
+        public string? Description { get; set; }
+
+        public string ContentType { get; set; } =
+            "Video";
+
+        public string? ContentUrl { get; set; }
+
+        public int DurationMinutes { get; set; }
+
+        public bool IsFreePreview { get; set; }
+    }
+}
