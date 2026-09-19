@@ -79,10 +79,16 @@
             @if (!string.IsNullOrWhiteSpace(SuccessMessage))
             {
                 <div class="support-success-message">
+
                     @SuccessMessage
+
                 </div>
             }
 
+
+            <!-- =========================
+                 MODULE FORM
+                 ========================= -->
 
             <div class="support-followup-form">
 
@@ -91,7 +97,9 @@
                     <div class="support-form-group support-form-wide">
 
                         <label>
-                            عنوان سرفصل جدید
+                            @(EditingModuleId.HasValue
+                                ? "ویرایش سرفصل"
+                                : "عنوان سرفصل جدید")
                         </label>
 
                         <input
@@ -129,9 +137,24 @@
 
                         @(IsSaving
                             ? "در حال ذخیره..."
-                            : "افزودن سرفصل")
+                            : (EditingModuleId.HasValue
+                                ? "ذخیره تغییرات"
+                                : "افزودن سرفصل"))
 
                     </button>
+
+
+                    @if (EditingModuleId.HasValue)
+                    {
+                        <button
+                            type="button"
+                            class="support-outline-btn"
+                            @onclick="CancelModuleEdit">
+
+                            انصراف
+
+                        </button>
+                    }
 
                 </div>
 
@@ -139,6 +162,10 @@
 
         </section>
 
+
+        <!-- =========================
+             MODULE LIST
+             ========================= -->
 
         @if (Modules.Count == 0)
         {
@@ -180,9 +207,45 @@
                                 @module.LessonCount درس
                             </small>
 
+                            <small>
+                                وضعیت:
+                                @(module.IsActive
+                                    ? "فعال"
+                                    : "غیرفعال")
+                            </small>
+
                         </div>
 
+
                         <div class="instructor-course-actions">
+
+                            <!-- Edit module -->
+
+                            <button
+                                type="button"
+                                class="support-outline-btn"
+                                @onclick="() => EditModule(module)">
+
+                                ویرایش سرفصل
+
+                            </button>
+
+
+                            <!-- Toggle module -->
+
+                            <button
+                                type="button"
+                                class="support-outline-btn"
+                                @onclick="() => ToggleModuleStatus(module)">
+
+                                @(module.IsActive
+                                    ? "غیرفعال کردن"
+                                    : "فعال کردن")
+
+                            </button>
+
+
+                            <!-- Add lesson -->
 
                             <button
                                 type="button"
@@ -192,6 +255,9 @@
                                 افزودن درس
 
                             </button>
+
+
+                            <!-- Delete module -->
 
                             <button
                                 type="button"
@@ -207,6 +273,10 @@
                     </div>
 
 
+                    <!-- =========================
+                         LESSON FORM
+                         ========================= -->
+
                     @if (LessonModuleId == module.Id)
                     {
                         <div class="support-followup-form">
@@ -216,7 +286,9 @@
                                 <div class="support-form-group support-form-wide">
 
                                     <label>
-                                        عنوان درس
+                                        @(EditingLessonId.HasValue
+                                            ? "ویرایش درس"
+                                            : "عنوان درس")
                                     </label>
 
                                     <input
@@ -302,7 +374,38 @@
 
                                     <textarea
                                         class="support-form-input support-form-textarea"
-                                        @bind="LessonDescription"></textarea>
+                                        @bind="LessonDescription">
+                                    </textarea>
+
+                                </div>
+
+
+                                <div class="support-form-group">
+
+                                    <label>
+
+                                        <input
+                                            type="checkbox"
+                                            @bind="LessonIsActive" />
+
+                                        درس فعال باشد
+
+                                    </label>
+
+                                </div>
+
+
+                                <div class="support-form-group">
+
+                                    <label>
+
+                                        <input
+                                            type="checkbox"
+                                            @bind="LessonIsFreePreview" />
+
+                                        پیش‌نمایش رایگان
+
+                                    </label>
 
                                 </div>
 
@@ -319,9 +422,12 @@
 
                                     @(IsSaving
                                         ? "در حال ذخیره..."
-                                        : "ثبت درس")
+                                        : (EditingLessonId.HasValue
+                                            ? "ذخیره تغییرات"
+                                            : "ثبت درس"))
 
                                 </button>
+
 
                                 <button
                                     type="button"
@@ -338,8 +444,12 @@
                     }
 
 
-                    @if (LessonsByModule.TryGetValue(module.Id, out var lessons) &&
-                         lessons.Count > 0)
+                    <!-- =========================
+                         LESSON LIST
+                         ========================= -->
+
+                    @if (LessonsByModule.TryGetValue(module.Id, out var lessons)
+                         && lessons.Count > 0)
                     {
                         <div class="support-enrollments-list">
 
@@ -353,12 +463,14 @@
                                             @lesson.SortOrder. @lesson.Title
                                         </strong>
 
+
                                         @if (!string.IsNullOrWhiteSpace(lesson.Description))
                                         {
                                             <span>
                                                 @lesson.Description
                                             </span>
                                         }
+
 
                                         <span>
                                             نوع:
@@ -367,11 +479,21 @@
                                                 : "متن")
                                         </span>
 
+
                                         @if (lesson.DurationMinutes > 0)
                                         {
                                             <span>
                                                 مدت:
                                                 @lesson.DurationMinutes دقیقه
+                                            </span>
+                                        }
+
+
+                                        @if (!string.IsNullOrWhiteSpace(lesson.ContentUrl))
+                                        {
+                                            <span>
+                                                آدرس محتوا:
+                                                @lesson.ContentUrl
                                             </span>
                                         }
 
@@ -384,9 +506,11 @@
                                             وضعیت
                                         </small>
 
-                                        <span class="@(lesson.IsActive
-                                            ? "status-active"
-                                            : "status-cancelled")">
+
+                                        <span
+                                            class="@(lesson.IsActive
+                                                ? "status-active"
+                                                : "status-cancelled")">
 
                                             @(lesson.IsActive
                                                 ? "فعال"
@@ -394,12 +518,43 @@
 
                                         </span>
 
+
                                         @if (lesson.IsFreePreview)
                                         {
                                             <small>
                                                 پیش‌نمایش رایگان
                                             </small>
                                         }
+
+
+                                        <div class="instructor-course-actions">
+
+                                            <!-- Edit lesson -->
+
+                                            <button
+                                                type="button"
+                                                class="support-outline-btn"
+                                                @onclick="() => EditLesson(lesson)">
+
+                                                ویرایش درس
+
+                                            </button>
+
+
+                                            <!-- Toggle lesson -->
+
+                                            <button
+                                                type="button"
+                                                class="support-outline-btn"
+                                                @onclick="() => ToggleLessonStatus(lesson)">
+
+                                                @(lesson.IsActive
+                                                    ? "غیرفعال کردن"
+                                                    : "فعال کردن")
+
+                                            </button>
+
+                                        </div>
 
                                     </div>
 
@@ -429,43 +584,94 @@
 
 @code {
 
+    // =====================================================
+    // Course
+    // =====================================================
+
     [Parameter]
     public int CourseId { get; set; }
 
+
     private string CourseTitle { get; set; } = string.Empty;
+
+
+    // =====================================================
+    // Data
+    // =====================================================
 
     private List<CourseModuleDto> Modules { get; set; } = new();
 
-    private Dictionary<int, List<CourseLessonDto>> LessonsByModule { get; set; } = new();
+
+    private Dictionary<int, List<CourseLessonDto>> LessonsByModule
+        { get; set; } = new();
+
+
+    // =====================================================
+    // Page state
+    // =====================================================
 
     private bool IsLoading { get; set; } = true;
 
+
     private bool IsSaving { get; set; }
 
+
     private string? ErrorMessage { get; set; }
+
 
     private string? SuccessMessage { get; set; }
 
 
+    // =====================================================
+    // Module form
+    // =====================================================
+
+    private int? EditingModuleId { get; set; }
+
+
     private string ModuleTitle { get; set; } = string.Empty;
+
 
     private int ModuleSortOrder { get; set; }
 
 
+    // =====================================================
+    // Lesson form
+    // =====================================================
+
     private int? LessonModuleId { get; set; }
+
+
+    private int? EditingLessonId { get; set; }
+
 
     private string LessonTitle { get; set; } = string.Empty;
 
+
     private string LessonDescription { get; set; } = string.Empty;
+
 
     private string LessonContentType { get; set; } = "Video";
 
+
     private string LessonContentUrl { get; set; } = string.Empty;
+
 
     private int LessonDurationMinutes { get; set; }
 
+
     private int LessonSortOrder { get; set; }
 
+
+    private bool LessonIsActive { get; set; } = true;
+
+
+    private bool LessonIsFreePreview { get; set; }
+
+
+    // =====================================================
+    // Initialization
+    // =====================================================
 
     protected override async Task OnInitializedAsync()
     {
@@ -478,6 +684,10 @@
     }
 
 
+    // =====================================================
+    // Load course + modules + lessons
+    // =====================================================
+
     private async Task LoadData()
     {
         IsLoading = true;
@@ -487,9 +697,11 @@
         {
             var client = Auth.CreateAuthenticatedClient();
 
+
             var course =
                 await client.GetFromJsonAsync<CourseDto>(
                     $"api/Courses/{CourseId}");
+
 
             if (course == null)
             {
@@ -497,14 +709,18 @@
                 return;
             }
 
+
             CourseTitle = course.Title;
+
 
             Modules =
                 await client.GetFromJsonAsync<List<CourseModuleDto>>(
                     $"api/CourseModules/course/{CourseId}")
                 ?? new List<CourseModuleDto>();
 
+
             LessonsByModule.Clear();
+
 
             foreach (var module in Modules)
             {
@@ -512,6 +728,7 @@
                     await client.GetFromJsonAsync<List<CourseLessonDto>>(
                         $"api/CourseLessons/module/{module.Id}")
                     ?? new List<CourseLessonDto>();
+
 
                 LessonsByModule[module.Id] = lessons;
             }
@@ -528,24 +745,87 @@
     }
 
 
+    // =====================================================
+    // Create / Update Module
+    // =====================================================
+
     private async Task CreateModule()
     {
         ErrorMessage = null;
         SuccessMessage = null;
 
+
         if (string.IsNullOrWhiteSpace(ModuleTitle))
         {
-            ErrorMessage = "عنوان سرفصل الزامی است.";
+            ErrorMessage =
+                "عنوان سرفصل الزامی است.";
+
             return;
         }
 
+
         IsSaving = true;
+
 
         try
         {
             var client = Auth.CreateAuthenticatedClient();
 
-            var response =
+
+            if (EditingModuleId.HasValue)
+            {
+                var module =
+                    Modules.FirstOrDefault(
+                        x => x.Id == EditingModuleId.Value);
+
+
+                if (module == null)
+                {
+                    ErrorMessage =
+                        "سرفصل پیدا نشد.";
+
+                    return;
+                }
+
+
+                var response =
+                    await client.PutAsJsonAsync(
+                        $"api/CourseModules/{module.Id}",
+                        new UpdateCourseModuleDto
+                        {
+                            Title = ModuleTitle.Trim(),
+                            SortOrder = ModuleSortOrder,
+                            IsActive = module.IsActive
+                        });
+
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    ErrorMessage =
+                        await GetErrorMessage(response);
+
+                    return;
+                }
+
+
+                SuccessMessage =
+                    "سرفصل با موفقیت ویرایش شد.";
+
+
+                EditingModuleId = null;
+
+                ModuleTitle = string.Empty;
+
+                ModuleSortOrder = 0;
+
+
+                await LoadData();
+
+                return;
+            }
+
+
+            var createResponse =
                 await client.PostAsJsonAsync(
                     "api/CourseModules",
                     new CreateCourseModuleDto
@@ -556,19 +836,24 @@
                         IsActive = true
                     });
 
-            if (!response.IsSuccessStatusCode)
+
+            if (!createResponse.IsSuccessStatusCode)
             {
                 ErrorMessage =
-                    await GetErrorMessage(response);
+                    await GetErrorMessage(createResponse);
 
                 return;
             }
 
-            ModuleTitle = string.Empty;
-            ModuleSortOrder++;
 
             SuccessMessage =
                 "سرفصل با موفقیت اضافه شد.";
+
+
+            ModuleTitle = string.Empty;
+
+            ModuleSortOrder++;
+
 
             await LoadData();
         }
@@ -584,96 +869,389 @@
     }
 
 
-    private void StartLesson(CourseModuleDto module)
-    {
-        ErrorMessage = null;
-        SuccessMessage = null;
+    // =====================================================
+    // Edit Module
+    // =====================================================
 
-        LessonModuleId = module.Id;
-        LessonTitle = string.Empty;
-        LessonDescription = string.Empty;
-        LessonContentType = "Video";
-        LessonContentUrl = string.Empty;
-        LessonDurationMinutes = 0;
-        LessonSortOrder = module.LessonCount;
+    private void EditModule(CourseModuleDto module)
+    {
+        CancelLesson();
+
+
+        EditingModuleId = module.Id;
+
+        ModuleTitle = module.Title;
+
+        ModuleSortOrder = module.SortOrder;
+
+
+        ErrorMessage = null;
+
+        SuccessMessage = null;
     }
 
+
+    // =====================================================
+    // Cancel Module edit
+    // =====================================================
+
+    private void CancelModuleEdit()
+    {
+        EditingModuleId = null;
+
+        ModuleTitle = string.Empty;
+
+        ModuleSortOrder = 0;
+    }
+
+
+    // =====================================================
+    // Toggle Module active / inactive
+    // =====================================================
+
+    private async Task ToggleModuleStatus(
+        CourseModuleDto module)
+    {
+        ErrorMessage = null;
+
+        SuccessMessage = null;
+
+
+        try
+        {
+            var client =
+                Auth.CreateAuthenticatedClient();
+
+
+            var response =
+                await client.PutAsJsonAsync(
+                    $"api/CourseModules/{module.Id}",
+                    new UpdateCourseModuleDto
+                    {
+                        Title = module.Title,
+                        SortOrder = module.SortOrder,
+                        IsActive = !module.IsActive
+                    });
+
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage =
+                    await GetErrorMessage(response);
+
+                return;
+            }
+
+
+            SuccessMessage =
+                module.IsActive
+                    ? "سرفصل غیرفعال شد."
+                    : "سرفصل فعال شد.";
+
+
+            await LoadData();
+        }
+        catch
+        {
+            ErrorMessage =
+                "ارتباط با سرور برقرار نشد.";
+        }
+    }
+
+
+    // =====================================================
+    // Start Add Lesson
+    // =====================================================
+
+    private void StartLesson(
+        CourseModuleDto module)
+    {
+        CancelModuleEdit();
+
+
+        ErrorMessage = null;
+
+        SuccessMessage = null;
+
+
+        LessonModuleId = module.Id;
+
+        EditingLessonId = null;
+
+
+        LessonTitle = string.Empty;
+
+        LessonDescription = string.Empty;
+
+        LessonContentType = "Video";
+
+        LessonContentUrl = string.Empty;
+
+        LessonDurationMinutes = 0;
+
+        LessonSortOrder = module.LessonCount;
+
+        LessonIsActive = true;
+
+        LessonIsFreePreview = false;
+    }
+
+
+    // =====================================================
+    // Edit Lesson
+    // =====================================================
+
+    private void EditLesson(
+        CourseLessonDto lesson)
+    {
+        CancelModuleEdit();
+
+
+        ErrorMessage = null;
+
+        SuccessMessage = null;
+
+
+        LessonModuleId =
+            lesson.CourseModuleId;
+
+
+        EditingLessonId =
+            lesson.Id;
+
+
+        LessonTitle =
+            lesson.Title;
+
+
+        LessonDescription =
+            lesson.Description
+            ?? string.Empty;
+
+
+        LessonContentType =
+            lesson.ContentType;
+
+
+        LessonContentUrl =
+            lesson.ContentUrl
+            ?? string.Empty;
+
+
+        LessonDurationMinutes =
+            lesson.DurationMinutes;
+
+
+        LessonSortOrder =
+            lesson.SortOrder;
+
+
+        LessonIsActive =
+            lesson.IsActive;
+
+
+        LessonIsFreePreview =
+            lesson.IsFreePreview;
+    }
+
+
+    // =====================================================
+    // Cancel Lesson form
+    // =====================================================
 
     private void CancelLesson()
     {
         LessonModuleId = null;
 
+        EditingLessonId = null;
+
+
         LessonTitle = string.Empty;
+
         LessonDescription = string.Empty;
+
         LessonContentType = "Video";
+
         LessonContentUrl = string.Empty;
+
         LessonDurationMinutes = 0;
+
         LessonSortOrder = 0;
+
+        LessonIsActive = true;
+
+        LessonIsFreePreview = false;
     }
 
+
+    // =====================================================
+    // Create / Update Lesson
+    // =====================================================
 
     private async Task CreateLesson()
     {
         ErrorMessage = null;
+
         SuccessMessage = null;
+
 
         if (!LessonModuleId.HasValue)
         {
             return;
         }
 
+
         if (string.IsNullOrWhiteSpace(LessonTitle))
         {
-            ErrorMessage = "عنوان درس الزامی است.";
+            ErrorMessage =
+                "عنوان درس الزامی است.";
+
             return;
         }
+
 
         if (LessonDurationMinutes < 0)
         {
-            ErrorMessage = "مدت زمان نمی‌تواند منفی باشد.";
+            ErrorMessage =
+                "مدت زمان نمی‌تواند منفی باشد.";
+
             return;
         }
 
+
         IsSaving = true;
+
 
         try
         {
-            var client = Auth.CreateAuthenticatedClient();
+            var client =
+                Auth.CreateAuthenticatedClient();
 
-            var response =
-                await client.PostAsJsonAsync(
-                    "api/CourseLessons",
-                    new CreateCourseLessonDto
-                    {
-                        CourseModuleId = LessonModuleId.Value,
-                        Title = LessonTitle.Trim(),
-                        Description =
-                            string.IsNullOrWhiteSpace(LessonDescription)
-                                ? null
-                                : LessonDescription.Trim(),
-                        ContentType = LessonContentType,
-                        ContentUrl =
-                            string.IsNullOrWhiteSpace(LessonContentUrl)
-                                ? null
-                                : LessonContentUrl.Trim(),
-                        DurationMinutes = LessonDurationMinutes,
-                        SortOrder = LessonSortOrder,
-                        IsActive = true,
-                        IsFreePreview = false
-                    });
 
-            if (!response.IsSuccessStatusCode)
+            // ==============================
+            // UPDATE
+            // ==============================
+
+            if (EditingLessonId.HasValue)
             {
-                ErrorMessage =
-                    await GetErrorMessage(response);
+                var response =
+                    await client.PutAsJsonAsync(
+                        $"api/CourseLessons/{EditingLessonId.Value}",
+                        new UpdateCourseLessonDto
+                        {
+                            Title =
+                                LessonTitle.Trim(),
+
+                            Description =
+                                string.IsNullOrWhiteSpace(
+                                    LessonDescription)
+                                    ? null
+                                    : LessonDescription.Trim(),
+
+                            ContentType =
+                                LessonContentType,
+
+                            ContentUrl =
+                                string.IsNullOrWhiteSpace(
+                                    LessonContentUrl)
+                                    ? null
+                                    : LessonContentUrl.Trim(),
+
+                            DurationMinutes =
+                                LessonDurationMinutes,
+
+                            SortOrder =
+                                LessonSortOrder,
+
+                            IsActive =
+                                LessonIsActive,
+
+                            IsFreePreview =
+                                LessonIsFreePreview
+                        });
+
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    ErrorMessage =
+                        await GetErrorMessage(response);
+
+                    return;
+                }
+
+
+                SuccessMessage =
+                    "درس با موفقیت ویرایش شد.";
+
+
+                CancelLesson();
+
+
+                await LoadData();
 
                 return;
             }
 
+
+            // ==============================
+            // CREATE
+            // ==============================
+
+            var createResponse =
+                await client.PostAsJsonAsync(
+                    "api/CourseLessons",
+                    new CreateCourseLessonDto
+                    {
+                        CourseModuleId =
+                            LessonModuleId.Value,
+
+                        Title =
+                            LessonTitle.Trim(),
+
+                        Description =
+                            string.IsNullOrWhiteSpace(
+                                LessonDescription)
+                                ? null
+                                : LessonDescription.Trim(),
+
+                        ContentType =
+                            LessonContentType,
+
+                        ContentUrl =
+                            string.IsNullOrWhiteSpace(
+                                LessonContentUrl)
+                                ? null
+                                : LessonContentUrl.Trim(),
+
+                        DurationMinutes =
+                            LessonDurationMinutes,
+
+                        SortOrder =
+                            LessonSortOrder,
+
+                        IsActive =
+                            LessonIsActive,
+
+                        IsFreePreview =
+                            LessonIsFreePreview
+                    });
+
+
+            if (!createResponse.IsSuccessStatusCode)
+            {
+                ErrorMessage =
+                    await GetErrorMessage(createResponse);
+
+                return;
+            }
+
+
             SuccessMessage =
                 "درس با موفقیت اضافه شد.";
 
-            LessonModuleId = null;
+
+            CancelLesson();
+
 
             await LoadData();
         }
@@ -689,18 +1267,54 @@
     }
 
 
-    private async Task DeleteModule(CourseModuleDto module)
+    // =====================================================
+    // Toggle Lesson active / inactive
+    // =====================================================
+
+    private async Task ToggleLessonStatus(
+        CourseLessonDto lesson)
     {
         ErrorMessage = null;
+
         SuccessMessage = null;
+
 
         try
         {
-            var client = Auth.CreateAuthenticatedClient();
+            var client =
+                Auth.CreateAuthenticatedClient();
+
 
             var response =
-                await client.DeleteAsync(
-                    $"api/CourseModules/{module.Id}");
+                await client.PutAsJsonAsync(
+                    $"api/CourseLessons/{lesson.Id}",
+                    new UpdateCourseLessonDto
+                    {
+                        Title =
+                            lesson.Title,
+
+                        Description =
+                            lesson.Description,
+
+                        ContentType =
+                            lesson.ContentType,
+
+                        ContentUrl =
+                            lesson.ContentUrl,
+
+                        DurationMinutes =
+                            lesson.DurationMinutes,
+
+                        SortOrder =
+                            lesson.SortOrder,
+
+                        IsActive =
+                            !lesson.IsActive,
+
+                        IsFreePreview =
+                            lesson.IsFreePreview
+                    });
+
 
             if (!response.IsSuccessStatusCode)
             {
@@ -710,8 +1324,12 @@
                 return;
             }
 
+
             SuccessMessage =
-                "سرفصل و درس‌های آن حذف شدند.";
+                lesson.IsActive
+                    ? "درس غیرفعال شد."
+                    : "درس فعال شد.";
+
 
             await LoadData();
         }
@@ -722,6 +1340,56 @@
         }
     }
 
+
+    // =====================================================
+    // Delete Module
+    // =====================================================
+
+    private async Task DeleteModule(
+        CourseModuleDto module)
+    {
+        ErrorMessage = null;
+
+        SuccessMessage = null;
+
+
+        try
+        {
+            var client =
+                Auth.CreateAuthenticatedClient();
+
+
+            var response =
+                await client.DeleteAsync(
+                    $"api/CourseModules/{module.Id}");
+
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage =
+                    await GetErrorMessage(response);
+
+                return;
+            }
+
+
+            SuccessMessage =
+                "سرفصل و درس‌های آن حذف شدند.";
+
+
+            await LoadData();
+        }
+        catch
+        {
+            ErrorMessage =
+                "ارتباط با سرور برقرار نشد.";
+        }
+    }
+
+
+    // =====================================================
+    // Error helper
+    // =====================================================
 
     private async Task<string> GetErrorMessage(
         HttpResponseMessage response)
@@ -732,7 +1400,9 @@
                 await response.Content
                     .ReadFromJsonAsync<ApiError>();
 
-            if (!string.IsNullOrWhiteSpace(error?.Message))
+
+            if (!string.IsNullOrWhiteSpace(
+                error?.Message))
             {
                 return error.Message;
             }
@@ -741,21 +1411,28 @@
         {
         }
 
+
         return "عملیات انجام نشد.";
     }
 
+
+    // =====================================================
+    // DTOs
+    // =====================================================
 
     public class CourseDto
     {
         public int Id { get; set; }
 
-        public string Title { get; set; } = string.Empty;
+        public string Title { get; set; } =
+            string.Empty;
 
         public string? Description { get; set; }
 
         public decimal Price { get; set; }
 
-        public string DeliveryType { get; set; } = "Online";
+        public string DeliveryType { get; set; } =
+            "Online";
 
         public int? InstructorId { get; set; }
 
@@ -769,7 +1446,8 @@
 
         public int CourseId { get; set; }
 
-        public string Title { get; set; } = string.Empty;
+        public string Title { get; set; } =
+            string.Empty;
 
         public int SortOrder { get; set; }
 
@@ -783,11 +1461,24 @@
     {
         public int CourseId { get; set; }
 
-        public string Title { get; set; } = string.Empty;
+        public string Title { get; set; } =
+            string.Empty;
 
         public int SortOrder { get; set; }
 
-        public bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; } =
+            true;
+    }
+
+
+    public class UpdateCourseModuleDto
+    {
+        public string Title { get; set; } =
+            string.Empty;
+
+        public int SortOrder { get; set; }
+
+        public bool IsActive { get; set; }
     }
 
 
@@ -797,11 +1488,13 @@
 
         public int CourseModuleId { get; set; }
 
-        public string Title { get; set; } = string.Empty;
+        public string Title { get; set; } =
+            string.Empty;
 
         public string? Description { get; set; }
 
-        public string ContentType { get; set; } = "Video";
+        public string ContentType { get; set; } =
+            "Video";
 
         public string? ContentUrl { get; set; }
 
@@ -819,11 +1512,13 @@
     {
         public int CourseModuleId { get; set; }
 
-        public string Title { get; set; } = string.Empty;
+        public string Title { get; set; } =
+            string.Empty;
 
         public string? Description { get; set; }
 
-        public string ContentType { get; set; } = "Video";
+        public string ContentType { get; set; } =
+            "Video";
 
         public string? ContentUrl { get; set; }
 
@@ -831,9 +1526,33 @@
 
         public int SortOrder { get; set; }
 
-        public bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; } =
+            true;
 
-        public bool IsFreePreview { get; set; } = false;
+        public bool IsFreePreview { get; set; } =
+            false;
+    }
+
+
+    public class UpdateCourseLessonDto
+    {
+        public string Title { get; set; } =
+            string.Empty;
+
+        public string? Description { get; set; }
+
+        public string ContentType { get; set; } =
+            "Video";
+
+        public string? ContentUrl { get; set; }
+
+        public int DurationMinutes { get; set; }
+
+        public int SortOrder { get; set; }
+
+        public bool IsActive { get; set; }
+
+        public bool IsFreePreview { get; set; }
     }
 
 
