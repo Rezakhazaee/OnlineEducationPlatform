@@ -16,9 +16,54 @@ public class PublicCoursesController : ControllerBase
         _context = context;
     }
 
+
+    // =====================================================
+    // GET: api/PublicCourses
+    // لیست عمومی دوره‌های فعال
+    // =====================================================
+
+    [AllowAnonymous]
+    [HttpGet]
+    public async Task<ActionResult<List<PublicCourseListDto>>> GetCourses()
+    {
+        var courses = await _context.Courses
+            .AsNoTracking()
+            .Where(c => c.IsActive)
+            .OrderByDescending(c => c.Id)
+            .Select(c => new PublicCourseListDto
+            {
+                Id = c.Id,
+                Title = c.Title,
+                Description = c.Description,
+                Price = c.Price,
+                DeliveryType = c.DeliveryType,
+
+                InstructorName =
+                    c.Instructor != null &&
+                    c.Instructor.IsActive
+                        ? c.Instructor.FullName
+                        : null,
+
+                ModuleCount = _context.CourseModules
+                    .Count(m =>
+                        m.CourseId == c.Id &&
+                        m.IsActive),
+
+                LessonCount = _context.CourseLessons
+                    .Count(l =>
+                        l.CourseModule.CourseId == c.Id &&
+                        l.CourseModule.IsActive &&
+                        l.IsActive)
+            })
+            .ToListAsync();
+
+        return Ok(courses);
+    }
+
+
     // =====================================================
     // GET: api/PublicCourses/{id}
-    // اطلاعات عمومی یک دوره منتشرشده
+    // جزئیات عمومی دوره
     // =====================================================
 
     [AllowAnonymous]
@@ -68,14 +113,12 @@ public class PublicCoursesController : ControllerBase
                                 Title = l.Title,
                                 Description = l.Description,
                                 ContentType = l.ContentType,
-                                DurationMinutes = l.DurationMinutes,
-                                IsFreePreview = l.IsFreePreview,
-
-                                // فقط محتوای دارای پیش‌نمایش عمومی
-                                // برای بازدیدکننده قابل مشاهده باشد.
                                 ContentUrl = l.IsFreePreview
                                     ? l.ContentUrl
-                                    : null
+                                    : null,
+                                DurationMinutes = l.DurationMinutes,
+                                SortOrder = l.SortOrder,
+                                IsFreePreview = l.IsFreePreview
                             })
                             .ToList()
                     })
@@ -97,7 +140,31 @@ public class PublicCoursesController : ControllerBase
 
 
 // =========================================================
-// DTOs
+// DTO: لیست دوره‌ها
+// =========================================================
+
+public class PublicCourseListDto
+{
+    public int Id { get; set; }
+
+    public string Title { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+
+    public decimal Price { get; set; }
+
+    public string DeliveryType { get; set; } = "Online";
+
+    public string? InstructorName { get; set; }
+
+    public int ModuleCount { get; set; }
+
+    public int LessonCount { get; set; }
+}
+
+
+// =========================================================
+// DTO: جزئیات دوره
 // =========================================================
 
 public class PublicCourseDto
@@ -145,6 +212,8 @@ public class PublicCourseLessonDto
     public string? ContentUrl { get; set; }
 
     public int DurationMinutes { get; set; }
+
+    public int SortOrder { get; set; }
 
     public bool IsFreePreview { get; set; }
 }

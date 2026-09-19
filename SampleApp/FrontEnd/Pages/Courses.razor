@@ -1,0 +1,568 @@
+@page "/courses"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+
+<PageTitle>دوره‌های آموزشی | آموزش‌یار</PageTitle>
+
+<div class="public-courses-page">
+
+    <section class="public-courses-header">
+
+        <div class="public-courses-header-inner">
+
+            <span>
+                آموزش برای رشد
+            </span>
+
+            <h1>
+                دوره‌های آموزشی
+            </h1>
+
+            <p>
+                دوره موردنظر خود را انتخاب کنید و جزئیات آن را مشاهده کنید.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <main class="public-courses-content">
+
+        @if (IsLoading)
+        {
+            <div class="public-courses-state">
+
+                <div class="public-courses-loading-icon">
+                    ↻
+                </div>
+
+                <h3>
+                    در حال دریافت دوره‌ها...
+                </h3>
+
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="public-courses-state public-courses-error">
+
+                <h2>
+                    خطا در دریافت دوره‌ها
+                </h2>
+
+                <p>
+                    @ErrorMessage
+                </p>
+
+                <button
+                    type="button"
+                    class="public-course-primary-btn"
+                    @onclick="LoadCourses">
+
+                    تلاش مجدد
+
+                </button>
+
+            </div>
+        }
+        else if (CourseList.Count == 0)
+        {
+            <div class="public-courses-state">
+
+                <h2>
+                    دوره‌ای برای نمایش وجود ندارد.
+                </h2>
+
+                <p>
+                    در حال حاضر دوره فعال برای ثبت‌نام منتشر نشده است.
+                </p>
+
+            </div>
+        }
+        else
+        {
+            <div class="public-courses-grid">
+
+                @foreach (var course in CourseList)
+                {
+                    <article class="public-course-card">
+
+                        <div class="public-course-card-top">
+
+                            <span class="public-course-card-badge">
+                                @GetDeliveryType(course.DeliveryType)
+                            </span>
+
+                        </div>
+
+
+                        <div class="public-course-card-body">
+
+                            <h2>
+                                @course.Title
+                            </h2>
+
+
+                            @if (!string.IsNullOrWhiteSpace(course.Description))
+                            {
+                                <p>
+                                    @course.Description
+                                </p>
+                            }
+                            else
+                            {
+                                <p>
+                                    برای مشاهده جزئیات و محتوای دوره وارد صفحه دوره شوید.
+                                </p>
+                            }
+
+
+                            <div class="public-course-card-meta">
+
+                                <div>
+
+                                    <span>
+                                        مدرس
+                                    </span>
+
+                                    <strong>
+                                        @(string.IsNullOrWhiteSpace(course.InstructorName)
+                                            ? "تعیین نشده"
+                                            : course.InstructorName)
+                                    </strong>
+
+                                </div>
+
+
+                                <div>
+
+                                    <span>
+                                        سرفصل
+                                    </span>
+
+                                    <strong>
+                                        @course.ModuleCount
+                                    </strong>
+
+                                </div>
+
+
+                                <div>
+
+                                    <span>
+                                        درس
+                                    </span>
+
+                                    <strong>
+                                        @course.LessonCount
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="public-course-card-footer">
+
+                            <div class="public-course-card-price">
+
+                                <span>
+                                    هزینه دوره
+                                </span>
+
+                                <strong>
+                                    @course.Price.ToString("N0")
+                                    <small>
+                                        تومان
+                                    </small>
+                                </strong>
+
+                            </div>
+
+
+                            <a
+                                href="/courses/@course.Id"
+                                class="public-course-primary-btn">
+
+                                مشاهده دوره
+                                <span>
+                                    ←
+                                </span>
+
+                            </a>
+
+                        </div>
+
+                    </article>
+                }
+
+            </div>
+        }
+
+    </main>
+
+</div>
+
+
+<style>
+
+    .public-courses-page {
+        min-height: 100vh;
+        background: #f5f8fa;
+    }
+
+
+    .public-courses-header {
+        padding: 70px 6%;
+        background:
+            linear-gradient(
+                135deg,
+                var(--theme-primary, #568fa8),
+                var(--theme-secondary, #263d4a)
+            );
+        color: white;
+    }
+
+
+    .public-courses-header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+
+    .public-courses-header span {
+        font-size: 14px;
+        opacity: .8;
+    }
+
+
+    .public-courses-header h1 {
+        margin: 10px 0 12px;
+        font-size: clamp(34px, 5vw, 52px);
+    }
+
+
+    .public-courses-header p {
+        margin: 0;
+        max-width: 650px;
+        line-height: 2;
+        font-size: 16px;
+        opacity: .9;
+    }
+
+
+    .public-courses-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 55px 6% 80px;
+    }
+
+
+    .public-courses-grid {
+        display: grid;
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+        gap: 24px;
+    }
+
+
+    .public-course-card {
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border: 1px solid #e3eaed;
+        border-radius: 22px;
+        overflow: hidden;
+        box-shadow:
+            0 8px 25px rgba(0,0,0,.05);
+    }
+
+
+    .public-course-card-top {
+        padding: 20px 22px 0;
+    }
+
+
+    .public-course-card-badge {
+        display: inline-flex;
+        padding: 6px 11px;
+        border-radius: 999px;
+        background: #edf5f8;
+        color: var(--theme-primary, #568fa8);
+        font-size: 12px;
+    }
+
+
+    .public-course-card-body {
+        padding: 22px;
+        flex: 1;
+    }
+
+
+    .public-course-card-body h2 {
+        margin: 0 0 12px;
+        color: var(--theme-secondary, #263d4a);
+        font-size: 20px;
+        line-height: 1.5;
+    }
+
+
+    .public-course-card-body p {
+        margin: 0 0 22px;
+        color: #6b7d85;
+        font-size: 13px;
+        line-height: 2;
+    }
+
+
+    .public-course-card-meta {
+        display: grid;
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+
+    .public-course-card-meta div {
+        padding: 11px;
+        border-radius: 12px;
+        background: #f7fafb;
+    }
+
+
+    .public-course-card-meta span {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 11px;
+        color: #7b8c93;
+    }
+
+
+    .public-course-card-meta strong {
+        display: block;
+        color: var(--theme-secondary, #263d4a);
+        font-size: 13px;
+    }
+
+
+    .public-course-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 20px 22px;
+        border-top: 1px solid #edf1f2;
+    }
+
+
+    .public-course-card-price span {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 11px;
+        color: #7b8c93;
+    }
+
+
+    .public-course-card-price strong {
+        color: var(--theme-secondary, #263d4a);
+        font-size: 17px;
+    }
+
+
+    .public-course-card-price small {
+        font-size: 11px;
+        font-weight: normal;
+    }
+
+
+    .public-course-primary-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        min-height: 44px;
+        padding: 9px 15px;
+        border-radius: 12px;
+        background:
+            var(--theme-primary, #568fa8);
+        color: white;
+        text-decoration: none;
+        border: 0;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 13px;
+    }
+
+
+    .public-course-primary-btn:hover {
+        opacity: .92;
+    }
+
+
+    .public-courses-state {
+        padding: 65px 30px;
+        border-radius: 22px;
+        background: white;
+        text-align: center;
+        border: 1px solid #e3eaed;
+    }
+
+
+    .public-courses-state h2 {
+        color: var(--theme-secondary, #263d4a);
+        margin-bottom: 10px;
+    }
+
+
+    .public-courses-state h3 {
+        color: var(--theme-secondary, #263d4a);
+    }
+
+
+    .public-courses-state p {
+        color: #708188;
+        line-height: 2;
+    }
+
+
+    .public-courses-loading-icon {
+        font-size: 36px;
+    }
+
+
+    .public-courses-error {
+        color: #7a3232;
+    }
+
+
+    @@media (max-width: 1000px) {
+
+        .public-courses-grid {
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+        }
+
+    }
+
+
+    @@media (max-width: 650px) {
+
+        .public-courses-header {
+            padding: 45px 5%;
+        }
+
+
+        .public-courses-content {
+            padding-left: 5%;
+            padding-right: 5%;
+        }
+
+
+        .public-courses-grid {
+            grid-template-columns: 1fr;
+        }
+
+
+        .public-course-card-footer {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+
+        .public-course-primary-btn {
+            width: 100%;
+        }
+
+    }
+
+</style>
+
+
+@code {
+
+    private List<PublicCourseListDto> CourseList { get; set; }
+        = new();
+
+
+    private bool IsLoading { get; set; } = true;
+
+
+    private string? ErrorMessage { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCourses();
+    }
+
+
+    private async Task LoadCourses()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client =
+                Auth.CreateAuthenticatedClient();
+
+
+            CourseList =
+                await client.GetFromJsonAsync<
+                    List<PublicCourseListDto>>(
+                        "api/PublicCourses")
+                ?? new List<PublicCourseListDto>();
+        }
+        catch
+        {
+            ErrorMessage =
+                "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+
+    private string GetDeliveryType(
+        string deliveryType)
+    {
+        return deliveryType switch
+        {
+            "Online" => "آنلاین",
+            "InPerson" => "حضوری",
+            "Hybrid" => "ترکیبی",
+            _ => "نامشخص"
+        };
+    }
+
+
+    public class PublicCourseListDto
+    {
+        public int Id { get; set; }
+
+        public string Title { get; set; } =
+            string.Empty;
+
+        public string? Description { get; set; }
+
+        public decimal Price { get; set; }
+
+        public string DeliveryType { get; set; } =
+            "Online";
+
+        public string? InstructorName { get; set; }
+
+        public int ModuleCount { get; set; }
+
+        public int LessonCount { get; set; }
+    }
+
+}
