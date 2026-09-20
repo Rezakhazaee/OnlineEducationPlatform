@@ -15,4 +15,11 @@ public class OrganizationSettings
     public string SecondaryColor { get; set; } = "#263d4a";
 
     public bool ThemeIsActive { get; set; } = true;
+
+// سطح محصول
+// 1 = پایه حضوری
+// 2 = آموزش آنلاین
+// 3 = پرداخت آنلاین
+// 4 = سازمانی
+public int PackageLevel { get; set; } = 1;
 }

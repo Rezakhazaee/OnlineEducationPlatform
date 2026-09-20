@@ -1,6 +1,7 @@
 using BackEnd.Data;
 using BackEnd.DTOs;
 using BackEnd.Models;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,13 @@ namespace BackEnd.Controllers;
 public class CourseLessonsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-
-    public CourseLessonsController(ApplicationDbContext context)
+    private readonly PackageAccessService _packageAccess;
+public CourseLessonsController(
+        ApplicationDbContext context,
+        PackageAccessService packageAccess)
     {
         _context = context;
+        _packageAccess = packageAccess;
     }
 
     private bool IsManagementUser =>
@@ -34,6 +38,11 @@ public class CourseLessonsController : ControllerBase
 
     private async Task<bool> CanManageCourse(int courseId)
     {
+        if (!await _packageAccess.HasPackageAsync(2))
+        {
+            return false;
+        }
+
         if (IsManagementUser)
         {
             return true;

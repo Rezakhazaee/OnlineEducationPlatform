@@ -1,6 +1,7 @@
 using BackEnd.Data;
 using BackEnd.DTOs;
 using BackEnd.Models;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +13,13 @@ namespace BackEnd.Controllers;
 public class CoursesController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-
-    public CoursesController(ApplicationDbContext context)
+    private readonly PackageAccessService _packageAccess;
+public CoursesController(
+        ApplicationDbContext context,
+        PackageAccessService packageAccess)
     {
         _context = context;
+        _packageAccess = packageAccess;
     }
 
     // =========================
@@ -131,7 +135,15 @@ public class CoursesController : ControllerBase
         int id,
         UpdateCourseDto dto)
     {
-        var course = await _context.Courses
+        if (!await _packageAccess.HasPackageAsync(2) && !string.Equals(dto.DeliveryType, "InPerson", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                message = "در پکیج پایه فقط دوره حضوری قابل استفاده است."
+            });
+        }
+
+var course = await _context.Courses
             .FirstOrDefaultAsync(c => c.Id == id);
 
         // دوره پیدا نشد
@@ -298,7 +310,15 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
     public async Task<ActionResult<CourseDto>> Create(
         CreateCourseDto dto)
     {
-        // اگر برای دوره مدرس تعیین شده است
+        if (!await _packageAccess.HasPackageAsync(2) && !string.Equals(dto.DeliveryType, "InPerson", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                message = "در پکیج پایه فقط دوره حضوری قابل ایجاد است."
+            });
+        }
+
+// اگر برای دوره مدرس تعیین شده است
         if (dto.InstructorId.HasValue)
         {
             var instructor = await _context.Users

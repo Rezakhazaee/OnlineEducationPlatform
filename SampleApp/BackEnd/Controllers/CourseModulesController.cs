@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using BackEnd.Services;
 
 namespace BackEnd.Controllers;
 
@@ -13,11 +14,14 @@ namespace BackEnd.Controllers;
 public class CourseModulesController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-
-    public CourseModulesController(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    private readonly PackageAccessService _packageAccess;
+    public CourseModulesController(
+    ApplicationDbContext context,
+    PackageAccessService packageAccess)
+{
+    _context = context;
+    _packageAccess = packageAccess;
+}
 
     private bool IsManagementUser =>
         User.IsInRole("Admin") ||
@@ -38,25 +42,31 @@ public class CourseModulesController : ControllerBase
             .FirstOrDefaultAsync(c => c.Id == courseId);
     }
 
-    private async Task<bool> CanManageCourse(int courseId)
+private async Task<bool> CanManageCourse(int courseId)
+{
+    // مدیریت محتوای آنلاین از پکیج 2 به بالا فعال است
+    if (!await _packageAccess.HasPackageAsync(2))
     {
-        if (IsManagementUser)
-        {
-            return true;
-        }
-
-        if (!User.IsInRole("Instructor"))
-        {
-            return false;
-        }
-
-        var userId = await GetCurrentUserId();
-
-        return userId.HasValue &&
-               await _context.Courses.AnyAsync(c =>
-                   c.Id == courseId &&
-                   c.InstructorId == userId.Value);
+        return false;
     }
+
+    if (IsManagementUser)
+    {
+        return true;
+    }
+
+    if (!User.IsInRole("Instructor"))
+    {
+        return false;
+    }
+
+    var userId = await GetCurrentUserId();
+
+    return userId.HasValue &&
+           await _context.Courses.AnyAsync(c =>
+               c.Id == courseId &&
+               c.InstructorId == userId.Value);
+}
 
     [Authorize(Roles = "Admin,EducationStaff,Instructor")]
     [HttpGet("course/{courseId}")]

@@ -10,60 +10,7 @@
 
 <div class="admin-page">
 
-    <aside class="admin-sidebar">
-
-        <div class="admin-brand">
-            <div class="admin-brand-mark">آ</div>
-
-            <div>
-                <strong>آموزش‌یار</strong>
-                <small>پنل مدیریت</small>
-            </div>
-        </div>
-
-        <nav class="admin-menu">
-
-            <a href="/admin">
-                <span>⌂</span>
-                داشبورد
-            </a>
-
-            <a href="/admin/courses" class="active">
-                <span>▣</span>
-                دوره‌ها
-            </a>
-
-            <a href="/admin/users">
-                <span>♙</span>
-                کاربران
-            </a>
-
-            <a href="/admin/enrollments">
-                <span>✓</span>
-                ثبت‌نام‌ها
-            </a>
-
-            <a href="/admin/payments">
-                <span>₿</span>
-                پرداخت‌ها
-            </a>
-
-            <a href="/admin/reports">
-                <span>▤</span>
-                گزارش‌ها
-            </a>
-
-        </nav>
-
-        <div class="admin-sidebar-bottom">
-
-            <a href="/">
-                ← بازگشت به سایت
-            </a>
-
-        </div>
-
-    </aside>
+        <AdminSidebar ActivePage="courses" />
 
 
     <main class="admin-main">
@@ -228,19 +175,25 @@
 
                                 <select @bind="FormDeliveryType">
 
-                                    <option value="Online">
-                                        آنلاین
-                                    </option>
+    @if (PackageLevel >= 2)
+    {
+        <option value="Online">
+            آنلاین
+        </option>
+    }
 
-                                    <option value="InPerson">
-                                        حضوری
-                                    </option>
+    <option value="InPerson">
+        حضوری
+    </option>
 
-                                    <option value="Hybrid">
-                                        ترکیبی
-                                    </option>
+    @if (PackageLevel >= 2)
+    {
+        <option value="Hybrid">
+            ترکیبی
+        </option>
+    }
 
-                                </select>
+</select>
 
                             </div>
 
@@ -1008,7 +961,10 @@ private bool FormPartnerIsActive { get; set; } = true;
 private string FormPartnerDescription { get; set; } = string.Empty;
 
     private bool IsLoading { get; set; } = true;
-
+private class OrganizationSettingsDto
+{
+    public int PackageLevel { get; set; } = 1;
+}
     private bool ShowForm { get; set; }
 
     private bool IsSaving { get; set; }
@@ -1027,6 +983,8 @@ private string FormPartnerDescription { get; set; } = string.Empty;
 
     private string FormDeliveryType { get; set; } = "Online";
 
+    private int PackageLevel { get; set; } = 1;
+
     private string FormInstructorId { get; set; } = string.Empty;
 
     private bool FormIsActive { get; set; } = true;
@@ -1037,7 +995,20 @@ protected override async Task OnInitializedAsync()
         {
             Navigation.NavigateTo(
                 Auth.IsLoggedIn ? "/" : "/login");
+try
+{
+    var settingsClient = Auth.CreateAuthenticatedClient();
 
+    var settings =
+        await settingsClient.GetFromJsonAsync<OrganizationSettingsDto>(
+            "api/OrganizationSettings");
+
+    PackageLevel = settings?.PackageLevel ?? 1;
+}
+catch
+{
+    PackageLevel = 1;
+}
             return;
         }
 
@@ -1440,7 +1411,9 @@ private async Task DeletePartnerOrganization(
         FormTitle = string.Empty;
         FormDescription = string.Empty;
         FormPrice = 0;
-        FormDeliveryType = "Online";
+        FormDeliveryType = PackageLevel >= 2
+    ? "Online"
+    : "InPerson";
         FormInstructorId = string.Empty;
         FormIsActive = true;
 
@@ -1461,7 +1434,9 @@ private void EditCourse(CourseDto course)
         ?? string.Empty;
 
     FormDeliveryType =
-        course.DeliveryType ?? "Online";
+    PackageLevel >= 2
+        ? (course.DeliveryType ?? "Online")
+        : "InPerson";
 
     FormIsActive = course.IsActive;
 

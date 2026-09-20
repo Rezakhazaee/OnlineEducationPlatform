@@ -266,6 +266,8 @@
 
     private string PaymentType { get; set; } = "FullPayment";
 
+    private int PackageLevel { get; set; } = 1;
+
     private decimal Amount { get; set; }
 
 
@@ -278,6 +280,27 @@
         if (!Auth.IsLoggedIn || !Auth.IsStudent)
         {
             Navigation.NavigateTo("/login", true);
+            return;
+        }
+
+        var settingsClient = Auth.CreateAuthenticatedClient();
+
+        try
+        {
+            var settings =
+                await settingsClient.GetFromJsonAsync<OrganizationSettingsDto>(
+                    "api/OrganizationSettings");
+
+            PackageLevel = settings?.PackageLevel ?? 1;
+        }
+        catch
+        {
+            PackageLevel = 1;
+        }
+
+        if (PackageLevel < 3)
+        {
+            Navigation.NavigateTo("/student/courses", true);
             return;
         }
 
@@ -457,6 +480,12 @@
 
     return $"خطای سرور ({(int)response.StatusCode}): درخواست انجام نشد.";
 }
+
+
+    private class OrganizationSettingsDto
+    {
+        public int PackageLevel { get; set; } = 1;
+    }
 
 
     public class EnrollmentFinancialDto

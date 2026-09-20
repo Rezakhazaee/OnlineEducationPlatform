@@ -1,0 +1,174 @@
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+
+<aside class="admin-sidebar">
+
+    <div class="admin-brand">
+
+        <div class="admin-brand-mark">
+            آ
+        </div>
+
+        <div>
+            <strong>
+                آموزش‌یار
+            </strong>
+
+            <small>
+                پنل مدیریت
+            </small>
+        </div>
+
+    </div>
+
+
+    <nav class="admin-menu">
+
+        <a href="/admin"
+           class="@GetClass("dashboard")">
+
+            <span>⌂</span>
+            داشبورد
+
+        </a>
+
+
+        <a href="/admin/courses"
+           class="@GetClass("courses")">
+
+            <span>▣</span>
+            دوره‌ها
+
+        </a>
+
+
+        <a href="/admin/users"
+           class="@GetClass("users")">
+
+            <span>♙</span>
+            کاربران
+
+        </a>
+
+
+        <a href="/admin/students"
+           class="@GetClass("students")">
+
+            <span>♙</span>
+            دانشجویان
+
+        </a>
+
+
+        <a href="/admin/enrollments"
+           class="@GetClass("enrollments")">
+
+            <span>✓</span>
+            ثبت‌نام‌ها
+
+        </a>
+
+
+        <a href="/admin/payments"
+           class="@GetClass("payments")">
+
+            <span>₿</span>
+            پرداخت‌ها
+
+        </a>
+
+
+        <a href="/admin/reports"
+           class="@GetClass("reports")">
+
+            <span>▤</span>
+            گزارش‌ها
+
+        </a>
+
+
+        @if (PackageLevel >= 4)
+        {
+            <a href="/admin/partner-organizations"
+               class="@GetClass("partners")">
+
+                <span>▤</span>
+                سازمان‌های طرف قرارداد
+
+            </a>
+        }
+
+
+        <a href="/admin/organizations"
+           class="@GetClass("settings")">
+
+            <span>⚙</span>
+            تنظیمات سامانه
+
+        </a>
+
+    </nav>
+
+
+    <div class="admin-sidebar-bottom">
+
+        <a href="/">
+            ← بازگشت به سایت
+        </a>
+
+    </div>
+
+</aside>
+
+
+@code {
+
+    [Parameter]
+    public string ActivePage { get; set; } = string.Empty;
+
+
+    private int PackageLevel { get; set; } = 1;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var settings =
+                await client.GetFromJsonAsync<OrganizationSettingsDto>(
+                    "api/OrganizationSettings");
+
+            if (settings != null &&
+                settings.PackageLevel >= 1 &&
+                settings.PackageLevel <= 4)
+            {
+                PackageLevel = settings.PackageLevel;
+            }
+        }
+        catch
+        {
+            PackageLevel = 1;
+        }
+    }
+
+
+    private string GetClass(string page)
+    {
+        return string.Equals(
+            ActivePage,
+            page,
+            StringComparison.OrdinalIgnoreCase)
+                ? "active"
+                : string.Empty;
+    }
+
+
+    private class OrganizationSettingsDto
+    {
+        public int PackageLevel { get; set; } = 1;
+    }
+}

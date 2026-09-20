@@ -1,6 +1,7 @@
 using BackEnd.Data;
 using BackEnd.DTOs;
 using BackEnd.Models;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,14 @@ namespace BackEnd.Controllers;
 public class LessonProgressController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly PackageAccessService _packageAccess;
 
-    public LessonProgressController(ApplicationDbContext context)
+    public LessonProgressController(
+        ApplicationDbContext context,
+        PackageAccessService packageAccess)
     {
         _context = context;
+        _packageAccess = packageAccess;
     }
 
     private async Task<Student?> GetCurrentStudent()
@@ -38,6 +43,16 @@ public class LessonProgressController : ControllerBase
     public async Task<ActionResult<List<LessonProgressDto>>> GetByEnrollment(
         int enrollmentId)
     {
+        if (!await _packageAccess.HasPackageAsync(2))
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message = "دسترسی به محتوای آنلاین در پکیج پایه فعال نیست."
+                });
+        }
+
         var student = await GetCurrentStudent();
 
         if (student == null)
@@ -81,6 +96,16 @@ public class LessonProgressController : ControllerBase
     public async Task<ActionResult<LessonProgressDto>> Update(
         UpdateLessonProgressDto dto)
     {
+        if (!await _packageAccess.HasPackageAsync(2))
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message = "دسترسی به محتوای آنلاین در پکیج پایه فعال نیست."
+                });
+        }
+
         var student = await GetCurrentStudent();
 
         if (student == null)

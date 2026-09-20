@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using BackEnd.Data;
 using BackEnd.DTOs;
 using BackEnd.Models;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -13,10 +14,13 @@ namespace BackEnd.Controllers;
 public class EnrollmentsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-
-    public EnrollmentsController(ApplicationDbContext context)
+    private readonly PackageAccessService _packageAccess;
+public EnrollmentsController(
+        ApplicationDbContext context,
+        PackageAccessService packageAccess)
     {
         _context = context;
+        _packageAccess = packageAccess;
     }
 
 
@@ -972,15 +976,29 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
 
 
         // بررسی وجود دوره
-        var courseExists = await _context.Courses
-            .AnyAsync(c => c.Id == dto.CourseId);
+        var course = await _context.Courses
+            .FirstOrDefaultAsync(c => c.Id == dto.CourseId);
 
-        if (!courseExists)
+        if (course == null)
         {
             return BadRequest(new
             {
-                message = "دوره مورد نظر وجود ندارد"
+                message = "Course not found."
             });
+        }
+
+        if (!await _packageAccess.HasPackageAsync(2) &&
+            !string.Equals(
+                course.DeliveryType,
+                "InPerson",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message = "Package 1 supports in-person enrollment only."
+                });
         }
 
 
@@ -999,6 +1017,17 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             });
         }
         // بررسی قرارداد سازمانی، در صورت ارسال
+            if (dto.CoursePartnerOrganizationId.HasValue &&
+                !await _packageAccess.HasPackageAsync(4))
+            {
+                return StatusCode(
+                    StatusCodes.Status403Forbidden,
+                    new
+                    {
+                        message = "Organization enrollment is available only in Package 4."
+                    });
+            }
+
         if (dto.CoursePartnerOrganizationId.HasValue)
         {
             var coursePartnerOrganization = await _context.CoursePartnerOrganizations
@@ -1206,6 +1235,16 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         if (dto.CoursePartnerOrganizationId !=
             enrollment.CoursePartnerOrganizationId)
         {
+            if (!await _packageAccess.HasPackageAsync(4))
+            {
+                return StatusCode(
+                    StatusCodes.Status403Forbidden,
+                    new
+                    {
+                        message = "Organization enrollment changes are available only in Package 4."
+                    });
+            }
+
             // آیا برای این ثبت نام پرداختی انجام شده؟
             var hasPaidPayment = await _context.Payments
                 .AnyAsync(p =>

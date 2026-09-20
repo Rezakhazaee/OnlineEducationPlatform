@@ -1,5 +1,6 @@
 using BackEnd.Data;
 using BackEnd.DTOs;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +13,14 @@ namespace BackEnd.Controllers;
 public class StudentCourseContentController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly PackageAccessService _packageAccess;
 
-    public StudentCourseContentController(ApplicationDbContext context)
+    public StudentCourseContentController(
+        ApplicationDbContext context,
+        PackageAccessService packageAccess)
     {
         _context = context;
+        _packageAccess = packageAccess;
     }
 
     [Authorize(Roles = "Student")]
@@ -23,6 +28,16 @@ public class StudentCourseContentController : ControllerBase
     public async Task<ActionResult<StudentCourseContentDto>> Get(
         int courseId)
     {
+        if (!await _packageAccess.HasPackageAsync(2))
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message = "دسترسی به محتوای آنلاین در پکیج پایه فعال نیست."
+                });
+        }
+
         var userIdValue =
             User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 

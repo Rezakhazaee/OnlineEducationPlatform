@@ -10,60 +10,7 @@
 
 <div class="admin-page">
 
-    <aside class="admin-sidebar">
-
-        <div class="admin-brand">
-            <div class="admin-brand-mark">آ</div>
-
-            <div>
-                <strong>آموزش‌یار</strong>
-                <small>پنل مدیریت</small>
-            </div>
-        </div>
-
-        <nav class="admin-menu">
-
-            <a href="/admin">
-                <span>⌂</span>
-                داشبورد
-            </a>
-
-            <a href="/admin/courses">
-                <span>▣</span>
-                دوره‌ها
-            </a>
-
-            <a href="/admin/users">
-                <span>♙</span>
-                کاربران
-            </a>
-
-            <a href="/admin/enrollments" class="active">
-                <span>✓</span>
-                ثبت‌نام‌ها
-            </a>
-
-            <a href="/admin/payments">
-                <span>₿</span>
-                پرداخت‌ها
-            </a>
-
-            <a href="/admin/reports">
-                <span>▤</span>
-                گزارش‌ها
-            </a>
-
-        </nav>
-
-        <div class="admin-sidebar-bottom">
-
-            <a href="/">
-                ← بازگشت به سایت
-            </a>
-
-        </div>
-
-    </aside>
+        <AdminSidebar ActivePage="enrollments" />
 
 
     <main class="admin-main">
@@ -232,6 +179,8 @@
                         </div>
 
 
+                        @if (PackageLevel >= 4)
+                        {
                         <div class="form-group">
 
                             <label>
@@ -278,6 +227,7 @@
                             }
 
                         </div>
+                        }
 
 
                         @if (SelectedCourse != null)
@@ -1086,6 +1036,8 @@
     private bool IsSaving { get; set; }
     private bool IsEditMode { get; set; }
 
+    private int PackageLevel { get; set; } = 1;
+
     private int EditingEnrollmentId { get; set; }
 
     private string? ErrorMessage { get; set; }
@@ -1157,6 +1109,21 @@
         {
             Navigation.NavigateTo(Auth.IsLoggedIn ? "/admin" : "/login");
             return;
+        }
+
+        try
+        {
+            var settingsClient = Auth.CreateAuthenticatedClient();
+
+            var settings =
+                await settingsClient.GetFromJsonAsync<OrganizationSettingsDto>(
+                    "api/OrganizationSettings");
+
+            PackageLevel = settings?.PackageLevel ?? 1;
+        }
+        catch
+        {
+            PackageLevel = 1;
         }
 
         await LoadData();
@@ -1307,7 +1274,14 @@
 
     private async Task LoadCoursePartnerOrganizations()
     {
-        if (!SelectedCourseId.HasValue)
+        if (PackageLevel < 4)
+        {
+            CoursePartnerOrganizations.Clear();
+            FormCoursePartnerOrganizationId = string.Empty;
+            return;
+        }
+
+if (!SelectedCourseId.HasValue)
         {
             return;
         }
@@ -1529,6 +1503,11 @@ private async Task SaveEnrollment()
         public bool IsActive { get; set; }
     }
 
+
+    public class OrganizationSettingsDto
+    {
+        public int PackageLevel { get; set; } = 1;
+    }
 
     public class PartnerOrganizationDto
     {

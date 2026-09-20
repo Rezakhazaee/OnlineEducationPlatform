@@ -1,6 +1,7 @@
 using BackEnd.Data;
 using BackEnd.DTOs;
 using BackEnd.Models;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -13,10 +14,13 @@ namespace BackEnd.Controllers;
 public class PaymentsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-
-    public PaymentsController(ApplicationDbContext context)
+    private readonly PackageAccessService _packageAccess;
+public PaymentsController(
+        ApplicationDbContext context,
+        PackageAccessService packageAccess)
     {
         _context = context;
+        _packageAccess = packageAccess;
     }
 
 
@@ -177,7 +181,15 @@ public async Task<ActionResult<List<PaymentDetailDto>>> Get()
 public async Task<ActionResult<PaymentDto>> CreateStudentPaymentRequest(
     StudentCreatePaymentDto dto)
 {
-    // ----------------------------------------
+    if (!await _packageAccess.HasPackageAsync(3))
+    {
+        return StatusCode(StatusCodes.Status403Forbidden, new
+        {
+            message = "پرداخت آنلاین فقط در پکیج پرداخت آنلاین فعال است."
+        });
+    }
+
+// ----------------------------------------
     // 1. دریافت شناسه کاربر
     // ----------------------------------------
 

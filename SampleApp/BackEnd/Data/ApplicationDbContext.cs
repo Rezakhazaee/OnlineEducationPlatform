@@ -38,7 +38,9 @@ public DbSet<OrganizationSettings> OrganizationSettings { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
+        modelBuilder.Entity<OrganizationSettings>()
+           .Property(x => x.PackageLevel)
+           .HasDefaultValue(1);
 
         // =========================
         // Enrollment -> CoursePartnerOrganization

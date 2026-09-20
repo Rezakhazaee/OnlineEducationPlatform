@@ -12,57 +12,7 @@
 
 <div class="admin-page">
 
-    <aside class="admin-sidebar">
-
-        <div class="admin-sidebar-header">
-            <div class="admin-logo">آ</div>
-            <div>
-                <strong>آموزش‌یار</strong>
-                <span>پنل مدیریت</span>
-            </div>
-        </div>
-
-        <nav class="admin-nav">
-
-            <NavLink href="/admin" Match="NavLinkMatch.All">
-                <span>داشبورد</span>
-            </NavLink>
-
-            <NavLink href="/admin/users">
-                <span>کاربران</span>
-            </NavLink>
-
-            <NavLink href="/admin/students">
-                <span>دانشجویان</span>
-            </NavLink>
-
-            <NavLink href="/admin/courses">
-                <span>دوره‌ها</span>
-            </NavLink>
-
-            <NavLink href="/admin/enrollments">
-                <span>ثبت‌نام‌ها</span>
-            </NavLink>
-
-            <NavLink href="/admin/payments">
-                <span>پرداخت‌ها</span>
-            </NavLink>
-
-            <NavLink href="/admin/partner-organizations">
-                <span>سازمان‌های طرف قرارداد</span>
-            </NavLink>
-
-            <NavLink href="/admin/organizations">
-                <span>تنظیمات سامانه</span>
-            </NavLink>
-
-            <NavLink href="/admin/reports">
-                <span>گزارش‌ها</span>
-            </NavLink>
-
-        </nav>
-
-    </aside>
+        <AdminSidebar ActivePage="partners" />
 
     <main class="admin-main">
 
@@ -362,23 +312,69 @@
     private bool IsLoading = true;
     private bool IsSaving = false;
     private bool ShowForm = false;
+    private int PackageLevel = 1;
 
     private int? EditingId;
 
     private string? ErrorMessage;
     private string? SuccessMessage;
+    private class OrganizationSettingsDto
+{
+    public int PackageLevel { get; set; } = 1;
+}
 
     protected override async Task OnInitializedAsync()
+{
+    if (!Auth.IsLoggedIn || !Auth.IsManagementPanelUser)
     {
-        if (!Auth.IsLoggedIn || !Auth.IsManagementPanelUser)
-        {
-            Navigation.NavigateTo(Auth.IsLoggedIn ? "/admin" : "/login");
-            return;
-        }
+        Navigation.NavigateTo(
+            Auth.IsLoggedIn ? "/admin" : "/login");
 
-        await LoadOrganizations();
+        return;
     }
 
+    if (!await LoadPackageAccess())
+    {
+        return;
+    }
+
+    await LoadOrganizations();
+}
+
+private async Task<bool> LoadPackageAccess()
+{
+    try
+    {
+        var response =
+            await Client.GetAsync("api/OrganizationSettings");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/admin");
+            return false;
+        }
+
+        var settings =
+            await response.Content
+                .ReadFromJsonAsync<OrganizationSettingsDto>();
+
+        PackageLevel =
+            settings?.PackageLevel ?? 1;
+
+        if (PackageLevel < 4)
+        {
+            Navigation.NavigateTo("/admin");
+            return false;
+        }
+
+        return true;
+    }
+    catch
+    {
+        Navigation.NavigateTo("/admin");
+        return false;
+    }
+}
     private async Task LoadOrganizations()
     {
         IsLoading = true;
@@ -388,12 +384,19 @@
         {
             var response = await Client.GetAsync("api/PartnerOrganizations");
 
-            if (response.StatusCode == HttpStatusCode.Unauthorized ||
-                response.StatusCode == HttpStatusCode.Forbidden)
-            {
-                Navigation.NavigateTo("/login");
-                return;
-            }
+           if (response.StatusCode == HttpStatusCode.Unauthorized)
+{
+    Navigation.NavigateTo("/login");
+    return;
+}
+
+if (response.StatusCode == HttpStatusCode.Forbidden)
+{
+    ErrorMessage =
+        "این قابلیت فقط در پکیج سازمانی فعال است.";
+
+    return;
+}
 
             if (!response.IsSuccessStatusCode)
             {

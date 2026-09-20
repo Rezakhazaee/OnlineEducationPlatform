@@ -217,7 +217,7 @@
 
     </div>
 
-    @if (financial.RemainingAmount > 0)
+    @if (PackageLevel >= 3 && financial.RemainingAmount > 0)
     {
         <a
             href="/student/payment/@enrollment.Id"
@@ -431,6 +431,8 @@
 
     private string? ErrorMessage { get; set; }
 
+    private int PackageLevel { get; set; } = 1;
+
     private bool IsDetailsOpen { get; set; }
 
     private EnrollmentDto? SelectedEnrollment { get; set; }
@@ -446,6 +448,21 @@
                 Auth.IsLoggedIn ? "/" : "/login");
 
             return;
+        }
+
+        try
+        {
+            var settingsClient = Auth.CreateAuthenticatedClient();
+
+            var settings =
+                await settingsClient.GetFromJsonAsync<OrganizationSettingsDto>(
+                    "api/OrganizationSettings");
+
+            PackageLevel = settings?.PackageLevel ?? 1;
+        }
+        catch
+        {
+            PackageLevel = 1;
         }
 
         await LoadData();
@@ -560,6 +577,12 @@
             _ => "student-enrollment-neutral"
         };
     }
+    private class OrganizationSettingsDto
+    {
+        public int PackageLevel { get; set; } = 1;
+    }
+
+
 
 
     public class EnrollmentDto
