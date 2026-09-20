@@ -185,7 +185,7 @@
 
 
                     <a
-                        href="/courses/@CourseId/enroll"
+                        href="/login"
                         class="public-course-primary-btn">
 
                         ورود برای ثبت‌نام
@@ -194,7 +194,7 @@
 
 
                     <a
-                        href="/register?returnUrl=/courses/@CourseId/enroll"
+                        href="/register"
                         class="public-course-secondary-btn">
 
                         ساخت حساب کاربری
@@ -395,7 +395,7 @@
                 <div class="public-course-final-actions">
 
                     <a
-                        href="/register?returnUrl=/courses/@CourseId/enroll"
+                        href="/register"
                         class="public-course-primary-btn">
 
                         ثبت‌نام

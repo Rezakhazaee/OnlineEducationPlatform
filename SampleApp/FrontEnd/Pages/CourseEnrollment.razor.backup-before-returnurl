@@ -43,7 +43,7 @@
             <div class="course-enrollment-actions">
 
                 <a
-                    href="/login?returnUrl=/courses/@CourseId/enroll"
+                    href="/login"
                     class="course-enrollment-primary">
 
                     ورود به حساب
@@ -51,7 +51,7 @@
                 </a>
 
                 <a
-                    href="/register?returnUrl=/courses/@CourseId/enroll"
+                    href="/register"
                     class="course-enrollment-secondary">
 
                     ایجاد حساب
@@ -418,14 +418,6 @@
         try
         {
             var client = Auth.CreateAuthenticatedClient();
-
-            var studentResponse = await client.GetAsync("api/Students/me");
-
-            if (!studentResponse.IsSuccessStatusCode)
-            {
-                ErrorMessage = "پروفایل دانشجویی شما ایجاد نشد. لطفاً دوباره وارد حساب شوید.";
-                return;
-            }
 
             var response =
                 await client.PostAsJsonAsync(

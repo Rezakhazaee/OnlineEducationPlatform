@@ -419,14 +419,6 @@
         {
             var client = Auth.CreateAuthenticatedClient();
 
-            var studentResponse = await client.GetAsync("api/Students/me");
-
-            if (!studentResponse.IsSuccessStatusCode)
-            {
-                ErrorMessage = "پروفایل دانشجویی شما ایجاد نشد. لطفاً دوباره وارد حساب شوید.";
-                return;
-            }
-
             var response =
                 await client.PostAsJsonAsync(
                     "api/Enrollments",

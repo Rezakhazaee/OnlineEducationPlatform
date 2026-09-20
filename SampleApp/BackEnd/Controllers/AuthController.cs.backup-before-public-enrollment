@@ -80,31 +80,6 @@ public class AuthController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        var nameParts = (dto.FullName ?? string.Empty)
-            .Trim()
-            .Split(" ", 2, StringSplitOptions.RemoveEmptyEntries);
-
-        var firstName = nameParts.Length > 0
-            ? nameParts[0]
-            : string.Empty;
-
-        var lastName = nameParts.Length > 1
-            ? nameParts[1]
-            : string.Empty;
-
-        var student = new Student
-        {
-            UserId = user.Id,
-            FirstName = firstName,
-            LastName = lastName,
-            NationalCode = string.Empty,
-            Mobile = dto.Mobile
-        };
-
-        _context.Students.Add(student);
-
-        await _context.SaveChangesAsync();
-
         return Ok(new
         {
             message = "ثبت نام با موفقیت انجام شد",

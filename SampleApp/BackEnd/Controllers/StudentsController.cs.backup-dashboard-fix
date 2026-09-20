@@ -55,41 +55,11 @@ public class StudentsController : ControllerBase
 
         if (student == null)
         {
-            var currentUser = await _context.Users
-                .FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (currentUser == null)
+            return NotFound(new
             {
-                return Unauthorized(new
-                {
-                    message = "کاربر پیدا نشد"
-                });
-            }
-
-            var nameParts = (currentUser.FullName ?? string.Empty)
-                .Trim()
-                .Split(" ", 2, StringSplitOptions.RemoveEmptyEntries);
-
-            var firstName = nameParts.Length > 0
-                ? nameParts[0]
-                : string.Empty;
-
-            var lastName = nameParts.Length > 1
-                ? nameParts[1]
-                : string.Empty;
-
-            student = new Student
-            {
-                UserId = userId,
-                FirstName = firstName,
-                LastName = lastName,
-                NationalCode = string.Empty,
-                Mobile = currentUser.Mobile,
-                CreatedDate = DateTime.Now
-            };
-
-            _context.Students.Add(student);
-            await _context.SaveChangesAsync();
+                message =
+                    "پروفایل دانشجویی برای این کاربر پیدا نشد"
+            });
         }
 
         var result = new StudentDto

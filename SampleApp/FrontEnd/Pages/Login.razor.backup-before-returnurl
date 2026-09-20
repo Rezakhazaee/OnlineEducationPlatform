@@ -181,7 +181,7 @@
               // دانشجو → پنل دانشجو
               if (Auth.IsStudent)
               {
-                  Navigation.NavigateTo(GetSafeReturnUrl() ?? "/student");
+                  Navigation.NavigateTo("/student");
                   return;
               }
 
@@ -227,34 +227,4 @@
                && url.StartsWith("/")
                && !url.StartsWith("//");
     }
-
-
-    private string? GetSafeReturnUrl()
-    {
-        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
-        var query = uri.Query;
-
-        const string key = "returnUrl=";
-        var index = query.IndexOf(key, StringComparison.OrdinalIgnoreCase);
-
-        if (index < 0)
-            return null;
-
-        var value = query[(index + key.Length)..];
-
-        var ampIndex = value.IndexOf('&');
-
-        if (ampIndex >= 0)
-            value = value[..ampIndex];
-
-        value = Uri.UnescapeDataString(value);
-
-        if (string.IsNullOrWhiteSpace(value) ||
-            !value.StartsWith("/") ||
-            value.StartsWith("//"))
-            return null;
-
-        return value;
-    }
-
 }
