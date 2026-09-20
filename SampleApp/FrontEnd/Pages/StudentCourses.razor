@@ -178,47 +178,57 @@
 
                         </div>
 
-
                         @if (financial != null)
-                        {
-                            <div class="student-course-financial">
+{
+    <div class="student-course-financial">
 
-                                <div>
-                                    <small>
-                                        مبلغ دوره
-                                    </small>
+        <div>
+            <small>
+                مبلغ دوره
+            </small>
 
-                                    <strong>
-                                        @financial.CoursePrice.ToString("N0")
-                                        تومان
-                                    </strong>
-                                </div>
+            <strong>
+                @financial.CoursePrice.ToString("N0")
+                تومان
+            </strong>
+        </div>
 
-                                <div>
-                                    <small>
-                                        پرداخت‌شده
-                                    </small>
+        <div>
+            <small>
+                پرداخت‌شده
+            </small>
 
-                                    <strong>
-                                        @financial.TotalPaid.ToString("N0")
-                                        تومان
-                                    </strong>
-                                </div>
+            <strong>
+                @financial.TotalPaid.ToString("N0")
+                تومان
+            </strong>
+        </div>
 
-                                <div>
-                                    <small>
-                                        باقی‌مانده
-                                    </small>
+        <div>
+            <small>
+                باقی‌مانده
+            </small>
 
-                                    <strong>
-                                        @financial.RemainingAmount.ToString("N0")
-                                        تومان
-                                    </strong>
-                                </div>
+            <strong>
+                @financial.RemainingAmount.ToString("N0")
+                تومان
+            </strong>
+        </div>
 
-                            </div>
-                        }
+    </div>
 
+    @if (financial.RemainingAmount > 0)
+    {
+        <a
+            href="/student/payment/@enrollment.Id"
+            class="student-course-details-btn">
+
+            پرداخت مبلغ باقی‌مانده
+            <span>←</span>
+
+        </a>
+    }
+}
 
                         <a
                             href="/student/course-content/@enrollment.CourseId"

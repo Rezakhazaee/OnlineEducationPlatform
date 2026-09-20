@@ -1,0 +1,496 @@
+@page "/student/payment/{EnrollmentId:int}"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@layout StudentLayout
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>پرداخت دوره | آموزش‌یار</PageTitle>
+
+<div class="student-page">
+
+    <header class="student-topbar">
+
+        <div>
+            <span class="student-eyebrow">
+                امور مالی
+            </span>
+
+            <h1>
+                پرداخت دوره
+            </h1>
+
+            <p>
+                ثبت درخواست پرداخت برای ثبت‌نام انتخاب‌شده.
+            </p>
+        </div>
+
+        <a
+            href="/student/courses"
+            class="student-profile-btn">
+
+            دوره‌های من
+            <span>←</span>
+
+        </a>
+
+    </header>
+
+
+    @if (IsLoading)
+    {
+        <section class="student-content-card">
+
+            <div class="student-loading">
+
+                <div class="student-loading-icon">
+                    ↻
+                </div>
+
+                <h3>
+                    در حال دریافت اطلاعات مالی...
+                </h3>
+
+            </div>
+
+        </section>
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <section class="student-content-card">
+
+            <div class="student-error">
+
+                <strong>
+                    ثبت درخواست پرداخت انجام نشد
+                </strong>
+
+                <p>
+                    @ErrorMessage
+                </p>
+
+                <a
+                    href="/student/courses"
+                    class="student-outline-btn">
+
+                    ← بازگشت به دوره‌ها
+
+                </a>
+
+            </div>
+
+        </section>
+    }
+    else if (Financial != null)
+    {
+        <section class="student-content-card">
+
+            <div class="student-section-header">
+
+                <div>
+                    <span>
+                        ثبت‌نام
+                    </span>
+
+                    <h2>
+                        @Financial.CourseTitle
+                    </h2>
+                </div>
+
+            </div>
+
+
+            <div class="student-course-detail-financial">
+
+                <div>
+                    <small>
+                        قیمت دوره
+                    </small>
+
+                    <strong>
+                        @Financial.CoursePrice.ToString("N0")
+                        تومان
+                    </strong>
+                </div>
+
+                <div>
+                    <small>
+                        پرداخت‌شده
+                    </small>
+
+                    <strong>
+                        @Financial.TotalPaid.ToString("N0")
+                        تومان
+                    </strong>
+                </div>
+
+                <div>
+                    <small>
+                        باقی‌مانده
+                    </small>
+
+                    <strong>
+                        @Financial.RemainingAmount.ToString("N0")
+                        تومان
+                    </strong>
+                </div>
+
+            </div>
+
+
+            @if (Financial.RemainingAmount <= 0)
+            {
+                <div class="student-info-note">
+
+                    <strong>
+                        تسویه کامل
+                    </strong>
+
+                    <p>
+                        مبلغ این ثبت‌نام به طور کامل پرداخت شده است.
+                    </p>
+
+                </div>
+            }
+            else
+            {
+                <div style="margin-top:24px;">
+
+                    <div style="margin-bottom:16px;">
+
+                        <label>
+                            نوع پرداخت
+                        </label>
+
+                        <select
+                            class="admin-input"
+                            value="@PaymentType"
+                            @onchange="HandlePaymentTypeChanged">
+
+                            <option value="FullPayment">
+                                پرداخت کامل
+                            </option>
+
+                            <option value="FirstInstallment">
+                                قسط اول
+                            </option>
+
+                            <option value="SecondInstallment">
+                                قسط دوم
+                            </option>
+
+                            <option value="ThirdInstallment">
+                                قسط سوم
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div style="margin-bottom:16px;">
+
+                        <label>
+                            مبلغ پرداخت
+                        </label>
+
+                        <input
+                            type="number"
+                            class="admin-input"
+                            min="0.01"
+                            max="@Financial.RemainingAmount"
+                            step="1"
+                            @bind="Amount"
+                            disabled="@IsFullPayment" />
+
+                        <small>
+                            حداکثر مبلغ قابل پرداخت:
+                            @Financial.RemainingAmount.ToString("N0")
+                            تومان
+                        </small>
+
+                    </div>
+
+
+                    @if (!string.IsNullOrWhiteSpace(LocalErrorMessage))
+                    {
+                        <div class="student-error">
+
+                            <p>
+                                @LocalErrorMessage
+                            </p>
+
+                        </div>
+                    }
+
+
+                    <button
+                        type="button"
+                        class="student-course-details-btn"
+                        @onclick="SubmitPayment"
+                        disabled="@IsSubmitting">
+
+                        @(IsSubmitting
+                            ? "در حال ثبت درخواست..."
+                            : "ثبت درخواست پرداخت")
+
+                    </button>
+
+                </div>
+            }
+
+        </section>
+    }
+
+</div>
+
+
+@code {
+
+    [Parameter]
+    public int EnrollmentId { get; set; }
+
+
+    private EnrollmentFinancialDto? Financial { get; set; }
+
+    private bool IsLoading { get; set; } = true;
+
+    private bool IsSubmitting { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+    private string? LocalErrorMessage { get; set; }
+
+    private string PaymentType { get; set; } = "FullPayment";
+
+    private decimal Amount { get; set; }
+
+
+    private bool IsFullPayment =>
+        PaymentType == "FullPayment";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsLoggedIn || !Auth.IsStudent)
+        {
+            Navigation.NavigateTo("/login", true);
+            return;
+        }
+
+        await LoadData();
+    }
+
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Financial =
+                await client.GetFromJsonAsync<EnrollmentFinancialDto>(
+                    $"api/Enrollments/my/{EnrollmentId}/financial");
+
+            if (Financial == null)
+            {
+                ErrorMessage =
+                    "اطلاعات مالی این ثبت‌نام پیدا نشد.";
+
+                return;
+            }
+
+            Amount = Financial.RemainingAmount;
+        }
+        catch
+        {
+            ErrorMessage =
+                "دریافت اطلاعات مالی با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+
+    private void HandlePaymentTypeChanged(
+        ChangeEventArgs e)
+    {
+        PaymentType =
+            e.Value?.ToString()
+            ?? "FullPayment";
+
+        if (Financial == null)
+        {
+            return;
+        }
+
+        if (PaymentType == "FullPayment")
+        {
+            Amount = Financial.RemainingAmount;
+        }
+        else
+        {
+            Amount = 0;
+        }
+
+        LocalErrorMessage = null;
+    }
+
+
+    private async Task SubmitPayment()
+    {
+        if (Financial == null)
+        {
+            return;
+        }
+
+        LocalErrorMessage = null;
+
+        if (Amount <= 0)
+        {
+            LocalErrorMessage =
+                "مبلغ پرداخت باید بیشتر از صفر باشد.";
+
+            return;
+        }
+
+        if (Amount > Financial.RemainingAmount)
+        {
+            LocalErrorMessage =
+                "مبلغ پرداخت نمی‌تواند بیشتر از مبلغ باقی‌مانده باشد.";
+
+            return;
+        }
+
+        if (PaymentType == "FullPayment" &&
+            Amount != Financial.RemainingAmount)
+        {
+            LocalErrorMessage =
+                "برای پرداخت کامل باید کل مبلغ باقی‌مانده پرداخت شود.";
+
+            return;
+        }
+
+        IsSubmitting = true;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var response =
+                await client.PostAsJsonAsync(
+                    "api/Payments/my/request",
+                    new StudentCreatePaymentDto
+                    {
+                        EnrollmentId = EnrollmentId,
+                        Amount = Amount,
+                        PaymentType = PaymentType,
+                        Description = "درخواست پرداخت توسط دانشجو"
+                    });
+
+            if (response.IsSuccessStatusCode)
+            {
+                Navigation.NavigateTo("/student/payments");
+                return;
+            }
+
+            LocalErrorMessage =
+                await GetErrorMessage(response);
+        }
+        catch
+        {
+            LocalErrorMessage =
+                "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+
+   private async Task<string> GetErrorMessage(
+    HttpResponseMessage response)
+{
+    var responseBody = string.Empty;
+
+    try
+    {
+        responseBody =
+            await response.Content.ReadAsStringAsync();
+    }
+    catch
+    {
+    }
+
+    try
+    {
+        var error =
+            System.Text.Json.JsonSerializer.Deserialize<ApiError>(
+                responseBody,
+                new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+        if (!string.IsNullOrWhiteSpace(error?.Message))
+        {
+            return error.Message;
+        }
+    }
+    catch
+    {
+    }
+
+    if (!string.IsNullOrWhiteSpace(responseBody))
+    {
+        return $"خطای سرور ({(int)response.StatusCode}): {responseBody}";
+    }
+
+    return $"خطای سرور ({(int)response.StatusCode}): درخواست انجام نشد.";
+}
+
+
+    public class EnrollmentFinancialDto
+    {
+        public int EnrollmentId { get; set; }
+
+        public string StudentName { get; set; } = string.Empty;
+
+        public string CourseTitle { get; set; } = string.Empty;
+
+        public decimal CoursePrice { get; set; }
+
+        public decimal TotalPaid { get; set; }
+
+        public decimal RemainingAmount { get; set; }
+
+        public string PaymentStatus { get; set; } = string.Empty;
+    }
+
+
+    public class StudentCreatePaymentDto
+    {
+        public int EnrollmentId { get; set; }
+
+        public decimal Amount { get; set; }
+
+        public string PaymentType { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
+    }
+
+
+    public class ApiError
+    {
+        public string? Message { get; set; }
+    }
+}
