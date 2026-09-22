@@ -38,6 +38,43 @@ public class LessonProgressController : ControllerBase
             .FirstOrDefaultAsync(s => s.UserId == userId);
     }
 
+    private async Task<bool> CanAccessEnrollmentAsync(Enrollment enrollment)
+    {
+        if (enrollment.Status != "Active")
+        {
+            return false;
+        }
+
+        if (!await _packageAccess.HasPackageAsync(2))
+        {
+            return false;
+        }
+
+        if (enrollment.Course == null)
+        {
+            return false;
+        }
+
+        var coursePrice =
+            enrollment.CoursePartnerOrganization?.AgreedPrice
+            ?? enrollment.Course.Price;
+
+        if (coursePrice <= 0)
+        {
+            return true;
+        }
+
+        var totalPaid =
+            await _context.Payments
+                .Where(p =>
+                    p.EnrollmentId == enrollment.Id &&
+                    p.Status == "Paid")
+                .SumAsync(p => (decimal?)p.Amount)
+            ?? 0;
+
+        return totalPaid >= coursePrice;
+    }
+
     [Authorize(Roles = "Student")]
     [HttpGet("enrollment/{enrollmentId}")]
     public async Task<ActionResult<List<LessonProgressDto>>> GetByEnrollment(
@@ -64,10 +101,11 @@ public class LessonProgressController : ControllerBase
         }
 
         var enrollment = await _context.Enrollments
+            .Include(e => e.Course)
+            .Include(e => e.CoursePartnerOrganization)
             .FirstOrDefaultAsync(e =>
                 e.Id == enrollmentId &&
-                e.StudentId == student.Id &&
-                e.Status != "Cancelled");
+                e.StudentId == student.Id);
 
         if (enrollment == null)
         {
@@ -75,6 +113,16 @@ public class LessonProgressController : ControllerBase
             {
                 message = "ثبت‌نام پیدا نشد"
             });
+        }
+
+        if (!await CanAccessEnrollmentAsync(enrollment))
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message = "برای مشاهده پیشرفت دوره، وضعیت مالی ثبت‌نام باید تسویه شده باشد."
+                });
         }
 
         var progress = await _context.EnrollmentLessonProgresses
@@ -117,6 +165,8 @@ public class LessonProgressController : ControllerBase
         }
 
         var enrollment = await _context.Enrollments
+            .Include(e => e.Course)
+            .Include(e => e.CoursePartnerOrganization)
             .FirstOrDefaultAsync(e =>
                 e.Id == dto.EnrollmentId &&
                 e.StudentId == student.Id &&
@@ -128,6 +178,16 @@ public class LessonProgressController : ControllerBase
             {
                 message = "ثبت‌نام پیدا نشد"
             });
+        }
+
+        if (!await CanAccessEnrollmentAsync(enrollment))
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message = "برای ثبت پیشرفت درس، وضعیت مالی ثبت‌نام باید تسویه شده باشد."
+                });
         }
 
         var lesson = await _context.CourseLessons

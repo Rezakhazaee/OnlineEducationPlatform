@@ -200,19 +200,13 @@
 
                                     <div>
 
-                                        @if (!string.IsNullOrWhiteSpace(
-                                            lesson.ContentUrl))
-                                        {
-                                            <a
-                                                href="@lesson.ContentUrl"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                class="student-course-details-btn">
+                                          <a
+                                              href="/student/lesson/@CourseId/@lesson.Id"
+                                              class="student-course-details-btn">
 
-                                                مشاهده محتوا
+                                              مشاهده درس
 
-                                            </a>
-                                        }
+                                          </a>
 
 
                                         <button
@@ -272,16 +266,27 @@
         Progress.Count(x => x.Value);
 
 
-    protected override async Task OnInitializedAsync()
-    {
-        if (!Auth.IsLoggedIn || !Auth.IsStudent)
-        {
-            Navigation.NavigateTo("/login", true);
-            return;
-        }
+      protected override async Task OnAfterRenderAsync(bool firstRender)
+      {
+          if (!firstRender)
+          {
+              return;
+          }
 
-        await LoadData();
-    }
+          await Auth.RestoreAsync();
+
+          if (!Auth.IsLoggedIn || !Auth.IsStudent)
+          {
+              Navigation.NavigateTo(
+                  $"/login?returnUrl=/student/course-content/{CourseId}",
+                  true);
+              return;
+          }
+
+          await LoadData();
+
+          StateHasChanged();
+      }
 
 
     private async Task LoadData()

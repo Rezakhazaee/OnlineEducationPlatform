@@ -5,10 +5,7 @@
 
 @layout InstructorLayout
 
-@using Microsoft.JSInterop
 @inject AuthService Auth
-@inject AuthService Auth
-@inject IJSRuntime JS
 
 <PageTitle>محتوای دوره | آموزش‌یار</PageTitle>
 
@@ -554,17 +551,6 @@
                                                 @(lesson.IsActive
                                                     ? "غیرفعال کردن"
                                                     : "فعال کردن")
-
-                                            </button>
-
-                                            <!-- Delete lesson -->
-
-                                            <button
-                                                type="button"
-                                                class="support-outline-btn"
-                                                @onclick="() => DeleteLesson(lesson)">
-
-                                                حذف درس
 
                                             </button>
 
@@ -1282,48 +1268,6 @@
 
 
     // =====================================================
-    // =====================================================
-    // Delete lesson
-    // =====================================================
-
-    private async Task DeleteLesson(CourseLessonDto lesson)
-    {
-        ErrorMessage = null;
-        SuccessMessage = null;
-
-        var confirmed = await JS.InvokeAsync<bool>(
-            "confirm",
-            $"آیا از حذف درس «{lesson.Title}» مطمئن هستید؟");
-
-        if (!confirmed)
-            return;
-
-        try
-        {
-            var client = Auth.CreateAuthenticatedClient();
-
-            var response = await client.DeleteAsync(
-                $"api/CourseLessons/{lesson.Id}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                ErrorMessage = await GetErrorMessage(response);
-                return;
-            }
-
-            SuccessMessage = "درس با موفقیت حذف شد.";
-
-            if (EditingLessonId == lesson.Id)
-                CancelLesson();
-
-            await LoadData();
-        }
-        catch
-        {
-            ErrorMessage = "ارتباط با سرور برقرار نشد.";
-        }
-    }
-
     // Toggle Lesson active / inactive
     // =====================================================
 

@@ -1,11 +1,19 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.JSInterop;
 
 namespace FrontEnd.Services;
 
 public class AuthService
 {
+    private const string TokenKey = "auth.token";
+    private const string UserIdKey = "auth.userId";
+    private const string FullNameKey = "auth.fullName";
+    private const string UsernameKey = "auth.username";
+    private const string RoleKey = "auth.role";
+
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IJSRuntime _js;
 
     public string? Token { get; private set; }
     public int? UserId { get; private set; }
@@ -15,7 +23,6 @@ public class AuthService
 
     public bool IsLoggedIn =>
         !string.IsNullOrWhiteSpace(Token);
-
 
     public bool IsAdmin =>
         Role == "Admin";
@@ -38,9 +45,12 @@ public class AuthService
     public bool IsManagementPanelUser =>
         IsAdmin || IsEducationStaff;
 
-    public AuthService(IHttpClientFactory httpClientFactory)
+    public AuthService(
+        IHttpClientFactory httpClientFactory,
+        IJSRuntime js)
     {
         _httpClientFactory = httpClientFactory;
+        _js = js;
     }
 
     public async Task<(bool Success, string Message)> Login(
@@ -91,10 +101,123 @@ public class AuthService
         Username = result.User?.Username;
         Role = result.User?.Role;
 
+        await SaveToStorage();
+
         return (
             true,
             result.Message ?? "ورود موفق بود"
         );
+    }
+
+    public async Task RestoreAsync()
+    {
+        try
+        {
+            Token = await _js.InvokeAsync<string?>(
+                "localStorage.getItem",
+                TokenKey);
+
+            if (string.IsNullOrWhiteSpace(Token))
+            {
+                ClearMemory();
+                return;
+            }
+
+            var userIdValue = await _js.InvokeAsync<string?>(
+                "localStorage.getItem",
+                UserIdKey);
+
+            UserId =
+                int.TryParse(userIdValue, out var userId)
+                    ? userId
+                    : null;
+
+            FullName = await _js.InvokeAsync<string?>(
+                "localStorage.getItem",
+                FullNameKey);
+
+            Username = await _js.InvokeAsync<string?>(
+                "localStorage.getItem",
+                UsernameKey);
+
+            Role = await _js.InvokeAsync<string?>(
+                "localStorage.getItem",
+                RoleKey);
+        }
+        catch
+        {
+            ClearMemory();
+        }
+    }
+
+    private async Task SaveToStorage()
+    {
+        await _js.InvokeVoidAsync(
+            "localStorage.setItem",
+            TokenKey,
+            Token ?? string.Empty);
+
+        await _js.InvokeVoidAsync(
+            "localStorage.setItem",
+            UserIdKey,
+            UserId?.ToString() ?? string.Empty);
+
+        await _js.InvokeVoidAsync(
+            "localStorage.setItem",
+            FullNameKey,
+            FullName ?? string.Empty);
+
+        await _js.InvokeVoidAsync(
+            "localStorage.setItem",
+            UsernameKey,
+            Username ?? string.Empty);
+
+        await _js.InvokeVoidAsync(
+            "localStorage.setItem",
+            RoleKey,
+            Role ?? string.Empty);
+    }
+
+    public async Task LogoutAsync()
+    {
+        ClearMemory();
+
+        try
+        {
+            await _js.InvokeVoidAsync(
+                "localStorage.removeItem",
+                TokenKey);
+
+            await _js.InvokeVoidAsync(
+                "localStorage.removeItem",
+                UserIdKey);
+
+            await _js.InvokeVoidAsync(
+                "localStorage.removeItem",
+                FullNameKey);
+
+            await _js.InvokeVoidAsync(
+                "localStorage.removeItem",
+                UsernameKey);
+
+            await _js.InvokeVoidAsync(
+                "localStorage.removeItem",
+                RoleKey);
+        }
+        catch
+        {
+            // در صورت نبود دسترسی به localStorage،
+            // وضعیت حافظه‌ای قبلاً پاک شده است.
+        }
+    }
+
+    private void ClearMemory()
+    {
+        Token = null;
+        UserId = null;
+        FullName = null;
+        Username = null;
+        Role = null;
     }
 
     public HttpClient CreateAuthenticatedClient()
@@ -112,15 +235,6 @@ public class AuthService
         }
 
         return client;
-    }
-
-    public void Logout()
-    {
-        Token = null;
-        UserId = null;
-        FullName = null;
-        Username = null;
-        Role = null;
     }
 }
 

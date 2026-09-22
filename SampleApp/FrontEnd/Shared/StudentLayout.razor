@@ -112,14 +112,14 @@
     }
 
 
-    private void Logout()
-    {
-        Auth.Logout();
+      private async Task Logout()
+      {
+          await Auth.LogoutAsync();
 
-        Navigation.NavigateTo(
-            "/login",
-            replace: true,
-            forceLoad: true);
-    }
+          Navigation.NavigateTo(
+              "/login",
+              replace: true,
+              forceLoad: true);
+      }
 
 }

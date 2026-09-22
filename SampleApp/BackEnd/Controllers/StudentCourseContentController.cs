@@ -60,13 +60,14 @@ public class StudentCourseContentController : ControllerBase
             });
         }
 
-        var enrollmentExists =
-            await _context.Enrollments.AnyAsync(e =>
+        var enrollment = await _context.Enrollments
+            .Include(e => e.Course)
+            .Include(e => e.CoursePartnerOrganization)
+            .FirstOrDefaultAsync(e =>
                 e.StudentId == student.Id &&
-                e.CourseId == courseId &&
-                e.Status != "Cancelled");
+                e.CourseId == courseId);
 
-        if (!enrollmentExists)
+        if (enrollment == null)
         {
             return NotFound(new
             {
@@ -74,8 +75,17 @@ public class StudentCourseContentController : ControllerBase
             });
         }
 
-        var course = await _context.Courses
-            .FirstOrDefaultAsync(c => c.Id == courseId);
+        if (enrollment.Status != "Active")
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message = "ثبت‌نام این دوره فعال نیست."
+                });
+        }
+
+        var course = enrollment.Course;
 
         if (course == null)
         {
@@ -83,6 +93,28 @@ public class StudentCourseContentController : ControllerBase
             {
                 message = "دوره پیدا نشد"
             });
+        }
+
+        var coursePrice =
+            enrollment.CoursePartnerOrganization?.AgreedPrice
+            ?? course.Price;
+
+        var totalPaid =
+            await _context.Payments
+                .Where(p =>
+                    p.EnrollmentId == enrollment.Id &&
+                    p.Status == "Paid")
+                .SumAsync(p => (decimal?)p.Amount)
+            ?? 0;
+
+        if (coursePrice > 0 && totalPaid < coursePrice)
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message = "برای دسترسی به محتوای این دوره، ابتدا مبلغ ثبت‌نام را به‌طور کامل تسویه کنید."
+                });
         }
 
         var modules = await _context.CourseModules

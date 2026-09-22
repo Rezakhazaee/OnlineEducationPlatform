@@ -557,17 +557,6 @@
 
                                             </button>
 
-                                            <!-- Delete lesson -->
-
-                                            <button
-                                                type="button"
-                                                class="support-outline-btn"
-                                                @onclick="() => DeleteLesson(lesson)">
-
-                                                حذف درس
-
-                                            </button>
-
                                         </div>
 
                                     </div>
