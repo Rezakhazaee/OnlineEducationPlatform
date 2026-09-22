@@ -18,5 +18,4 @@ public class UpdateOrganizationSettingsDto
     // 2 = آموزش آنلاین
     // 3 = پرداخت آنلاین
     // 4 = سازمانی
-    public int PackageLevel { get; set; } = 1;
 }

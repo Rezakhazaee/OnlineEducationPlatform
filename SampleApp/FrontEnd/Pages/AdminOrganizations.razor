@@ -161,35 +161,6 @@
 
                         </div>
 
-                         <div class="admin-form">
-
-    <label>
-        سطح محصول
-    </label>
-
-    <select
-        class="admin-input"
-        @bind="PackageLevel">
-
-        <option value="1">
-            ۱ - پایه حضوری
-        </option>
-
-        <option value="2">
-            ۲ - آموزش آنلاین
-        </option>
-
-        <option value="3">
-            ۳ - پرداخت آنلاین
-        </option>
-
-        <option value="4">
-            ۴ - سازمانی
-        </option>
-
-    </select>
-
-</div>
 
                     </div>
 
@@ -411,7 +382,6 @@
     private string? OrganizationDescription { get; set; }
 
     private bool OrganizationIsActive { get; set; } = true;
-   private int PackageLevel { get; set; } = 1;
        private string PrimaryColor { get; set; } = "#568fa8";
 
     private string SecondaryColor { get; set; } = "#263d4a";
@@ -494,8 +464,6 @@
 
             IsThemeActive =
                 settings.ThemeIsActive;
-                 PackageLevel =
-                 settings.PackageLevel;
         }
         catch
         {
@@ -591,8 +559,6 @@
                     ThemeIsActive =
                         IsThemeActive,
 
-                    PackageLevel =
-                        PackageLevel
                 };
 
             var response =
@@ -698,7 +664,6 @@
         public string? SecondaryColor { get; set; }
 
         public bool ThemeIsActive { get; set; }
-        public int PackageLevel { get; set; }
     }
 
 private class UpdateOrganizationSettingsDto
@@ -715,6 +680,5 @@ private class UpdateOrganizationSettingsDto
 
     public bool ThemeIsActive { get; set; } = true;
 
-    public int PackageLevel { get; set; } = 1;
 }
 }

@@ -60,13 +60,6 @@ public class OrganizationSettingsController : ControllerBase
     public async Task<ActionResult<OrganizationSettings>> UpdateSettings(
         [FromBody] UpdateOrganizationSettingsDto request)
     {
-        if (request.PackageLevel < 1 || request.PackageLevel > 4)
-        {
-            return BadRequest(new
-            {
-                message = "سطح محصول باید بین 1 تا 4 باشد"
-            });
-        }
         var settings = await _context.OrganizationSettings
             .FirstOrDefaultAsync();
 
@@ -83,7 +76,6 @@ public class OrganizationSettingsController : ControllerBase
         settings.PrimaryColor = request.PrimaryColor;
         settings.SecondaryColor = request.SecondaryColor;
         settings.ThemeIsActive = request.ThemeIsActive;
-        settings.PackageLevel = request.PackageLevel;
         await _context.SaveChangesAsync();
 
         return Ok(settings);
