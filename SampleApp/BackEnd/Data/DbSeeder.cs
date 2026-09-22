@@ -5,7 +5,7 @@ namespace BackEnd.Data;
 
 public static class DbSeeder
 {
-    public static async Task SeedAsync(ApplicationDbContext db, int packageLevel)
+    public static async Task SeedAsync(ApplicationDbContext db, int packageLevel, bool seedTestData, string initialAdminUsername, string initialAdminPassword)
     {
         if (packageLevel < 1 || packageLevel > 4)
         {
@@ -16,7 +16,7 @@ public static class DbSeeder
         // 1. Main Admin
         // ==========================================
 
-        var admin = await db.Users.FirstOrDefaultAsync(u => u.Username == "admin");
+        var admin = await db.Users.FirstOrDefaultAsync(u => u.Role == "Admin");
 
         if (admin == null)
         {
@@ -24,8 +24,8 @@ public static class DbSeeder
             {
                 FullName = "System Administrator",
                 Mobile = "09000000000",
-                Username = "admin",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@12345"),
+                Username = initialAdminUsername,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(initialAdminPassword),
                 Role = "Admin",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -36,7 +36,36 @@ public static class DbSeeder
         }
 
         // ==========================================
-        // 2. Test Instructor
+        // 2. Organization Settings
+        // ==========================================
+
+        var settings = await db.OrganizationSettings
+            .FirstOrDefaultAsync();
+
+        if (settings == null)
+        {
+            settings = new OrganizationSettings
+            {
+                Name = "سازمان آزمایشی",
+                Description = "اطلاعات آزمایشی سامانه",
+                IsActive = true,
+                PrimaryColor = "#568fa8",
+                SecondaryColor = "#263d4a",
+                ThemeIsActive = true,
+                PackageLevel = packageLevel
+            };
+
+            db.OrganizationSettings.Add(settings);
+            await db.SaveChangesAsync();
+        }
+        if (!seedTestData)
+        {
+            return;
+        }
+
+
+        // ==========================================
+        // 3. Test Instructor
         // ==========================================
 
         var instructor = await db.Users
@@ -60,7 +89,7 @@ public static class DbSeeder
         }
 
         // ==========================================
-        // 3. Test Support
+        // 4. Test Support
         // ==========================================
 
         var support = await db.Users
@@ -80,30 +109,6 @@ public static class DbSeeder
             };
 
             db.Users.Add(support);
-            await db.SaveChangesAsync();
-        }
-
-        // ==========================================
-        // 4. Organization Settings
-        // ==========================================
-
-        var settings = await db.OrganizationSettings
-            .FirstOrDefaultAsync();
-
-        if (settings == null)
-        {
-            settings = new OrganizationSettings
-            {
-                Name = "سازمان آزمایشی",
-                Description = "اطلاعات آزمایشی سامانه",
-                IsActive = true,
-                PrimaryColor = "#568fa8",
-                SecondaryColor = "#263d4a",
-                ThemeIsActive = true,
-                PackageLevel = packageLevel
-            };
-
-            db.OrganizationSettings.Add(settings);
             await db.SaveChangesAsync();
         }
 

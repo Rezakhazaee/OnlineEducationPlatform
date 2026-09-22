@@ -82,7 +82,30 @@ using (var scope = app.Services.CreateScope())
 
     var packageLevel = builder.Configuration.GetValue<int?>("Product:PackageLevel") ?? 1;
 
-    await DbSeeder.SeedAsync(db, packageLevel);
+    var initialAdminUsername =
+        builder.Configuration["Product:InitialAdminUsername"];
+
+    var initialAdminPassword =
+        builder.Configuration["Product:InitialAdminPassword"];
+
+    if (app.Environment.IsDevelopment())
+    {
+        initialAdminUsername ??= "admin";
+        initialAdminPassword ??= "Admin";
+    }
+    else if (string.IsNullOrWhiteSpace(initialAdminUsername) ||
+             string.IsNullOrWhiteSpace(initialAdminPassword))
+    {
+        throw new InvalidOperationException(
+            "Production requires Product:InitialAdminUsername and Product:InitialAdminPassword.");
+    }
+
+    await DbSeeder.SeedAsync(
+        db,
+        packageLevel,
+        app.Environment.IsDevelopment(),
+        initialAdminUsername!,
+        initialAdminPassword!);
 }
 
 // OpenAPI + Scalar
