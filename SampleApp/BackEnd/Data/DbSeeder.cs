@@ -5,8 +5,13 @@ namespace BackEnd.Data;
 
 public static class DbSeeder
 {
-    public static async Task SeedAsync(ApplicationDbContext db)
+    public static async Task SeedAsync(ApplicationDbContext db, int packageLevel)
     {
+        if (packageLevel < 1 || packageLevel > 4)
+        {
+            throw new InvalidOperationException("Product:PackageLevel must be between 1 and 4.");
+        }
+
         // ==========================================
         // 1. Main Admin
         // ==========================================
@@ -94,7 +99,8 @@ public static class DbSeeder
                 IsActive = true,
                 PrimaryColor = "#568fa8",
                 SecondaryColor = "#263d4a",
-                ThemeIsActive = true
+                ThemeIsActive = true,
+                PackageLevel = packageLevel
             };
 
             db.OrganizationSettings.Add(settings);

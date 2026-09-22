@@ -80,7 +80,9 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider
         .GetRequiredService<ApplicationDbContext>();
 
-    await DbSeeder.SeedAsync(db);
+    var packageLevel = builder.Configuration.GetValue<int?>("Product:PackageLevel") ?? 1;
+
+    await DbSeeder.SeedAsync(db, packageLevel);
 }
 
 // OpenAPI + Scalar
