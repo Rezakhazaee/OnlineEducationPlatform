@@ -83,6 +83,7 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
 
     var packageLevel = builder.Configuration.GetValue<int?>("Product:PackageLevel") ?? 1;
+    var organizationName = builder.Configuration["Product:OrganizationName"] ?? "Sample Organization";
 
     var initialAdminUsername =
         builder.Configuration["Product:InitialAdminUsername"];
@@ -107,7 +108,8 @@ using (var scope = app.Services.CreateScope())
         packageLevel,
         app.Environment.IsDevelopment(),
         initialAdminUsername!,
-        initialAdminPassword!);
+        initialAdminPassword!,
+        organizationName);
 }
 
 // OpenAPI + Scalar

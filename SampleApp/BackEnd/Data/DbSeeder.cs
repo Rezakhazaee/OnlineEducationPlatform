@@ -5,7 +5,7 @@ namespace BackEnd.Data;
 
 public static class DbSeeder
 {
-    public static async Task SeedAsync(ApplicationDbContext db, int packageLevel, bool seedTestData, string initialAdminUsername, string initialAdminPassword)
+    public static async Task SeedAsync(ApplicationDbContext db, int packageLevel, bool seedTestData, string initialAdminUsername, string initialAdminPassword, string organizationName)
     {
         if (packageLevel < 1 || packageLevel > 4)
         {
@@ -46,8 +46,8 @@ public static class DbSeeder
         {
             settings = new OrganizationSettings
             {
-                Name = "سازمان آزمایشی",
-                Description = "اطلاعات آزمایشی سامانه",
+                Name = organizationName,
+                Description = seedTestData ? "اطلاعات آزمایشی سامانه" : null,
                 IsActive = true,
                 PrimaryColor = "#568fa8",
                 SecondaryColor = "#263d4a",
