@@ -18,5 +18,8 @@ public class PaymentDetailDto
 
     public string? Description { get; set; }
 
+    public string? PaymentMethod { get; set; }
+
+    public string? GatewayRefId { get; set; }
     public string Status { get; set; } = string.Empty;
 }

@@ -119,6 +119,9 @@ public async Task<ActionResult<List<PaymentDetailDto>>> Get()
 
                 Description = p.Description,
 
+                  PaymentMethod = p.PaymentMethod,
+
+                  GatewayRefId = p.GatewayRefId,
                 Status = p.Status
             })
             .ToListAsync();
@@ -170,6 +173,8 @@ public async Task<ActionResult<List<PaymentDetailDto>>> Get()
                     ? p.Enrollment.Course.Title
                     : string.Empty,
                 Amount = p.Amount,
+                  PaymentMethod = p.PaymentMethod,
+                  GatewayRefId = p.GatewayRefId,
                 PaymentDate = p.PaymentDate,
                 PaymentType = p.PaymentType,
                 Description = p.Description,
@@ -282,6 +287,23 @@ public async Task<ActionResult<List<PaymentDetailDto>>> Get()
             return BadRequest(new
             {
                 message = "مبلغ پرداخت کامل باید برابر مبلغ باقی‌مانده باشد"
+            });
+        }
+
+        var existingGatewayPayment = await _context.Payments
+            .AnyAsync(p =>
+                p.EnrollmentId == enrollment.Id &&
+                p.PaymentMethod == "ZarinPal" &&
+                p.PaymentType == dto.PaymentType &&
+                (p.Status == "Pending" || p.Status == "Paid"));
+
+        if (existingGatewayPayment)
+        {
+            return BadRequest(new
+            {
+                message = dto.PaymentType == "FullPayment"
+                    ? "برای این ثبت‌نام قبلاً یک پرداخت کامل آنلاین ایجاد یا تأیید شده است."
+                    : "برای این نوع پرداخت، یک تراکنش آنلاین قبلی هنوز معتبر است."
             });
         }
 

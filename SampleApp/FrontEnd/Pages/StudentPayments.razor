@@ -175,6 +175,7 @@
                                 <th>نوع پرداخت</th>
                                 <th>تاریخ</th>
                                 <th>مبلغ</th>
+                                  <th>شماره پیگیری</th>
                                 <th>وضعیت</th>
                                 <th>ثبت‌نام</th>
                             </tr>
@@ -232,6 +233,11 @@
                                         <span class="@GetPaymentStatusClass(payment.Status)">
                                             @GetPaymentStatusText(payment.Status)
                                         </span>
+                                      <td>
+                                          <span class="student-enrollment-number">
+                                              @(!string.IsNullOrWhiteSpace(payment.GatewayRefId) ? payment.GatewayRefId : "—")
+                                          </span>
+                                      </td>
                                     </td>
 
 
@@ -396,6 +402,12 @@
         public string? Description { get; set; }
 
         public string Status { get; set; } = string.Empty;
+        public string? PaymentMethod { get; set; }
+
+        public string? GatewayRefId { get; set; }
+        public string? PaymentMethod { get; set; }
+
+        public string? GatewayRefId { get; set; }
     }
 
 }
