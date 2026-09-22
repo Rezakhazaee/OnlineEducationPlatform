@@ -512,7 +512,31 @@
                             </select>
 
                         </div>
+                          @if (PackageLevel >= 4)
+{
+    <div class="form-group">
 
+        <label>
+            سازمان طرف قرارداد
+        </label>
+
+        <select @bind="FormPartnerOrganizationId">
+
+            <option value="">
+                بدون سازمان طرف قرارداد
+            </option>
+
+            @foreach (var organization in PartnerOrganizations.Where(x => x.IsActive))
+            {
+                <option value="@organization.Id">
+                    @organization.Name
+                </option>
+            }
+
+        </select>
+
+    </div>
+}
 
                         <div class="form-group student-address-field">
 
@@ -601,7 +625,11 @@
     private string FormMarketingUserId { get; set; } = string.Empty;
 
     private string FormSupportUserId { get; set; } = string.Empty;
+    private string FormPartnerOrganizationId { get; set; } = string.Empty;
 
+    private int PackageLevel { get; set; } = 1;
+
+    private List<PartnerOrganizationDto> PartnerOrganizations { get; set; } = new();
 
     private bool CanManageStudents =>
         Auth.IsAdmin || Auth.IsEducationStaff;
@@ -682,6 +710,12 @@
         try
         {
             var client = Auth.CreateAuthenticatedClient();
+           var settings =
+           await client.GetFromJsonAsync<OrganizationSettingsDto>(
+            "api/OrganizationSettings");
+
+            PackageLevel =
+                settings?.PackageLevel ?? 1;
 
             Students =
                 await client.GetFromJsonAsync<List<StudentDto>>(
@@ -723,7 +757,36 @@
                 x => x.Id,
                 x => x.SupportUserId?.ToString() ?? string.Empty);
     }
+private async Task LoadPartnerOrganizations()
+{
+    if (PackageLevel < 4 ||
+        !CanManageStudents)
+    {
+        PartnerOrganizations =
+            new List<PartnerOrganizationDto>();
 
+        return;
+    }
+
+    try
+    {
+        var client =
+            Auth.CreateAuthenticatedClient();
+
+        var result =
+            await client.GetFromJsonAsync<
+                List<PartnerOrganizationDto>>(
+                    "api/PartnerOrganizations");
+
+        PartnerOrganizations =
+            result ?? new List<PartnerOrganizationDto>();
+    }
+    catch
+    {
+        PartnerOrganizations =
+            new List<PartnerOrganizationDto>();
+    }
+}
 
     private string GetSupportSelection(int studentId)
     {
@@ -824,19 +887,20 @@
     }
 
 
-    private void ResetForm()
-    {
-        FormFirstName = string.Empty;
-        FormLastName = string.Empty;
-        FormNationalCode = string.Empty;
-        FormMobile = string.Empty;
-        FormBirthDate = null;
-        FormAddress = string.Empty;
-        FormGuardianName = string.Empty;
-        FormGuardianMobile = string.Empty;
-        FormMarketingUserId = string.Empty;
-        FormSupportUserId = string.Empty;
-    }
+   private void ResetForm()
+{
+    FormFirstName = string.Empty;
+    FormLastName = string.Empty;
+    FormNationalCode = string.Empty;
+    FormMobile = string.Empty;
+    FormBirthDate = null;
+    FormAddress = string.Empty;
+    FormGuardianName = string.Empty;
+    FormGuardianMobile = string.Empty;
+    FormMarketingUserId = string.Empty;
+    FormSupportUserId = string.Empty;
+    FormPartnerOrganizationId = string.Empty;
+}
 
 
     private async Task CreateStudent()
@@ -899,6 +963,12 @@
                 out var supportId)
                     ? supportId
                     : null;
+        int? partnerOrganizationId =
+    int.TryParse(
+        FormPartnerOrganizationId,
+        out var partnerId)
+            ? partnerId
+            : null;
 
         IsSaving = true;
 
@@ -923,7 +993,8 @@
                     ? null
                     : FormGuardianMobile.Trim(),
                 MarketingUserId = marketingUserId,
-                SupportUserId = supportUserId
+                SupportUserId = supportUserId,
+                PartnerOrganizationId = partnerOrganizationId
             };
 
             var response =
@@ -1020,33 +1091,45 @@
         public string Role { get; set; } = string.Empty;
     }
 
+public class CreateStudentRequest
+{
+    public int? UserId { get; set; }
 
-    public class CreateStudentRequest
-    {
-        public int? UserId { get; set; }
+    public string FirstName { get; set; } = string.Empty;
 
-        public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
 
-        public string LastName { get; set; } = string.Empty;
+    public string NationalCode { get; set; } = string.Empty;
 
-        public string NationalCode { get; set; } = string.Empty;
+    public DateTime? BirthDate { get; set; }
 
-        public DateTime? BirthDate { get; set; }
+    public string Mobile { get; set; } = string.Empty;
 
-        public string Mobile { get; set; } = string.Empty;
+    public string? Address { get; set; }
 
-        public string? Address { get; set; }
+    public string? GuardianName { get; set; }
 
-        public string? GuardianName { get; set; }
+    public string? GuardianMobile { get; set; }
 
-        public string? GuardianMobile { get; set; }
+    public int? MarketingUserId { get; set; }
 
-        public int? MarketingUserId { get; set; }
+    public int? SupportUserId { get; set; }
 
-        public int? SupportUserId { get; set; }
-    }
+    public int? PartnerOrganizationId { get; set; }
+}
 
+private class OrganizationSettingsDto
+{
+    public int PackageLevel { get; set; } = 1;
+}
+public class PartnerOrganizationDto
+{
+    public int Id { get; set; }
 
+    public string Name { get; set; } = string.Empty;
+
+    public bool IsActive { get; set; }
+}
     public class AssignSupportRequest
     {
         public int SupportUserId { get; set; }

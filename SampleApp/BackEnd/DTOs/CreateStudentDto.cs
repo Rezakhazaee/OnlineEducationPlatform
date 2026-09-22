@@ -35,4 +35,5 @@ public class CreateStudentDto
     public int? MarketingUserId { get; set; }
 
     public int? SupportUserId { get; set; }
+    public int? PartnerOrganizationId { get; set; }
 }

@@ -995,20 +995,6 @@ protected override async Task OnInitializedAsync()
         {
             Navigation.NavigateTo(
                 Auth.IsLoggedIn ? "/" : "/login");
-try
-{
-    var settingsClient = Auth.CreateAuthenticatedClient();
-
-    var settings =
-        await settingsClient.GetFromJsonAsync<OrganizationSettingsDto>(
-            "api/OrganizationSettings");
-
-    PackageLevel = settings?.PackageLevel ?? 1;
-}
-catch
-{
-    PackageLevel = 1;
-}
             return;
         }
 
@@ -1024,6 +1010,22 @@ catch
 
     private async Task LoadCourses()
     {
+        try
+        {
+            var settingsClient = Auth.CreateAuthenticatedClient();
+
+            var settings =
+                await settingsClient.GetFromJsonAsync<OrganizationSettingsDto>(
+                    "api/OrganizationSettings");
+
+            PackageLevel = settings?.PackageLevel ?? 1;
+        }
+        catch
+        {
+            PackageLevel = 1;
+        }
+
+
         IsLoading = true;
         ErrorMessage = null;
 

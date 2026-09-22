@@ -23,6 +23,7 @@ public class StudentDto
     public int? MarketingUserId { get; set; }
 
     public int? SupportUserId { get; set; }
+    public int? PartnerOrganizationId { get; set; }
 
     public DateTime CreatedDate { get; set; }
 }

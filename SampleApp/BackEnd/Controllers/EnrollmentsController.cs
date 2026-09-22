@@ -863,162 +863,179 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
     return Ok(result);
 }
 
-    // ثبت نام دانشجو در دوره
-    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Student")]
-      [HttpPost]
-    public async Task<ActionResult<EnrollmentDto>> Create(CreateEnrollmentDto dto)
+// ثبت نام دانشجو در دوره
+[Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Student")]
+[HttpPost]
+public async Task<ActionResult<EnrollmentDto>> Create(CreateEnrollmentDto dto)
+{
+    // بررسی شناسه کاربر از JWT
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (!int.TryParse(userIdClaim, out var userId))
     {
-        // بررسی شناسه کاربر از JWT
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (!int.TryParse(userIdClaim, out var userId))
+        return Unauthorized(new
         {
-            return Unauthorized(new
-            {
-                message = "شناسه کاربر معتبر نیست"
-            });
-        }
+            message = "شناسه کاربر معتبر نیست"
+        });
+    }
 
-        // اگر کاربر Student باشد،
-        // StudentId از روی UserId تعیین می‌شود
-        if (User.IsInRole("Student"))
-        {
-            var student = await _context.Students
-                .FirstOrDefaultAsync(s => s.UserId == userId);
+    Student? currentStudent = null;
+    var isStudent = User.IsInRole("Student");
 
-            if (student == null)
-            {
-                return BadRequest(new
-                {
-                    message = "برای این کاربر پروفایل دانشجویی وجود ندارد"
-                });
-            }
+    // اگر کاربر Student باشد،
+    // StudentId از روی UserId تعیین می‌شود
+    if (isStudent)
+    {
+        currentStudent = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
 
-            dto.StudentId = student.Id;
-        }
-
-        if (User.IsInRole("Student") &&
-            (dto.SupportUserId.HasValue || dto.InstructorId.HasValue))
+        if (currentStudent == null)
         {
             return BadRequest(new
             {
-                message = "دانشجو مجاز به تعیین پشتیبان یا مدرس ثبت نام نیست."
+                message = "برای این کاربر پروفایل دانشجویی وجود ندارد"
             });
         }
-          // Marketer → فقط برای دانشجویان ارجاع‌شده توسط خودش
-          if (User.IsInRole("Marketer"))
-          {
-              var relatedStudent = await _context.Students
-                  .FirstOrDefaultAsync(s =>
-                      s.Id == dto.StudentId &&
-                      s.MarketingUserId == userId);
 
-              if (relatedStudent == null)
-              {
-                  return NotFound(new
-                  {
-                      message = "این دانشجو در فهرست ارجاع‌های شما قرار ندارد."
-                  });
-              }
+        dto.StudentId = currentStudent.Id;
+    }
 
-              if (dto.SupportUserId.HasValue ||
-                  dto.InstructorId.HasValue)
-              {
-                  return BadRequest(new
-                  {
-                      message = "بازاریاب مجاز به تعیین پشتیبان یا مدرس ثبت نام نیست."
-                  });
-              }
-          }
+    // Student نباید پشتیبان یا مدرس را خودش تعیین کند
+    if (isStudent &&
+        (dto.SupportUserId.HasValue || dto.InstructorId.HasValue))
+    {
+        return BadRequest(new
+        {
+            message = "دانشجو مجاز به تعیین پشتیبان یا مدرس ثبت نام نیست."
+        });
+    }
 
-          // Support → فقط برای دانشجویان اختصاص‌یافته به خودش
-          if (User.IsInRole("Support"))
-          {
-              var relatedStudent = await _context.Students
-                  .FirstOrDefaultAsync(s =>
-                      s.Id == dto.StudentId &&
-                      s.SupportUserId == userId);
+    // Marketer → فقط برای دانشجویان ارجاع‌شده توسط خودش
+    if (User.IsInRole("Marketer"))
+    {
+        var relatedStudent = await _context.Students
+            .FirstOrDefaultAsync(s =>
+                s.Id == dto.StudentId &&
+                s.MarketingUserId == userId);
 
-              if (relatedStudent == null)
-              {
-                  return NotFound(new
-                  {
-                      message = "این دانشجو به شما اختصاص داده نشده است."
-                  });
-              }
+        if (relatedStudent == null)
+        {
+            return NotFound(new
+            {
+                message = "این دانشجو در فهرست ارجاع‌های شما قرار ندارد."
+            });
+        }
 
-              if (dto.SupportUserId.HasValue &&
-                  dto.SupportUserId.Value != userId)
-              {
-                  return BadRequest(new
-                  {
-                      message = "پشتیبان نمی‌تواند ثبت نام را به پشتیبان دیگری اختصاص دهد."
-                  });
-              }
-
-              dto.SupportUserId = userId;
-          }
-
-
-
-
-        // بررسی وجود دانشجو
-        var studentExists = await _context.Students
-            .AnyAsync(s => s.Id == dto.StudentId);
-
-        if (!studentExists)
+        if (dto.SupportUserId.HasValue ||
+            dto.InstructorId.HasValue)
         {
             return BadRequest(new
             {
-                message = "دانشجوی مورد نظر وجود ندارد"
+                message = "بازاریاب مجاز به تعیین پشتیبان یا مدرس ثبت نام نیست."
+            });
+        }
+    }
+
+    // Support → فقط برای دانشجویان اختصاص‌یافته به خودش
+    if (User.IsInRole("Support"))
+    {
+        var relatedStudent = await _context.Students
+            .FirstOrDefaultAsync(s =>
+                s.Id == dto.StudentId &&
+                s.SupportUserId == userId);
+
+        if (relatedStudent == null)
+        {
+            return NotFound(new
+            {
+                message = "این دانشجو به شما اختصاص داده نشده است."
             });
         }
 
-
-        // بررسی وجود دوره
-        var course = await _context.Courses
-            .FirstOrDefaultAsync(c => c.Id == dto.CourseId);
-
-        if (course == null)
+        if (dto.SupportUserId.HasValue &&
+            dto.SupportUserId.Value != userId)
         {
             return BadRequest(new
             {
-                message = "Course not found."
+                message = "پشتیبان نمی‌تواند ثبت نام را به پشتیبان دیگری اختصاص دهد."
             });
         }
 
-        if (!await _packageAccess.HasPackageAsync(2) &&
-            !string.Equals(
-                course.DeliveryType,
-                "InPerson",
-                StringComparison.OrdinalIgnoreCase))
+        dto.SupportUserId = userId;
+    }
+
+    // بررسی وجود دانشجو
+    var student = currentStudent;
+
+    if (student == null)
+    {
+        student = await _context.Students
+            .FirstOrDefaultAsync(s => s.Id == dto.StudentId);
+    }
+
+    if (student == null)
+    {
+        return BadRequest(new
         {
-            return StatusCode(
-                StatusCodes.Status403Forbidden,
-                new
-                {
-                    message = "Package 1 supports in-person enrollment only."
-                });
-        }
+            message = "دانشجوی مورد نظر وجود ندارد"
+        });
+    }
 
+    // بررسی وجود دوره
+    var course = await _context.Courses
+        .FirstOrDefaultAsync(c => c.Id == dto.CourseId);
 
-        // بررسی ثبت نام تکراری دانشجو در دوره
-        var duplicateEnrollment = await _context.Enrollments
-            .AnyAsync(e =>
-                e.StudentId == dto.StudentId &&
-                e.CourseId == dto.CourseId &&
-                e.Status == "Active");
-
-        if (duplicateEnrollment)
+    if (course == null)
+    {
+        return BadRequest(new
         {
-            return BadRequest(new
+            message = "Course not found."
+        });
+    }
+
+    // Package 1 → فقط دوره حضوری
+    if (!await _packageAccess.HasPackageAsync(2) &&
+        !string.Equals(
+            course.DeliveryType,
+            "InPerson",
+            StringComparison.OrdinalIgnoreCase))
+    {
+        return StatusCode(
+            StatusCodes.Status403Forbidden,
+            new
             {
-                message = "این دانشجو قبلاً در این دوره ثبت نام کرده است"
+                message = "Package 1 supports in-person enrollment only."
             });
-        }
-        // بررسی قرارداد سازمانی، در صورت ارسال
-            if (dto.CoursePartnerOrganizationId.HasValue &&
-                !await _packageAccess.HasPackageAsync(4))
+    }
+
+    // بررسی ثبت نام تکراری دانشجو در دوره
+    var duplicateEnrollment = await _context.Enrollments
+        .AnyAsync(e =>
+            e.StudentId == dto.StudentId &&
+            e.CourseId == dto.CourseId &&
+            e.Status == "Active");
+
+    if (duplicateEnrollment)
+    {
+        return BadRequest(new
+        {
+            message = "این دانشجو قبلاً در این دوره ثبت نام کرده است"
+        });
+    }
+
+    // =========================================================
+    // منطق قرارداد سازمانی
+    // =========================================================
+
+    // اگر Student باشد:
+    // قرارداد نباید از سمت کاربر انتخاب شود؛
+    // قرارداد باید بر اساس سازمان خود دانشجو تعیین شود.
+    if (isStudent)
+    {
+        // قرارداد سازمانی فقط در Package 4 قابل استفاده است
+        if (!await _packageAccess.HasPackageAsync(4))
+        {
+            if (dto.CoursePartnerOrganizationId.HasValue)
             {
                 return StatusCode(
                     StatusCodes.Status403Forbidden,
@@ -1028,98 +1045,192 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
                     });
             }
 
+            dto.CoursePartnerOrganizationId = null;
+        }
+        else
+        {
+            // دانشجو سازمان طرف قرارداد دارد
+            if (student.PartnerOrganizationId.HasValue)
+            {
+                var today = DateTime.Today;
+
+                var ownOrganizationContract =
+                    await _context.CoursePartnerOrganizations
+                        .Where(x =>
+                            x.CourseId == dto.CourseId &&
+                            x.PartnerOrganizationId ==
+                                student.PartnerOrganizationId.Value &&
+                            x.IsActive &&
+                            (!x.StartDate.HasValue ||
+                             x.StartDate.Value.Date <= today) &&
+                            (!x.EndDate.HasValue ||
+                             x.EndDate.Value.Date >= today))
+                        .OrderBy(x => x.Id)
+                        .FirstOrDefaultAsync();
+
+                // اگر دانشجو شناسه یک قرارداد را دستی ارسال کرده،
+                // باید دقیقاً همان قرارداد سازمان خودش باشد.
+                if (dto.CoursePartnerOrganizationId.HasValue)
+                {
+                    if (ownOrganizationContract == null)
+                    {
+                        return BadRequest(new
+                        {
+                            message =
+                                "برای سازمان شما قرارداد فعالی برای این دوره وجود ندارد."
+                        });
+                    }
+
+                    if (dto.CoursePartnerOrganizationId.Value !=
+                        ownOrganizationContract.Id)
+                    {
+                        return BadRequest(new
+                        {
+                            message =
+                                "دانشجو فقط مجاز به استفاده از قرارداد سازمان خودش است."
+                        });
+                    }
+                }
+
+                // تعیین قرارداد توسط سرور
+                dto.CoursePartnerOrganizationId =
+                    ownOrganizationContract?.Id;
+            }
+            else
+            {
+                // دانشجو به هیچ سازمانی وابسته نیست،
+                // بنابراین نمی‌تواند قرارداد سازمانی ارسال کند.
+                if (dto.CoursePartnerOrganizationId.HasValue)
+                {
+                    return BadRequest(new
+                    {
+                        message =
+                            "این دانشجو به سازمان طرف قرارداد اختصاص داده نشده است."
+                    });
+                }
+
+                dto.CoursePartnerOrganizationId = null;
+            }
+        }
+    }
+    else
+    {
+        // =====================================================
+        // منطق قبلی برای کاربران مدیریتی
+        // =====================================================
+
+        if (dto.CoursePartnerOrganizationId.HasValue &&
+            !await _packageAccess.HasPackageAsync(4))
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message = "Organization enrollment is available only in Package 4."
+                });
+        }
+
         if (dto.CoursePartnerOrganizationId.HasValue)
         {
-            var coursePartnerOrganization = await _context.CoursePartnerOrganizations
-                .FirstOrDefaultAsync(x => x.Id == dto.CoursePartnerOrganizationId.Value);
+            var coursePartnerOrganization =
+                await _context.CoursePartnerOrganizations
+                    .FirstOrDefaultAsync(x =>
+                        x.Id == dto.CoursePartnerOrganizationId.Value);
 
             if (coursePartnerOrganization == null)
             {
-                return BadRequest(new { message = "ارتباط دوره و سازمان طرف قرارداد پیدا نشد." });
+                return BadRequest(new
+                {
+                    message = "ارتباط دوره و سازمان طرف قرارداد پیدا نشد."
+                });
             }
 
             if (coursePartnerOrganization.CourseId != dto.CourseId)
             {
-                return BadRequest(new { message = "سازمان طرف قرارداد مربوط به این دوره نیست." });
+                return BadRequest(new
+                {
+                    message = "سازمان طرف قرارداد مربوط به این دوره نیست."
+                });
             }
+
             if (!coursePartnerOrganization.IsActive)
             {
-                return BadRequest(new { message = "قرارداد سازمانی این دوره غیرفعال است." });
-            }
-        }
-        if (dto.SupportUserId.HasValue)
-        {
-            var supportExists = await _context.Users
-                .AnyAsync(u =>
-                      u.Id == dto.SupportUserId.Value &&
-                      u.IsActive &&
-                      u.Role == "Support");
-
-            if (!supportExists)
-            {
                 return BadRequest(new
                 {
-                    message = "پشتیبان آموزشی مورد نظر وجود ندارد"
+                    message = "قرارداد سازمانی این دوره غیرفعال است."
                 });
             }
         }
-
-
-        // بررسی وجود استاد، در صورت ارسال
-        if (dto.InstructorId.HasValue)
-{
-    var instructorExists = await _context.Users
-        .AnyAsync(u =>
-            u.Id == dto.InstructorId.Value &&
-            u.IsActive &&
-            u.Role == "Instructor");
-
-            if (!instructorExists)
-            {
-                return BadRequest(new
-                {
-                    message = "استاد مورد نظر وجود ندارد"
-                });
-            }
-        }
-
-
-        // ایجاد ثبت نام
-        var enrollment = new Enrollment
-        {
-            StudentId = dto.StudentId,
-            CoursePartnerOrganizationId = dto.CoursePartnerOrganizationId,
-            CourseId = dto.CourseId,
-            SupportUserId = dto.SupportUserId,
-            InstructorId = dto.InstructorId,
-            StartDate = dto.StartDate,
-            Status = dto.Status,
-            Description = dto.Description
-        };
-
-
-        _context.Enrollments.Add(enrollment);
-
-        await _context.SaveChangesAsync();
-
-
-        // آماده سازی نتیجه
-        var result = new EnrollmentDto
-        {
-            Id = enrollment.Id,
-            StudentId = enrollment.StudentId,
-            CourseId = enrollment.CourseId,
-            SupportUserId = enrollment.SupportUserId,
-            InstructorId = enrollment.InstructorId,
-            StartDate = enrollment.StartDate,
-            Status = enrollment.Status,
-            Description = enrollment.Description
-        };
-
-
-        return result;
-        
     }
+
+    // بررسی وجود پشتیبان
+    if (dto.SupportUserId.HasValue)
+    {
+        var supportExists = await _context.Users
+            .AnyAsync(u =>
+                u.Id == dto.SupportUserId.Value &&
+                u.IsActive &&
+                u.Role == "Support");
+
+        if (!supportExists)
+        {
+            return BadRequest(new
+            {
+                message = "پشتیبان آموزشی مورد نظر وجود ندارد"
+            });
+        }
+    }
+
+    // بررسی وجود استاد
+    if (dto.InstructorId.HasValue)
+    {
+        var instructorExists = await _context.Users
+            .AnyAsync(u =>
+                u.Id == dto.InstructorId.Value &&
+                u.IsActive &&
+                u.Role == "Instructor");
+
+        if (!instructorExists)
+        {
+            return BadRequest(new
+            {
+                message = "استاد مورد نظر وجود ندارد"
+            });
+        }
+    }
+
+    // ایجاد ثبت نام
+    var enrollment = new Enrollment
+    {
+        StudentId = dto.StudentId,
+        CoursePartnerOrganizationId = dto.CoursePartnerOrganizationId,
+        CourseId = dto.CourseId,
+        SupportUserId = dto.SupportUserId,
+        InstructorId = dto.InstructorId,
+        StartDate = dto.StartDate,
+        Status = dto.Status,
+        Description = dto.Description
+    };
+
+    _context.Enrollments.Add(enrollment);
+
+    await _context.SaveChangesAsync();
+
+    // آماده سازی نتیجه
+    var result = new EnrollmentDto
+    {
+        Id = enrollment.Id,
+        StudentId = enrollment.StudentId,
+        CourseId = enrollment.CourseId,
+        SupportUserId = enrollment.SupportUserId,
+        InstructorId = enrollment.InstructorId,
+        StartDate = enrollment.StartDate,
+        Status = enrollment.Status,
+        Description = enrollment.Description
+    };
+
+    return result;
+}
         // ویرایش ثبت نام
     [Authorize(Roles = "Admin,EducationStaff,Support")]
       [HttpPut("{id}")]

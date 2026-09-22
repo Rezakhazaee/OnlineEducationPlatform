@@ -1,24 +1,27 @@
 using BackEnd.DTOs;
 using BackEnd.Data;
 using BackEnd.Models;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-
 namespace BackEnd.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class StudentsController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+   private readonly ApplicationDbContext _context;
+private readonly PackageAccessService _packageAccess;
 
-    public StudentsController(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-
+    public StudentsController(
+    ApplicationDbContext context,
+    PackageAccessService packageAccess)
+{
+    _context = context;
+    _packageAccess = packageAccess;
+}
 
     // ==========================================
     // Student - مشاهده پروفایل خودش
@@ -105,6 +108,7 @@ public class StudentsController : ControllerBase
             GuardianMobile = student.GuardianMobile,
             MarketingUserId = student.MarketingUserId,
             SupportUserId = student.SupportUserId,
+            PartnerOrganizationId = student.PartnerOrganizationId,
             CreatedDate = student.CreatedDate
         };
 
@@ -208,6 +212,7 @@ public class StudentsController : ControllerBase
                 GuardianMobile = s.GuardianMobile,
                 MarketingUserId = s.MarketingUserId,
                 SupportUserId = s.SupportUserId,
+                PartnerOrganizationId = s.PartnerOrganizationId,
                 CreatedDate = s.CreatedDate
             })
             .ToListAsync();
@@ -250,124 +255,212 @@ public class StudentsController : ControllerBase
     // ثبت دانشجوی جدید
     // ==========================================
 
-    [Authorize(Roles = "Admin,EducationStaff")]
-    [HttpPost]
-    public async Task<ActionResult<StudentDto>> Create(
-        CreateStudentDto dto)
+   // ==========================================
+// ثبت دانشجوی جدید
+// ==========================================
+
+[Authorize(Roles = "Admin,EducationStaff")]
+[HttpPost]
+public async Task<ActionResult<StudentDto>> Create(
+    CreateStudentDto dto)
+{
+    // =========================
+    // بررسی کاربر جاری
+    // =========================
+
+    var userIdClaim =
+        User.FindFirst(ClaimTypes.NameIdentifier);
+
+    if (userIdClaim == null)
     {
-        var userIdClaim =
-            User.FindFirst(ClaimTypes.NameIdentifier);
-
-        if (userIdClaim == null)
+        return Unauthorized(new
         {
-            return Unauthorized(new
-            {
-                message =
-                    "شناسه کاربر در توکن پیدا نشد"
-            });
-        }
+            message = "شناسه کاربر در توکن پیدا نشد"
+        });
+    }
 
-        if (!int.TryParse(
-            userIdClaim.Value,
-            out var userId))
+    if (!int.TryParse(
+        userIdClaim.Value,
+        out var userId))
+    {
+        return Unauthorized(new
         {
-            return Unauthorized(new
-            {
-                message = "شناسه کاربر معتبر نیست"
-            });
-        }
+            message = "شناسه کاربر معتبر نیست"
+        });
+    }
 
-        var currentUser = await _context.Users
-            .FirstOrDefaultAsync(u => u.Id == userId);
+    var currentUser = await _context.Users
+        .FirstOrDefaultAsync(u => u.Id == userId);
 
-        if (currentUser == null)
+    if (currentUser == null)
+    {
+        return Unauthorized(new
         {
-            return Unauthorized(new
-            {
-                message = "کاربر پیدا نشد"
-            });
-        }
+            message = "کاربر پیدا نشد"
+        });
+    }
 
-        if (currentUser.Role != "Admin" &&
-            currentUser.Role != "EducationStaff")
-        {
-            return Forbid();
-        }
-
-        if (dto.MarketingUserId.HasValue)
-        {
-            var marketer = await _context.Users
-                .FirstOrDefaultAsync(u =>
-                    u.Id == dto.MarketingUserId.Value &&
-                    u.Role == "Marketer" &&
-                    u.IsActive);
-
-            if (marketer == null)
-            {
-                return BadRequest(new
-                {
-                    message = "بازاریاب انتخاب‌شده معتبر نیست."
-                });
-            }
-        }
-
-        if (dto.SupportUserId.HasValue)
-        {
-            var support = await _context.Users
-                .FirstOrDefaultAsync(u =>
-                    u.Id == dto.SupportUserId.Value &&
-                    u.Role == "Support" &&
-                    u.IsActive);
-
-            if (support == null)
-            {
-                return BadRequest(new
-                {
-                    message = "پشتیبان انتخاب‌شده معتبر نیست."
-                });
-            }
-        }
-
-        var student = new Student
-        {
-            UserId = dto.UserId,
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            NationalCode = dto.NationalCode,
-            BirthDate = dto.BirthDate,
-            Mobile = dto.Mobile,
-            Address = dto.Address,
-            GuardianName = dto.GuardianName,
-            GuardianMobile = dto.GuardianMobile,
-            MarketingUserId = dto.MarketingUserId,
-            SupportUserId = dto.SupportUserId,
-            CreatedByUserId = currentUser.Id
-        };
-
-        _context.Students.Add(student);
-
-        await _context.SaveChangesAsync();
-
-        var result = new StudentDto
-        {
-            Id = student.Id,
-            FirstName = student.FirstName,
-            LastName = student.LastName,
-            NationalCode = student.NationalCode,
-            BirthDate = student.BirthDate,
-            Mobile = student.Mobile,
-            Address = student.Address,
-            GuardianName = student.GuardianName,
-            GuardianMobile = student.GuardianMobile,
-            MarketingUserId = student.MarketingUserId,
-            SupportUserId = student.SupportUserId,
-            CreatedDate = student.CreatedDate
-        };
-
-        return Ok(result);
+    if (currentUser.Role != "Admin" &&
+        currentUser.Role != "EducationStaff")
+    {
+        return Forbid();
     }
 
 
+    // =========================
+    // بررسی بازاریاب
+    // =========================
+
+    if (dto.MarketingUserId.HasValue)
+    {
+        var marketer = await _context.Users
+            .FirstOrDefaultAsync(u =>
+                u.Id == dto.MarketingUserId.Value &&
+                u.Role == "Marketer" &&
+                u.IsActive);
+
+        if (marketer == null)
+        {
+            return BadRequest(new
+            {
+                message = "بازاریاب انتخاب‌شده معتبر نیست."
+            });
+        }
+    }
+
+
+    // =========================
+    // بررسی پشتیبان
+    // =========================
+
+    if (dto.SupportUserId.HasValue)
+    {
+        var support = await _context.Users
+            .FirstOrDefaultAsync(u =>
+                u.Id == dto.SupportUserId.Value &&
+                u.Role == "Support" &&
+                u.IsActive);
+
+        if (support == null)
+        {
+            return BadRequest(new
+            {
+                message = "پشتیبان انتخاب‌شده معتبر نیست."
+            });
+        }
+    }
+
+
+    // =========================
+    // بررسی سازمان طرف قرارداد
+    // =========================
+
+    if (dto.PartnerOrganizationId.HasValue)
+    {
+        // قابلیت سازمانی فقط در Package 4
+        if (!await _packageAccess.HasPackageAsync(4))
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message =
+                        "اختصاص دانشجو به سازمان طرف قرارداد فقط در پکیج سازمانی فعال است."
+                });
+        }
+
+        // پیدا کردن سازمان
+        var partnerOrganization =
+            await _context.PartnerOrganizations
+                .FirstOrDefaultAsync(o =>
+                    o.Id == dto.PartnerOrganizationId.Value);
+
+        if (partnerOrganization == null)
+        {
+            return BadRequest(new
+            {
+                message = "سازمان طرف قرارداد پیدا نشد."
+            });
+        }
+
+        // سازمان باید فعال باشد
+        if (!partnerOrganization.IsActive)
+        {
+            return BadRequest(new
+            {
+                message = "سازمان طرف قرارداد غیرفعال است."
+            });
+        }
+    }
+
+
+    // =========================
+    // ایجاد دانشجو
+    // =========================
+
+    var student = new Student
+    {
+        UserId = dto.UserId,
+
+        FirstName = dto.FirstName,
+        LastName = dto.LastName,
+
+        NationalCode = dto.NationalCode,
+        BirthDate = dto.BirthDate,
+        Mobile = dto.Mobile,
+
+        Address = dto.Address,
+
+        GuardianName = dto.GuardianName,
+        GuardianMobile = dto.GuardianMobile,
+
+        MarketingUserId = dto.MarketingUserId,
+        SupportUserId = dto.SupportUserId,
+
+        // سازمان طرف قرارداد دانشجو
+        PartnerOrganizationId = dto.PartnerOrganizationId,
+
+        CreatedByUserId = currentUser.Id
+    };
+
+
+    _context.Students.Add(student);
+
+    await _context.SaveChangesAsync();
+
+
+    // =========================
+    // نتیجه
+    // =========================
+
+    var result = new StudentDto
+    {
+        Id = student.Id,
+
+        FirstName = student.FirstName,
+        LastName = student.LastName,
+
+        NationalCode = student.NationalCode,
+        BirthDate = student.BirthDate,
+        Mobile = student.Mobile,
+
+        Address = student.Address,
+
+        GuardianName = student.GuardianName,
+        GuardianMobile = student.GuardianMobile,
+
+        MarketingUserId = student.MarketingUserId,
+        SupportUserId = student.SupportUserId,
+
+        // برگرداندن سازمان دانشجو
+        PartnerOrganizationId =
+            student.PartnerOrganizationId,
+
+        CreatedDate = student.CreatedDate
+    };
+
+    return Ok(result);
+}
     // ==========================================
     // اختصاص دانشجو به Support
     // ==========================================

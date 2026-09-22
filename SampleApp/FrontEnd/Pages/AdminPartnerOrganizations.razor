@@ -4,7 +4,6 @@
 @using System.Net
 @using FrontEnd.Services
 
-@inject IHttpClientFactory HttpClientFactory
 @inject AuthService Auth
 @inject NavigationManager Navigation
 
@@ -303,8 +302,8 @@
 
 @code {
 
-    private HttpClient Client => HttpClientFactory.CreateClient("Backend");
-
+  private HttpClient Client =>
+    Auth.CreateAuthenticatedClient();
     private List<PartnerOrganizationDto> Organizations = new();
 
     private PartnerOrganizationForm Form = new();
@@ -345,8 +344,10 @@ private async Task<bool> LoadPackageAccess()
 {
     try
     {
-        var response =
-            await Client.GetAsync("api/OrganizationSettings");
+        var client = Auth.CreateAuthenticatedClient();
+
+var response =
+    await client.GetAsync("api/OrganizationSettings");
 
         if (!response.IsSuccessStatusCode)
         {
@@ -501,12 +502,18 @@ if (response.StatusCode == HttpStatusCode.Forbidden)
                     Form);
             }
 
-            if (response.StatusCode == HttpStatusCode.Unauthorized ||
-                response.StatusCode == HttpStatusCode.Forbidden)
-            {
-                Navigation.NavigateTo("/login");
-                return;
-            }
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+{
+    Navigation.NavigateTo("/login");
+    return;
+}
+
+if (response.StatusCode == HttpStatusCode.Forbidden)
+{
+    ErrorMessage =
+        "شما مجوز انجام این عملیات را ندارید.";
+    return;
+}
 
             if (!response.IsSuccessStatusCode)
             {

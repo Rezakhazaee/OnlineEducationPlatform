@@ -41,6 +41,9 @@ public class Student
 
     // پشتیبان آموزشی
     public int? SupportUserId { get; set; }
+    public int? PartnerOrganizationId { get; set; }
+
+    public PartnerOrganization? PartnerOrganization { get; set; }
 
     public User? SupportUser { get; set; }
 
