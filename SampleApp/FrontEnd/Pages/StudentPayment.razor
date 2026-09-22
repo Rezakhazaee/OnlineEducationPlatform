@@ -77,7 +77,6 @@
         </section>
     }
 
-
     @if (IsLoading)
     {
         <section class="student-content-card">
@@ -626,15 +625,6 @@
     public class CreateGatewayPaymentDto
     {
         public int EnrollmentId { get; set; }
-
-    [SupplyParameterFromQuery(Name = "gateway")]
-    public string? GatewayResult { get; set; }
-
-    [SupplyParameterFromQuery(Name = "refId")]
-    public string? GatewayRefId { get; set; }
-
-    [SupplyParameterFromQuery(Name = "code")]
-    public int? GatewayCode { get; set; }
         public decimal Amount { get; set; }
         public string PaymentType { get; set; } = string.Empty;
     }
@@ -656,15 +646,6 @@
     {
         public int EnrollmentId { get; set; }
 
-    [SupplyParameterFromQuery(Name = "gateway")]
-    public string? GatewayResult { get; set; }
-
-    [SupplyParameterFromQuery(Name = "refId")]
-    public string? GatewayRefId { get; set; }
-
-    [SupplyParameterFromQuery(Name = "code")]
-    public int? GatewayCode { get; set; }
-
         public string StudentName { get; set; } = string.Empty;
 
         public string CourseTitle { get; set; } = string.Empty;
@@ -682,15 +663,6 @@
     public class StudentCreatePaymentDto
     {
         public int EnrollmentId { get; set; }
-
-    [SupplyParameterFromQuery(Name = "gateway")]
-    public string? GatewayResult { get; set; }
-
-    [SupplyParameterFromQuery(Name = "refId")]
-    public string? GatewayRefId { get; set; }
-
-    [SupplyParameterFromQuery(Name = "code")]
-    public int? GatewayCode { get; set; }
 
         public decimal Amount { get; set; }
 
