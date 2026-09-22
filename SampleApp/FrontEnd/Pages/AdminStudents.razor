@@ -214,7 +214,12 @@
                                     <th>
                                         بازاریاب
                                     </th>
-
+                                    @if (PackageLevel >= 4)
+                                        {
+                                            <th>
+                                                سازمان طرف قرارداد
+                                            </th>
+                                        }
                                     <th>
                                         پشتیبان
                                     </th>
@@ -265,7 +270,41 @@
                                         <td>
                                             @GetMarketerName(student.MarketingUserId)
                                         </td>
+                                        @if (PackageLevel >= 4)
+                                        {
+                                            <td>
+                                                @if (CanManageStudents)
+                                                {
+                                                    <div class="student-support-cell">
+                                                        <select
+                                                            value="@GetPartnerOrganizationSelection(student.Id)"
+                                                            @onchange="e => SetPartnerOrganizationSelection(student.Id, e.Value?.ToString() ?? string.Empty)">
 
+                                                            <option value="">
+                                                                بدون سازمان
+                                                            </option>
+
+                                                            @foreach (var organization in PartnerOrganizations)
+                                                            {
+                                                                <option value="@organization.Id">
+                                                                    @organization.Name
+                                                                </option>
+                                                            }
+                                                        </select>
+
+                                                        <button type="button"
+                                                                class="admin-btn admin-btn-small"
+                                                                @onclick="() => AssignPartnerOrganization(student)">
+                                                            ذخیره سازمان
+                                                        </button>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    @GetPartnerOrganizationName(student.PartnerOrganizationId)
+                                                }
+                                            </td>
+                                        }
                                         <td>
                                             @if (CanManageStudents)
                                             {
@@ -722,7 +761,7 @@
                     "api/Students")
                 ?? new List<StudentDto>();
 
-            if (CanManageStudents)
+                       if (CanManageStudents)
             {
                 ManagementOptions =
                     await client.GetFromJsonAsync<List<StudentManagementOptionDto>>(
@@ -734,7 +773,18 @@
                 ManagementOptions.Clear();
             }
 
+            if (PackageLevel >= 4 &&
+                CanManageStudents)
+            {
+                await LoadPartnerOrganizations();
+            }
+            else
+            {
+                PartnerOrganizations.Clear();
+            }
+
             SyncSupportSelections();
+            SyncPartnerOrganizationSelections();
         }
         catch (Exception ex)
         {
@@ -749,6 +799,8 @@
         }
     }
 
+
+    private Dictionary<int, string> PartnerOrganizationSelections = new Dictionary<int, string>();
 
     private void SyncSupportSelections()
     {
@@ -824,7 +876,41 @@ private async Task LoadPartnerOrganizations()
                 : "اختصاص داده شده");
     }
 
+private string GetPartnerOrganizationSelection(int studentId)
+{
+    return PartnerOrganizationSelections.TryGetValue(
+        studentId,
+        out var value)
+            ? value
+            : string.Empty;
+}
 
+private void SetPartnerOrganizationSelection(int studentId, string value)
+{
+    PartnerOrganizationSelections[studentId] = value;
+}
+
+private void SyncPartnerOrganizationSelections()
+{
+    PartnerOrganizationSelections = Students
+        .ToDictionary(
+            x => x.Id,
+            x => x.PartnerOrganizationId?.ToString() ?? string.Empty);
+}
+
+private string GetPartnerOrganizationName(int? partnerOrganizationId)
+{
+    if (!partnerOrganizationId.HasValue)
+    {
+        return "بدون سازمان";
+    }
+
+    var organization = PartnerOrganizations
+        .FirstOrDefault(x => x.Id == partnerOrganizationId.Value);
+
+    return organization?.Name
+        ?? $"شناسه {partnerOrganizationId.Value}";
+}
     private async Task AssignSupport(StudentDto student)
     {
         var selectedValue =
@@ -868,6 +954,50 @@ private async Task LoadPartnerOrganizations()
         }
     }
 
+
+    private async Task AssignPartnerOrganization(StudentDto student)
+    {
+        var selectedValue = GetPartnerOrganizationSelection(student.Id);
+
+        int? partnerOrganizationId = null;
+
+        if (!string.IsNullOrWhiteSpace(selectedValue))
+        {
+            if (!int.TryParse(selectedValue, out var parsedId))
+            {
+                FormError = "سازمان طرف قرارداد انتخاب‌شده معتبر نیست.";
+                return;
+            }
+
+            partnerOrganizationId = parsedId;
+        }
+
+        try
+        {
+            FormError = null;
+
+            var client = Auth.CreateAuthenticatedClient();
+
+            var response = await client.PutAsJsonAsync(
+                $"api/Students/{student.Id}/assign-partner-organization",
+                new AssignPartnerOrganizationRequest
+                {
+                    PartnerOrganizationId = partnerOrganizationId
+                });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                FormError = await ReadApiError(response);
+                return;
+            }
+
+            await LoadData();
+        }
+        catch
+        {
+            FormError = "ذخیره سازمان طرف قرارداد با خطا مواجه شد.";
+        }
+    }
 
     private void OpenCreateForm()
     {
@@ -1077,6 +1207,7 @@ private async Task LoadPartnerOrganizations()
         public int? MarketingUserId { get; set; }
 
         public int? SupportUserId { get; set; }
+        public int? PartnerOrganizationId { get; set; }
 
         public DateTime CreatedDate { get; set; }
     }
@@ -1115,6 +1246,11 @@ public class CreateStudentRequest
 
     public int? SupportUserId { get; set; }
 
+    public int? PartnerOrganizationId { get; set; }
+}
+
+public class AssignPartnerOrganizationRequest
+{
     public int? PartnerOrganizationId { get; set; }
 }
 
