@@ -69,6 +69,8 @@ builder.Services.AddAuthorization();
 // OpenAPI
 builder.Services.AddOpenApi();
 
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<ZarinPalService>();
 var app = builder.Build();
 
  // =========================

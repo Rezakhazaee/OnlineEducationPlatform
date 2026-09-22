@@ -30,4 +30,10 @@ public class Payment
 
     // وضعیت پرداخت
     public string Status { get; set; } = "Paid";
+
+    public string? PaymentMethod { get; set; }
+
+    public string? GatewayAuthority { get; set; }
+
+    public string? GatewayRefId { get; set; }
 }

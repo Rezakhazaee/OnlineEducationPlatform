@@ -15,12 +15,18 @@ public class PaymentsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly PackageAccessService _packageAccess;
-public PaymentsController(
+    private readonly ZarinPalService _zarinPalService;
+    private readonly IConfiguration _configuration;
+    public PaymentsController(
         ApplicationDbContext context,
-        PackageAccessService packageAccess)
+        PackageAccessService packageAccess,
+        ZarinPalService zarinPalService,
+        IConfiguration configuration)
     {
         _context = context;
         _packageAccess = packageAccess;
+        _zarinPalService = zarinPalService;
+        _configuration = configuration;
     }
 
 
@@ -174,6 +180,352 @@ public async Task<ActionResult<List<PaymentDetailDto>>> Get()
         return Ok(payments);
     }
 
+
+    // ==========================================
+    // Student - درخواست پرداخت از طریق درگاه
+    // ==========================================
+
+    [Authorize(Roles = "Student")]
+    [HttpPost("my/gateway/request")]
+    public async Task<IActionResult> CreateGatewayPayment(
+        CreateGatewayPaymentDto dto)
+    {
+        if (!await _packageAccess.HasPackageAsync(3))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                message = "درگاه پرداخت فقط در پکیج پرداخت آنلاین فعال است."
+            });
+        }
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { message = "شناسه کاربر معتبر نیست" });
+        }
+
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (student == null)
+        {
+            return NotFound(new { message = "پروفایل دانشجویی پیدا نشد" });
+        }
+
+        var enrollment = await _context.Enrollments
+            .Include(e => e.Course)
+            .Include(e => e.CoursePartnerOrganization)
+            .FirstOrDefaultAsync(e =>
+                e.Id == dto.EnrollmentId &&
+                e.StudentId == student.Id);
+
+        if (enrollment == null || enrollment.Course == null)
+        {
+            return NotFound(new { message = "ثبت نام مورد نظر پیدا نشد" });
+        }
+
+        if (enrollment.Status == "Cancelled" ||
+            enrollment.Status == "Suspended")
+        {
+            return BadRequest(new
+            {
+                message = "برای این ثبت نام امکان پرداخت وجود ندارد"
+            });
+        }
+
+        var allowedTypes = new[]
+        {
+            "FirstInstallment",
+            "SecondInstallment",
+            "ThirdInstallment",
+            "FullPayment"
+        };
+
+        if (!allowedTypes.Contains(dto.PaymentType))
+        {
+            return BadRequest(new { message = "نوع پرداخت نامعتبر است" });
+        }
+
+        var coursePrice =
+            enrollment.CoursePartnerOrganization?.AgreedPrice
+            ?? enrollment.Course.Price;
+
+        var totalPaid = await _context.Payments
+            .Where(p =>
+                p.EnrollmentId == enrollment.Id &&
+                p.Status == "Paid")
+            .SumAsync(p => (decimal?)p.Amount) ?? 0;
+
+        var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
+
+        if (remainingAmount <= 0)
+        {
+            return BadRequest(new
+            {
+                message = "این ثبت نام به طور کامل تسویه شده است"
+            });
+        }
+
+        if (dto.Amount <= 0 || dto.Amount > remainingAmount)
+        {
+            return BadRequest(new
+            {
+                message = "مبلغ پرداخت نامعتبر است",
+                remainingAmount
+            });
+        }
+
+        if (dto.PaymentType == "FullPayment" &&
+            dto.Amount != remainingAmount)
+        {
+            return BadRequest(new
+            {
+                message = "مبلغ پرداخت کامل باید برابر مبلغ باقی‌مانده باشد"
+            });
+        }
+
+        var payment = new Payment
+        {
+            EnrollmentId = enrollment.Id,
+            Amount = dto.Amount,
+            PaymentDate = DateTime.Now,
+            PaymentType = dto.PaymentType,
+            Description = "پرداخت از طریق زرین‌پال",
+            Status = "Pending",
+            PaymentMethod = "ZarinPal"
+        };
+
+        _context.Payments.Add(payment);
+        await _context.SaveChangesAsync();
+
+        var callbackBaseUrl =
+            _configuration["ZarinPal:CallbackBaseUrl"];
+
+        if (string.IsNullOrWhiteSpace(callbackBaseUrl))
+        {
+            _context.Payments.Remove(payment);
+            await _context.SaveChangesAsync();
+
+            return BadRequest(new
+            {
+                message = "CallbackBaseUrl زرین‌پال در تنظیمات سیستم وارد نشده است."
+            });
+        }
+
+        var callbackUrl =
+              callbackBaseUrl.TrimEnd('/') + 
+            "/api/Payments/gateway/callback?paymentId=" +
+            payment.Id;
+
+        var gatewayResult =
+            await _zarinPalService.RequestPaymentAsync(
+                dto.Amount,
+                callbackUrl,
+                "پرداخت دوره - " + enrollment.Course.Title,
+                student.Mobile);
+
+        if (!gatewayResult.Success)
+        {
+            _context.Payments.Remove(payment);
+            await _context.SaveChangesAsync();
+
+            return BadRequest(new
+            {
+                message = gatewayResult.Error ?? "خطا در ایجاد تراکنش"
+            });
+        }
+
+        payment.GatewayAuthority = gatewayResult.Authority;
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            paymentId = payment.Id,
+            authority = gatewayResult.Authority,
+            paymentUrl = gatewayResult.PaymentUrl
+        });
+    }
+
+    // ==========================================
+    // ZarinPal - Callback و تأیید پرداخت
+    // ==========================================
+
+    [AllowAnonymous]
+    [HttpGet("gateway/callback")]
+    public async Task<IActionResult> GatewayCallback(
+        [FromQuery] int paymentId,
+        [FromQuery] string? Authority,
+        [FromQuery] string? Status)
+    {
+        var payment = await _context.Payments
+            .Include(p => p.Enrollment)
+            .ThenInclude(e => e!.Course)
+            .FirstOrDefaultAsync(p => p.Id == paymentId);
+
+        if (payment == null)
+        {
+            return NotFound(new
+            {
+                message = "پرداخت مورد نظر پیدا نشد"
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(Authority) ||
+            string.IsNullOrWhiteSpace(payment.GatewayAuthority) ||
+            !string.Equals(
+                payment.GatewayAuthority,
+                Authority,
+                StringComparison.Ordinal))
+        {
+            return BadRequest(new
+            {
+                message = "Authority تراکنش معتبر نیست"
+            });
+        }
+
+        var frontendBaseUrl =
+            _configuration["ZarinPal:FrontendBaseUrl"];
+
+        string BuildRedirect(string result, string? refId = null, int? code = null)
+        {
+            if (string.IsNullOrWhiteSpace(frontendBaseUrl) ||
+                payment.Enrollment == null)
+            {
+                return string.Empty;
+            }
+
+            var url =
+                frontendBaseUrl.TrimEnd('/') +
+                "/student/payment/" +
+                payment.Enrollment.Id +
+                "?gateway=" +
+                Uri.EscapeDataString(result);
+
+            if (!string.IsNullOrWhiteSpace(refId))
+            {
+                url +=
+                    "&refId=" +
+                    Uri.EscapeDataString(refId);
+            }
+
+            if (code.HasValue)
+            {
+                url += "&code=" + code.Value;
+            }
+
+            return url;
+        }
+
+        if (!string.Equals(
+                Status,
+                "OK",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            if (payment.Status == "Pending")
+            {
+                payment.Status = "Cancelled";
+                await _context.SaveChangesAsync();
+            }
+
+            var cancelledUrl = BuildRedirect("cancelled");
+
+            if (!string.IsNullOrWhiteSpace(cancelledUrl))
+            {
+                return Redirect(cancelledUrl);
+            }
+
+            return Ok(new
+            {
+                message = "پرداخت توسط کاربر لغو شد",
+                paymentId = payment.Id,
+                status = payment.Status
+            });
+        }
+
+        if (payment.Status == "Paid")
+        {
+            var successUrl =
+                BuildRedirect(
+                    "success",
+                    payment.GatewayRefId);
+
+            if (!string.IsNullOrWhiteSpace(successUrl))
+            {
+                return Redirect(successUrl);
+            }
+
+            return Ok(new
+            {
+                message = "این پرداخت قبلاً تأیید شده است",
+                paymentId = payment.Id,
+                refId = payment.GatewayRefId,
+                status = payment.Status
+            });
+        }
+
+        if (payment.Status != "Pending")
+        {
+            return BadRequest(new
+            {
+                message = "وضعیت فعلی پرداخت قابل تأیید نیست",
+                paymentId = payment.Id,
+                status = payment.Status
+            });
+        }
+
+        var verifyResult =
+            await _zarinPalService.VerifyPaymentAsync(
+                payment.Amount,
+                Authority);
+
+        if (!verifyResult.Success)
+        {
+            var failedUrl =
+                BuildRedirect(
+                    "failed",
+                    code: verifyResult.Code);
+
+            if (!string.IsNullOrWhiteSpace(failedUrl))
+            {
+                return Redirect(failedUrl);
+            }
+
+            return BadRequest(new
+            {
+                message =
+                    verifyResult.Error ??
+                    "تأیید پرداخت در زرین‌پال ناموفق بود",
+                code = verifyResult.Code
+            });
+        }
+
+        payment.Status = "Paid";
+        payment.GatewayRefId = verifyResult.RefId;
+        payment.PaymentDate = DateTime.Now;
+
+        await _context.SaveChangesAsync();
+
+        var finalUrl =
+            BuildRedirect(
+                "success",
+                verifyResult.RefId,
+                verifyResult.Code);
+
+        if (!string.IsNullOrWhiteSpace(finalUrl))
+        {
+            return Redirect(finalUrl);
+        }
+
+        return Ok(new
+        {
+            message = "پرداخت با موفقیت تأیید شد",
+            paymentId = payment.Id,
+            refId = verifyResult.RefId,
+            status = payment.Status,
+            code = verifyResult.Code
+        });
+    }
 
     // Student - ثبت درخواست پرداخت
 [Authorize(Roles = "Student")]

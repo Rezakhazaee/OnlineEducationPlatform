@@ -517,6 +517,93 @@ public async Task<ActionResult<StudentDto>> Create(
         });
     }
 
+// ==========================================
+[HttpPut("{studentId}/assign-partner-organization")]
+public async Task<IActionResult> AssignPartnerOrganization(
+    int studentId,
+    AssignPartnerOrganizationDto dto)
+{
+    // فقط در پکیج سازمانی
+    if (!await _packageAccess.HasPackageAsync(4))
+    {
+        return StatusCode(
+            StatusCodes.Status403Forbidden,
+            new
+            {
+                message =
+                    "اختصاص دانشجو به سازمان طرف قرارداد فقط در پکیج سازمانی فعال است."
+            });
+    }
+
+    var student = await _context.Students
+        .FirstOrDefaultAsync(s => s.Id == studentId);
+
+    if (student == null)
+    {
+        return NotFound(new
+        {
+            message = "دانشجو پیدا نشد."
+        });
+    }
+
+    // حذف سازمان
+    if (!dto.PartnerOrganizationId.HasValue)
+    {
+        student.PartnerOrganizationId = null;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "سازمان طرف قرارداد دانشجو حذف شد.",
+            studentId = student.Id,
+            partnerOrganizationId = (int?)null
+        });
+    }
+
+    // پیدا کردن سازمان
+    var partnerOrganization =
+        await _context.PartnerOrganizations
+            .FirstOrDefaultAsync(o =>
+                o.Id == dto.PartnerOrganizationId.Value);
+
+    if (partnerOrganization == null)
+    {
+        return BadRequest(new
+        {
+            message = "سازمان طرف قرارداد پیدا نشد."
+        });
+    }
+
+    // سازمان باید فعال باشد
+    if (!partnerOrganization.IsActive)
+    {
+        return BadRequest(new
+        {
+            message = "سازمان طرف قرارداد غیرفعال است."
+        });
+    }
+
+    // ذخیره سازمان
+    student.PartnerOrganizationId =
+        partnerOrganization.Id;
+
+    await _context.SaveChangesAsync();
+
+    return Ok(new
+    {
+        message =
+            "سازمان طرف قرارداد دانشجو با موفقیت تغییر کرد.",
+
+        studentId = student.Id,
+
+        partnerOrganizationId =
+            partnerOrganization.Id,
+
+        partnerOrganizationName =
+            partnerOrganization.Name
+    });
+}
 
     // ==========================================
     // Student - ویرایش پروفایل خودش

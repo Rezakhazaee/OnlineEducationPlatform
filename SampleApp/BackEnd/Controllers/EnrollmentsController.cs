@@ -24,6 +24,79 @@ public EnrollmentsController(
     }
 
 
+    // ==========================================
+    // قیمت نهایی ثبت نام دانشجو
+    // ==========================================
+
+    [Authorize(Roles = "Student")]
+    [HttpGet("my/course/{courseId}/price")]
+    public async Task<ActionResult<EnrollmentPriceDto>> GetMyCoursePrice(int courseId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (student == null)
+        {
+            return BadRequest(new
+            {
+                message = "برای این کاربر پروفایل دانشجویی وجود ندارد"
+            });
+        }
+
+        var course = await _context.Courses
+            .FirstOrDefaultAsync(c => c.Id == courseId && c.IsActive);
+
+        if (course == null)
+        {
+            return NotFound(new
+            {
+                message = "دوره پیدا نشد"
+            });
+        }
+
+        CoursePartnerOrganization? contract = null;
+
+        if (await _packageAccess.HasPackageAsync(4) &&
+            student.PartnerOrganizationId.HasValue)
+        {
+            var today = DateTime.Today;
+
+            contract = await _context.CoursePartnerOrganizations
+                .FirstOrDefaultAsync(x =>
+                    x.CourseId == courseId &&
+                    x.PartnerOrganizationId == student.PartnerOrganizationId.Value &&
+                    x.IsActive &&
+                    (!x.StartDate.HasValue || x.StartDate.Value.Date <= today) &&
+                    (!x.EndDate.HasValue || x.EndDate.Value.Date >= today));
+        }
+
+        var finalPrice = contract?.AgreedPrice ?? course.Price;
+
+        var result = new EnrollmentPriceDto
+        {
+            CourseId = course.Id,
+            CoursePrice = course.Price,
+            AgreedPrice = contract?.AgreedPrice,
+            FinalPrice = finalPrice,
+            IsFree = finalPrice <= 0,
+            HasOrganizationContract = contract != null,
+            PartnerOrganizationId = student.PartnerOrganizationId,
+            CoursePartnerOrganizationId = contract?.Id
+        };
+
+        return Ok(result);
+    }
+
     // دریافت ثبت نام‌های دانشجوی وارد شده
     [Authorize(Roles = "Student")]
     [HttpGet("my")]
