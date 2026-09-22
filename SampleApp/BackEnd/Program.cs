@@ -80,6 +80,8 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider
         .GetRequiredService<ApplicationDbContext>();
 
+    await db.Database.MigrateAsync();
+
     var packageLevel = builder.Configuration.GetValue<int?>("Product:PackageLevel") ?? 1;
 
     var initialAdminUsername =
@@ -91,7 +93,7 @@ using (var scope = app.Services.CreateScope())
     if (app.Environment.IsDevelopment())
     {
         initialAdminUsername ??= "admin";
-        initialAdminPassword ??= "Admin";
+        initialAdminPassword ??= "Admin@12345";
     }
     else if (string.IsNullOrWhiteSpace(initialAdminUsername) ||
              string.IsNullOrWhiteSpace(initialAdminPassword))
