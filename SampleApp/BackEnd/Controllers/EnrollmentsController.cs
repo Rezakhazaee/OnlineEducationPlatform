@@ -1278,10 +1278,10 @@ public async Task<ActionResult<EnrollmentDto>> Create(CreateEnrollmentDto dto)
         StudentId = dto.StudentId,
         CoursePartnerOrganizationId = dto.CoursePartnerOrganizationId,
         CourseId = dto.CourseId,
-        SupportUserId = dto.SupportUserId,
-        InstructorId = dto.InstructorId,
-        StartDate = dto.StartDate,
-        Status = dto.Status,
+        SupportUserId = isStudent ? null : dto.SupportUserId,
+        InstructorId = isStudent ? course.InstructorId : dto.InstructorId,
+        StartDate = isStudent ? DateTime.Now : dto.StartDate,
+        Status = isStudent ? "Active" : dto.Status,
         Description = dto.Description
     };
 
