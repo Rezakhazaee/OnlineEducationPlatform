@@ -1,0 +1,494 @@
+@page "/admin/user-report"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+@using Microsoft.JSInterop
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>گزارش کاربران | آموزش‌یار</PageTitle>
+
+<div class="admin-page">
+
+    <AdminSidebar ActivePage="reports" />
+
+    <main class="admin-main">
+
+        <header class="admin-topbar">
+            <div>
+                <span class="admin-label">گزارش‌ها</span>
+                <h1>گزارش کاربران</h1>
+            </div>
+            <AdminLogout />
+        </header>
+
+        @if (IsLoading)
+        {
+            <div class="admin-loading">
+                <div class="admin-loading-icon">↻</div>
+                <h3>در حال دریافت گزارش...</h3>
+                <p>اطلاعات کاربران از سرور دریافت می‌شود.</p>
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="admin-error">
+                <strong>خطا در دریافت گزارش</strong>
+                <p>@ErrorMessage</p>
+
+                <button type="button"
+                        class="admin-outline-btn"
+                        @onclick="LoadReport">
+                    تلاش مجدد
+                </button>
+            </div>
+        }
+        else
+        {
+            <section class="admin-content-card">
+
+                <div class="admin-card-header">
+                    <div>
+                        <span>فیلتر و جستجو</span>
+                        <h2>گزارش کاربران</h2>
+                    </div>
+                </div>
+
+                <div class="admin-form-grid">
+
+                    <div class="admin-form-group">
+                        <label>جستجو</label>
+                        <input class="admin-input"
+                               @bind="Search"
+                               placeholder="نام، موبایل یا نام کاربری..." />
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>نقش</label>
+                        <select class="admin-input" @bind="Role">
+                            <option value="">همه</option>
+                            <option value="Admin">مدیر</option>
+                            <option value="EducationStaff">کارشناس آموزش</option>
+                            <option value="Marketer">بازاریاب</option>
+                            <option value="Support">پشتیبان</option>
+                            <option value="Instructor">مدرس</option>
+                            <option value="Student">دانشجو</option>
+                        </select>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>وضعیت</label>
+                        <select class="admin-input" @bind="ActiveStatus">
+                            <option value="">همه</option>
+                            <option value="true">فعال</option>
+                            <option value="false">غیرفعال</option>
+                        </select>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>از تاریخ ایجاد</label>
+                        <input class="admin-input"
+                               type="date"
+                               @bind="CreatedFrom" />
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>تا تاریخ ایجاد</label>
+                        <input class="admin-input"
+                               type="date"
+                               @bind="CreatedTo" />
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>مرتب‌سازی</label>
+                        <select class="admin-input" @bind="SortBy">
+                            <option value="createdAt">تاریخ ایجاد</option>
+                            <option value="fullname">نام</option>
+                            <option value="mobile">موبایل</option>
+                            <option value="username">نام کاربری</option>
+                            <option value="role">نقش</option>
+                            <option value="status">وضعیت</option>
+                        </select>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>جهت مرتب‌سازی</label>
+                        <select class="admin-input"
+                                @bind="SortDescending">
+                            <option value="true">نزولی</option>
+                            <option value="false">صعودی</option>
+                        </select>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>تعداد در صفحه</label>
+                        <select class="admin-input" @bind="PageSize">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="student-form-actions">
+
+                    <button type="button"
+                            class="admin-primary-btn"
+                            @onclick="ApplyFilters">
+                        اعمال فیلتر
+                    </button>
+
+                    <button type="button"
+                            class="admin-outline-btn"
+                            @onclick="ResetFilters">
+                        پاک کردن فیلترها
+                    </button>
+
+                    <button type="button"
+                            class="admin-primary-btn"
+                            disabled="@IsExporting"
+                            @onclick='() => DownloadExport("excel")'>
+                        @(IsExporting ? "در حال آماده‌سازی..." : "خروجی Excel")
+                    </button>
+
+                    <button type="button"
+                            class="admin-outline-btn"
+                            disabled="@IsExporting"
+                            @onclick='() => DownloadExport("pdf")'>
+                        @(IsExporting ? "در حال آماده‌سازی..." : "خروجی PDF")
+                    </button>
+
+                </div>
+
+            </section>
+
+            <section class="admin-content-card">
+
+                <div class="admin-card-header">
+                    <div>
+                        <span>نتایج</span>
+
+                        <h2>
+                            @(TotalCount == 0
+                                ? "نتیجه‌ای وجود ندارد"
+                                : $"نمایش {(CurrentPage - 1) * PageSize + 1} تا {Math.Min(CurrentPage * PageSize, TotalCount)} از {TotalCount}")
+                        </h2>
+                    </div>
+                </div>
+
+                @if (Items.Count == 0)
+                {
+                    <div class="admin-empty-state">
+                        کاربری مطابق فیلترهای انتخاب‌شده پیدا نشد.
+                    </div>
+                }
+                else
+                {
+                    <div class="students-table-wrap">
+
+                        <table class="students-table">
+
+                            <thead>
+                                <tr>
+                                    <th>نام</th>
+                                    <th>موبایل</th>
+                                    <th>نام کاربری</th>
+                                    <th>نقش</th>
+                                    <th>وضعیت</th>
+                                    <th>تاریخ ایجاد</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                @foreach (var item in Items)
+                                {
+                                    <tr>
+
+                                        <td>
+                                            <strong>@item.FullName</strong>
+                                            <small>شناسه: @item.Id</small>
+                                        </td>
+
+                                        <td>@item.Mobile</td>
+                                        <td>@item.Username</td>
+                                        <td>@GetRoleName(item.Role)</td>
+                                        <td>@(item.IsActive ? "فعال" : "غیرفعال")</td>
+                                        <td>@item.CreatedAt.ToString("yyyy/MM/dd")</td>
+
+                                    </tr>
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    <div class="student-form-actions">
+
+                        <button type="button"
+                                class="admin-outline-btn"
+                                disabled="@(CurrentPage <= 1)"
+                                @onclick="PreviousPage">
+                            صفحه قبل
+                        </button>
+
+                        <span>
+                            صفحه @CurrentPage از @TotalPages
+                        </span>
+
+                        <button type="button"
+                                class="admin-outline-btn"
+                                disabled="@(CurrentPage >= TotalPages)"
+                                @onclick="NextPage">
+                            صفحه بعد
+                        </button>
+
+                    </div>
+                }
+
+            </section>
+        }
+
+    </main>
+
+</div>
+
+@code {
+
+    private bool IsLoading { get; set; } = true;
+    private bool IsExporting { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+    private string Search { get; set; } = string.Empty;
+    private string Role { get; set; } = string.Empty;
+    private string ActiveStatus { get; set; } = string.Empty;
+
+    private DateTime? CreatedFrom { get; set; }
+    private DateTime? CreatedTo { get; set; }
+
+    private string SortBy { get; set; } = "createdAt";
+    private bool SortDescending { get; set; } = true;
+
+    private int PageSize { get; set; } = 20;
+    private int CurrentPage { get; set; } = 1;
+
+    private int TotalCount { get; set; }
+    private int TotalPages { get; set; }
+
+    private List<UserReportItemDto> Items { get; set; } = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || !Auth.IsAdmin)
+        {
+            Navigation.NavigateTo(
+                Auth.IsLoggedIn ? "/admin" : "/login",
+                true);
+
+            return;
+        }
+
+        await LoadReport();
+
+        StateHasChanged();
+    }
+
+    private async Task LoadReport()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+            var parameters = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(Search))
+                parameters.Add($"Search={Uri.EscapeDataString(Search.Trim())}");
+
+            if (!string.IsNullOrWhiteSpace(Role))
+                parameters.Add($"Role={Uri.EscapeDataString(Role)}");
+
+            if (bool.TryParse(ActiveStatus, out var active))
+                parameters.Add($"IsActive={active.ToString().ToLowerInvariant()}");
+
+            if (CreatedFrom.HasValue)
+                parameters.Add($"CreatedFrom={CreatedFrom.Value:yyyy-MM-dd}");
+
+            if (CreatedTo.HasValue)
+                parameters.Add($"CreatedTo={CreatedTo.Value:yyyy-MM-dd}");
+
+            parameters.Add($"SortBy={Uri.EscapeDataString(SortBy)}");
+            parameters.Add($"SortDescending={SortDescending.ToString().ToLowerInvariant()}");
+            parameters.Add($"Page={CurrentPage}");
+            parameters.Add($"PageSize={PageSize}");
+
+            var result =
+                await client.GetFromJsonAsync<UserReportResultDto>(
+                    "api/UserReports?" + string.Join("&", parameters));
+
+            Items = result?.Items ?? new();
+            TotalCount = result?.TotalCount ?? 0;
+            CurrentPage = result?.Page ?? 1;
+            PageSize = result?.PageSize ?? PageSize;
+            TotalPages = result?.TotalPages ?? 0;
+        }
+        catch
+        {
+            ErrorMessage = "دریافت گزارش کاربران با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        CurrentPage = 1;
+        await LoadReport();
+    }
+
+    private async Task ResetFilters()
+    {
+        Search = string.Empty;
+        Role = string.Empty;
+        ActiveStatus = string.Empty;
+        CreatedFrom = null;
+        CreatedTo = null;
+        SortBy = "createdAt";
+        SortDescending = true;
+        PageSize = 20;
+        CurrentPage = 1;
+
+        await LoadReport();
+    }
+
+    private async Task PreviousPage()
+    {
+        if (CurrentPage <= 1)
+            return;
+
+        CurrentPage--;
+        await LoadReport();
+    }
+
+    private async Task NextPage()
+    {
+        if (CurrentPage >= TotalPages)
+            return;
+
+        CurrentPage++;
+        await LoadReport();
+    }
+
+    private async Task DownloadExport(string format)
+    {
+        IsExporting = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+            var parameters = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(Search))
+                parameters.Add($"Search={Uri.EscapeDataString(Search.Trim())}");
+
+            if (!string.IsNullOrWhiteSpace(Role))
+                parameters.Add($"Role={Uri.EscapeDataString(Role)}");
+
+            if (bool.TryParse(ActiveStatus, out var active))
+                parameters.Add($"IsActive={active.ToString().ToLowerInvariant()}");
+
+            if (CreatedFrom.HasValue)
+                parameters.Add($"CreatedFrom={CreatedFrom.Value:yyyy-MM-dd}");
+
+            if (CreatedTo.HasValue)
+                parameters.Add($"CreatedTo={CreatedTo.Value:yyyy-MM-dd}");
+
+            parameters.Add($"SortBy={Uri.EscapeDataString(SortBy)}");
+            parameters.Add($"SortDescending={SortDescending.ToString().ToLowerInvariant()}");
+
+            var response =
+                await client.GetAsync(
+                    $"api/UserReportExports/{format}?" +
+                    string.Join("&", parameters));
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = "تهیه فایل خروجی با خطا مواجه شد.";
+                return;
+            }
+
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+
+            var contentType =
+                response.Content.Headers.ContentType?.ToString()
+                ?? "application/octet-stream";
+
+            var fileName =
+                format == "pdf"
+                    ? "user-report.pdf"
+                    : "user-report.xlsx";
+
+            await JS.InvokeVoidAsync(
+                "downloadFileFromBase64",
+                fileName,
+                contentType,
+                Convert.ToBase64String(bytes));
+        }
+        catch
+        {
+            ErrorMessage = "دانلود فایل خروجی با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+
+    private static string GetRoleName(string role) =>
+        role switch
+        {
+            "Admin" => "مدیر",
+            "EducationStaff" => "کارشناس آموزش",
+            "Marketer" => "بازاریاب",
+            "Support" => "پشتیبان",
+            "Instructor" => "مدرس",
+            "Student" => "دانشجو",
+            _ => role
+        };
+
+    private sealed class UserReportItemDto
+    {
+        public int Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Mobile { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    private sealed class UserReportResultDto
+    {
+        public List<UserReportItemDto> Items { get; set; } = new();
+        public int TotalCount { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public int TotalPages { get; set; }
+    }
+}

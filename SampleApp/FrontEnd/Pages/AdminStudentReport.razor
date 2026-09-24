@@ -3,9 +3,11 @@
 @using System.Net.Http.Json
 @using System.Globalization
 @using FrontEnd.Services
+@using Microsoft.JSInterop
 
 @inject AuthService Auth
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <PageTitle>گزارش دانشجویان | آموزش‌یار</PageTitle>
 
@@ -362,6 +364,30 @@
 
                 </div>
 
+
+              <div class="student-form-actions">
+
+                  <button
+                      type="button"
+                      class="admin-primary-btn"
+                      disabled="@IsExporting"
+                      @onclick='() => DownloadExport("excel")'>
+
+                      @(IsExporting ? "در حال آماده‌سازی..." : "خروجی Excel")
+
+                  </button>
+
+                  <button
+                      type="button"
+                      class="admin-outline-btn"
+                      disabled="@IsExporting"
+                      @onclick='() => DownloadExport("pdf")'>
+
+                      @(IsExporting ? "در حال آماده‌سازی..." : "خروجی PDF")
+
+                  </button>
+
+              </div>
             </section>
 
             <section class="admin-content-card">
@@ -534,6 +560,7 @@
 @code {
 
     private bool IsLoading { get; set; } = true;
+    private bool IsExporting { get; set; }
 
     private string? ErrorMessage { get; set; }
 
@@ -749,6 +776,80 @@
     {
         CurrentPage = 1;
         await LoadReport();
+    }
+
+    private string BuildExportQuery()
+    {
+        var parameters = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(Search))
+            parameters.Add($"Search={Uri.EscapeDataString(Search.Trim())}");
+
+        if (int.TryParse(SupportUserId, out var supportId))
+            parameters.Add($"SupportUserId={supportId}");
+
+        if (int.TryParse(MarketingUserId, out var marketerId))
+            parameters.Add($"MarketingUserId={marketerId}");
+
+        if (int.TryParse(PartnerOrganizationId, out var organizationId))
+            parameters.Add($"PartnerOrganizationId={organizationId}");
+
+        if (CreatedFrom.HasValue)
+            parameters.Add($"CreatedFrom={CreatedFrom.Value:yyyy-MM-dd}");
+
+        if (CreatedTo.HasValue)
+            parameters.Add($"CreatedTo={CreatedTo.Value:yyyy-MM-dd}");
+
+        parameters.Add($"SortBy={Uri.EscapeDataString(SortBy)}");
+        parameters.Add($"SortDescending={SortDescending.ToString().ToLowerInvariant()}");
+
+        return string.Join("&", parameters);
+    }
+
+    private async Task DownloadExport(string format)
+    {
+        IsExporting = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+            var query = BuildExportQuery();
+
+            var response = await client.GetAsync(
+                $"api/StudentReportExports/{format}?{query}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = "تهیه فایل خروجی با خطا مواجه شد.";
+                return;
+            }
+
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+
+            var contentType =
+                response.Content.Headers.ContentType?.ToString()
+                ?? "application/octet-stream";
+
+            var fileName =
+                format == "pdf"
+                    ? "student-report.pdf"
+                    : "student-report.xlsx";
+
+            await JS.InvokeVoidAsync(
+                "downloadFileFromBase64",
+                fileName,
+                contentType,
+                Convert.ToBase64String(bytes));
+        }
+        catch
+        {
+            ErrorMessage = "دانلود فایل خروجی با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsExporting = false;
+        }
     }
 
     private async Task ResetFilters()

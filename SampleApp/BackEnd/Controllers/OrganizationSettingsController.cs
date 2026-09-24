@@ -76,6 +76,8 @@ public class OrganizationSettingsController : ControllerBase
         settings.PrimaryColor = request.PrimaryColor;
         settings.SecondaryColor = request.SecondaryColor;
         settings.ThemeIsActive = request.ThemeIsActive;
+        settings.PackageLevel = request.PackageLevel;
+
         await _context.SaveChangesAsync();
 
         return Ok(settings);

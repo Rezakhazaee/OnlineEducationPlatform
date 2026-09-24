@@ -1,0 +1,414 @@
+@page "/admin/partner-organization-report"
+
+@using System.Net.Http.Json
+@using Microsoft.JSInterop
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject IJSRuntime JS
+
+<PageTitle>گزارش سازمان‌های طرف قرارداد | آموزش‌یار</PageTitle>
+
+<div class="admin-page">
+
+    <div class="admin-content-card">
+
+        <div class="admin-card-header">
+            <div>
+                <h2>گزارش تفصیلی سازمان‌های طرف قرارداد</h2>
+                <p>جست‌وجو، فیلتر و دریافت گزارش سازمان‌های طرف قرارداد</p>
+            </div>
+        </div>
+
+        @if (Loading)
+        {
+            <div class="admin-empty-state">
+                در حال دریافت گزارش...
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="admin-empty-state">
+                @ErrorMessage
+            </div>
+        }
+        else
+        {
+            <div class="admin-form-grid">
+
+                <div class="admin-form-group">
+                    <label>جست‌وجو</label>
+                    <input class="admin-input"
+                           @bind="Search"
+                           @bind:event="oninput"
+                           placeholder="نام سازمان، مسئول، موبایل یا شماره قرارداد" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label>وضعیت سازمان</label>
+                    <select class="admin-input" @bind="IsActive">
+                        <option value="">همه</option>
+                        <option value="true">فعال</option>
+                        <option value="false">غیرفعال</option>
+                    </select>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>شروع قرارداد از</label>
+                    <input type="date"
+                           class="admin-input"
+                           @bind="ContractStartFrom" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label>شروع قرارداد تا</label>
+                    <input type="date"
+                           class="admin-input"
+                           @bind="ContractStartTo" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label>پایان قرارداد از</label>
+                    <input type="date"
+                           class="admin-input"
+                           @bind="ContractEndFrom" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label>پایان قرارداد تا</label>
+                    <input type="date"
+                           class="admin-input"
+                           @bind="ContractEndTo" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label>مرتب‌سازی</label>
+                    <select class="admin-input" @bind="SortBy">
+                        <option value="createdDate">تاریخ ایجاد</option>
+                        <option value="name">نام سازمان</option>
+                        <option value="contractNumber">شماره قرارداد</option>
+                        <option value="contractStartDate">شروع قرارداد</option>
+                        <option value="contractEndDate">پایان قرارداد</option>
+                        <option value="courseCount">تعداد دوره</option>
+                        <option value="studentCount">تعداد دانشجو</option>
+                    </select>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>جهت مرتب‌سازی</label>
+                    <select class="admin-input" @bind="SortDescending">
+                        <option value="true">نزولی</option>
+                        <option value="false">صعودی</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="student-form-actions">
+                <button class="admin-primary-btn"
+                        @onclick="ApplyFilters">
+                    اعمال فیلتر
+                </button>
+
+                <button class="admin-outline-btn"
+                        @onclick="ResetFilters">
+                    پاک کردن فیلترها
+                </button>
+
+                <button class="admin-outline-btn"
+                        @onclick='() => DownloadExport("excel")'
+                        disabled="@IsExporting">
+                    @(IsExporting ? "در حال دریافت..." : "دریافت Excel")
+                </button>
+
+                <button class="admin-outline-btn"
+                        @onclick='() => DownloadExport("pdf")'
+                        disabled="@IsExporting">
+                    @(IsExporting ? "در حال دریافت..." : "دریافت PDF")
+                </button>
+            </div>
+
+            <div class="admin-report-summary">
+                <span>تعداد نتایج: <strong>@Report.TotalCount</strong></span>
+                <span>صفحه @Report.Page از @Report.TotalPages</span>
+            </div>
+
+            @if (Report.Items.Count == 0)
+            {
+                <div class="admin-empty-state">
+                    موردی مطابق فیلترهای انتخاب‌شده پیدا نشد.
+                </div>
+            }
+            else
+            {
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>نام سازمان</th>
+                                <th>مسئول</th>
+                                <th>شماره قرارداد</th>
+                                <th>شروع قرارداد</th>
+                                <th>پایان قرارداد</th>
+                                <th>دوره</th>
+                                <th>دانشجو</th>
+                                <th>وضعیت قرارداد</th>
+                                <th>وضعیت سازمان</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var item in Report.Items)
+                            {
+                                <tr>
+                                    <td>@item.Name</td>
+                                    <td>
+                                        @item.ContactPerson
+                                        @if (!string.IsNullOrWhiteSpace(item.ContactMobile))
+                                        {
+                                            <div>@item.ContactMobile</div>
+                                        }
+                                    </td>
+                                    <td>@(item.ContractNumber ?? "-")</td>
+                                    <td>@FormatDate(item.ContractStartDate)</td>
+                                    <td>@FormatDate(item.ContractEndDate)</td>
+                                    <td>@item.CourseCount</td>
+                                    <td>@item.StudentCount</td>
+                                    <td>@item.ContractStatus</td>
+                                    <td>@(item.IsActive ? "فعال" : "غیرفعال")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="student-form-actions">
+                    <button class="admin-outline-btn"
+                            @onclick="PreviousPage"
+                            disabled="@(Report.Page <= 1)">
+                        صفحه قبل
+                    </button>
+
+                    <button class="admin-outline-btn"
+                            @onclick="NextPage"
+                            disabled="@(Report.Page >= Report.TotalPages)">
+                        صفحه بعد
+                    </button>
+                </div>
+            }
+        }
+
+    </div>
+
+</div>
+
+@code {
+
+    private bool Loading = true;
+    private bool IsExporting;
+    private string? ErrorMessage;
+
+    private string Search = string.Empty;
+    private bool? IsActive;
+    private DateTime? ContractStartFrom;
+    private DateTime? ContractStartTo;
+    private DateTime? ContractEndFrom;
+    private DateTime? ContractEndTo;
+    private string SortBy = "createdDate";
+    private bool SortDescending = true;
+
+    private PartnerOrganizationReportResult Report = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || !Auth.IsManagementPanelUser)
+        {
+            ErrorMessage = "دسترسی به این صفحه امکان‌پذیر نیست.";
+            Loading = false;
+            StateHasChanged();
+            return;
+        }
+
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        Loading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var url = BuildQuery(
+                "api/PartnerOrganizationReports",
+                includePaging: true);
+
+            var result = await client.GetFromJsonAsync<PartnerOrganizationReportResult>(url);
+
+            Report = result ?? new PartnerOrganizationReportResult();
+        }
+        catch
+        {
+            ErrorMessage = "خطا در دریافت گزارش.";
+        }
+        finally
+        {
+            Loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        Report.Page = 1;
+        await LoadReport();
+    }
+
+    private async Task ResetFilters()
+    {
+        Search = string.Empty;
+        IsActive = null;
+        ContractStartFrom = null;
+        ContractStartTo = null;
+        ContractEndFrom = null;
+        ContractEndTo = null;
+        SortBy = "createdDate";
+        SortDescending = true;
+
+        Report.Page = 1;
+
+        await LoadReport();
+    }
+
+    private async Task PreviousPage()
+    {
+        if (Report.Page <= 1)
+            return;
+
+        Report.Page--;
+        await LoadReport();
+    }
+
+    private async Task NextPage()
+    {
+        if (Report.Page >= Report.TotalPages)
+            return;
+
+        Report.Page++;
+        await LoadReport();
+    }
+
+    private async Task DownloadExport(string type)
+    {
+        IsExporting = true;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var url = BuildQuery(
+                $"api/PartnerOrganizationReportExports/{type}",
+                includePaging: false);
+
+            var bytes = await client.GetByteArrayAsync(url);
+
+            var base64 = Convert.ToBase64String(bytes);
+
+            var fileName = type == "excel"
+                ? "partner-organization-report.xlsx"
+                : "partner-organization-report.pdf";
+
+            var contentType = type == "excel"
+                ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                : "application/pdf";
+
+            await JS.InvokeVoidAsync(
+                "downloadFileFromBase64",
+                fileName,
+                contentType,
+                base64);
+        }
+        catch
+        {
+            ErrorMessage = "خطا در دریافت فایل گزارش.";
+        }
+        finally
+        {
+            IsExporting = false;
+            StateHasChanged();
+        }
+    }
+
+    private string BuildQuery(string baseUrl, bool includePaging)
+    {
+        var parameters = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(Search))
+            parameters.Add($"Search={Uri.EscapeDataString(Search.Trim())}");
+
+        if (IsActive.HasValue)
+            parameters.Add($"IsActive={IsActive.Value.ToString().ToLowerInvariant()}");
+
+        if (ContractStartFrom.HasValue)
+            parameters.Add($"ContractStartFrom={ContractStartFrom.Value:yyyy-MM-dd}");
+
+        if (ContractStartTo.HasValue)
+            parameters.Add($"ContractStartTo={ContractStartTo.Value:yyyy-MM-dd}");
+
+        if (ContractEndFrom.HasValue)
+            parameters.Add($"ContractEndFrom={ContractEndFrom.Value:yyyy-MM-dd}");
+
+        if (ContractEndTo.HasValue)
+            parameters.Add($"ContractEndTo={ContractEndTo.Value:yyyy-MM-dd}");
+
+        parameters.Add($"SortBy={Uri.EscapeDataString(SortBy)}");
+        parameters.Add($"SortDescending={SortDescending.ToString().ToLowerInvariant()}");
+
+        if (includePaging)
+        {
+            parameters.Add($"Page={Report.Page}");
+            parameters.Add("PageSize=20");
+        }
+
+        return $"{baseUrl}?{string.Join("&", parameters)}";
+    }
+
+    private static string FormatDate(DateTime? date)
+    {
+        return date.HasValue
+            ? date.Value.ToString("yyyy/MM/dd")
+            : "-";
+    }
+
+    private class PartnerOrganizationReportResult
+    {
+        public List<PartnerOrganizationReportItem> Items { get; set; } = new();
+        public int TotalCount { get; set; }
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 20;
+        public int TotalPages { get; set; } = 1;
+    }
+
+    private class PartnerOrganizationReportItem
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? ContactPerson { get; set; }
+        public string? ContactMobile { get; set; }
+        public string? ContractNumber { get; set; }
+        public DateTime? ContractStartDate { get; set; }
+        public DateTime? ContractEndDate { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public int CourseCount { get; set; }
+        public int StudentCount { get; set; }
+        public string ContractStatus { get; set; } = string.Empty;
+    }
+}

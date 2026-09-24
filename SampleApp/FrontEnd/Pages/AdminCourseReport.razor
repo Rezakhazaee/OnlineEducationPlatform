@@ -1,0 +1,649 @@
+@page "/admin/course-report"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+@using Microsoft.JSInterop
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>گزارش دوره‌ها | آموزش‌یار</PageTitle>
+
+<div class="admin-page">
+
+    <AdminSidebar ActivePage="reports" />
+
+    <main class="admin-main">
+
+        <header class="admin-topbar">
+            <div>
+                <span class="admin-label">گزارش‌ها</span>
+                <h1>گزارش دوره‌ها</h1>
+            </div>
+            <AdminLogout />
+        </header>
+
+        @if (IsLoading)
+        {
+            <div class="admin-loading">
+                <div class="admin-loading-icon">↻</div>
+                <h3>در حال دریافت گزارش...</h3>
+                <p>اطلاعات دوره‌ها از سرور دریافت می‌شود.</p>
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="admin-error">
+                <strong>خطا در دریافت گزارش</strong>
+                <p>@ErrorMessage</p>
+
+                <button type="button"
+                        class="admin-outline-btn"
+                        @onclick="LoadReport">
+                    تلاش مجدد
+                </button>
+            </div>
+        }
+        else
+        {
+            <section class="admin-content-card">
+
+                <div class="admin-card-header">
+                    <div>
+                        <span>فیلتر و جستجو</span>
+                        <h2>گزارش دوره‌ها</h2>
+                    </div>
+                </div>
+
+                <div class="admin-form-grid">
+
+                    <div class="admin-form-group">
+                        <label>جستجو</label>
+                        <input class="admin-input"
+                               @bind="Search"
+                               placeholder="عنوان یا توضیحات دوره..." />
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>مدرس</label>
+                        <select class="admin-input" @bind="InstructorId">
+                            <option value="">همه</option>
+
+                            @foreach (var instructor in Instructors)
+                            {
+                                <option value="@instructor.Id">
+                                    @instructor.FullName
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>نوع برگزاری</label>
+                        <select class="admin-input" @bind="DeliveryType">
+                            <option value="">همه</option>
+                            <option value="Online">آنلاین</option>
+                            <option value="InPerson">حضوری</option>
+                            <option value="Hybrid">ترکیبی</option>
+                        </select>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>وضعیت</label>
+                        <select class="admin-input" @bind="StatusFilter">
+                            <option value="">همه</option>
+                            <option value="true">فعال</option>
+                            <option value="false">غیرفعال</option>
+                        </select>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>حداقل قیمت</label>
+                        <input class="admin-input"
+                               type="number"
+                               @bind="MinPrice" />
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>حداکثر قیمت</label>
+                        <input class="admin-input"
+                               type="number"
+                               @bind="MaxPrice" />
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>مرتب‌سازی</label>
+                        <select class="admin-input" @bind="SortBy">
+                            <option value="title">عنوان</option>
+                            <option value="price">قیمت</option>
+                            <option value="instructor">مدرس</option>
+                            <option value="deliverytype">نوع برگزاری</option>
+                            <option value="status">وضعیت</option>
+                        </select>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>جهت مرتب‌سازی</label>
+                        <select class="admin-input" @bind="SortDescending">
+                            <option value="false">صعودی</option>
+                            <option value="true">نزولی</option>
+                        </select>
+                    </div>
+
+                    <div class="admin-form-group">
+                        <label>تعداد در صفحه</label>
+                        <select class="admin-input" @bind="PageSize">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="student-form-actions">
+
+                    <button type="button"
+                            class="admin-primary-btn"
+                            @onclick="ApplyFilters">
+                        اعمال فیلتر
+                    </button>
+
+                    <button type="button"
+                            class="admin-outline-btn"
+                            @onclick="ResetFilters">
+                        پاک کردن فیلترها
+                    </button>
+
+                    <button type="button"
+                            class="admin-primary-btn"
+                            disabled="@IsExporting"
+                            @onclick='() => DownloadExport("excel")'>
+                        @(IsExporting ? "در حال آماده‌سازی..." : "خروجی Excel")
+                    </button>
+
+                    <button type="button"
+                            class="admin-outline-btn"
+                            disabled="@IsExporting"
+                            @onclick='() => DownloadExport("pdf")'>
+                        @(IsExporting ? "در حال آماده‌سازی..." : "خروجی PDF")
+                    </button>
+
+                </div>
+
+            </section>
+
+            <section class="admin-content-card">
+
+                <div class="admin-card-header">
+                    <div>
+                        <span>نتایج</span>
+
+                        <h2>
+                            @(TotalCount == 0
+                                ? "نتیجه‌ای وجود ندارد"
+                                : $"نمایش {(CurrentPage - 1) * PageSize + 1} تا {Math.Min(CurrentPage * PageSize, TotalCount)} از {TotalCount}")
+                        </h2>
+                    </div>
+                </div>
+
+                @if (Courses.Count == 0)
+                {
+                    <div class="admin-empty-state">
+                        دوره‌ای مطابق فیلترهای انتخاب‌شده پیدا نشد.
+                    </div>
+                }
+                else
+                {
+                    <div class="students-table-wrap">
+
+                        <table class="students-table">
+
+                            <thead>
+                                <tr>
+                                    <th>دوره</th>
+                                    <th>مدرس</th>
+                                    <th>نوع برگزاری</th>
+                                    <th>قیمت</th>
+                                    <th>وضعیت</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                @foreach (var course in Courses)
+                                {
+                                    <tr>
+
+                                        <td>
+                                            <strong>@course.Title</strong>
+                                            <small>شناسه: @course.Id</small>
+                                        </td>
+
+                                        <td>
+                                            @(course.InstructorName ?? "بدون مدرس")
+                                        </td>
+
+                                        <td>
+                                            @GetDeliveryTypeName(course.DeliveryType)
+                                        </td>
+
+                                        <td>
+                                            @course.Price.ToString("N0")
+                                        </td>
+
+                                        <td>
+                                            @(course.IsActive ? "فعال" : "غیرفعال")
+                                        </td>
+
+                                    </tr>
+                                }
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    <div class="student-form-actions">
+
+                        <button type="button"
+                                class="admin-outline-btn"
+                                disabled="@(CurrentPage <= 1)"
+                                @onclick="PreviousPage">
+                            صفحه قبل
+                        </button>
+
+                        <span>
+                            صفحه @CurrentPage از @TotalPages
+                        </span>
+
+                        <button type="button"
+                                class="admin-outline-btn"
+                                disabled="@(CurrentPage >= TotalPages)"
+                                @onclick="NextPage">
+                            صفحه بعد
+                        </button>
+
+                    </div>
+                }
+
+            </section>
+        }
+
+    </main>
+
+</div>
+
+@code {
+
+    private bool IsLoading { get; set; } = true;
+    private bool IsExporting { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+    private string Search { get; set; } = string.Empty;
+    private string InstructorId { get; set; } = string.Empty;
+    private string DeliveryType { get; set; } = string.Empty;
+    private string StatusFilter { get; set; } = string.Empty;
+
+    private decimal? MinPrice { get; set; }
+    private decimal? MaxPrice { get; set; }
+
+    private string SortBy { get; set; } = "title";
+    private bool SortDescending { get; set; }
+
+    private int PageSize { get; set; } = 20;
+    private int CurrentPage { get; set; } = 1;
+
+    private List<InstructorDto> Instructors { get; set; } = new();
+    private List<CourseReportItemDto> Courses { get; set; } = new();
+
+    private int TotalCount { get; set; }
+    private int TotalPages { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || !Auth.IsManagementPanelUser)
+        {
+            Navigation.NavigateTo(
+                Auth.IsLoggedIn ? "/admin" : "/login",
+                true);
+
+            return;
+        }
+
+        await LoadData();
+
+        StateHasChanged();
+    }
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Instructors =
+                await client.GetFromJsonAsync<List<InstructorDto>>(
+                    "api/Courses/instructors")
+                ?? new List<InstructorDto>();
+
+            await LoadReport();
+        }
+        catch
+        {
+            ErrorMessage =
+                "دریافت اطلاعات گزارش با خطا مواجه شد.";
+
+            IsLoading = false;
+        }
+    }
+
+    private async Task LoadReport()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var parameters = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(Search))
+            {
+                parameters.Add(
+                    $"Search={Uri.EscapeDataString(Search.Trim())}");
+            }
+
+            if (int.TryParse(
+                InstructorId,
+                out var instructorId))
+            {
+                parameters.Add(
+                    $"InstructorId={instructorId}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(DeliveryType))
+            {
+                parameters.Add(
+                    $"DeliveryType={Uri.EscapeDataString(DeliveryType)}");
+            }
+
+            if (bool.TryParse(
+                StatusFilter,
+                out var active))
+            {
+                parameters.Add(
+                    $"IsActive={active.ToString().ToLowerInvariant()}");
+            }
+
+            if (MinPrice.HasValue)
+            {
+                parameters.Add(
+                    $"MinPrice={MinPrice.Value}");
+            }
+
+            if (MaxPrice.HasValue)
+            {
+                parameters.Add(
+                    $"MaxPrice={MaxPrice.Value}");
+            }
+
+            parameters.Add(
+                $"SortBy={Uri.EscapeDataString(SortBy)}");
+
+            parameters.Add(
+                $"SortDescending={SortDescending.ToString().ToLowerInvariant()}");
+
+            parameters.Add($"Page={CurrentPage}");
+            parameters.Add($"PageSize={PageSize}");
+
+            var url =
+                "api/CourseReports?" +
+                string.Join("&", parameters);
+
+            var result =
+                await client.GetFromJsonAsync<CourseReportResultDto>(
+                    url);
+
+            Courses =
+                result?.Items
+                ?? new List<CourseReportItemDto>();
+
+            TotalCount =
+                result?.TotalCount ?? 0;
+
+            CurrentPage =
+                result?.Page ?? 1;
+
+            PageSize =
+                result?.PageSize ?? PageSize;
+
+            TotalPages =
+                result?.TotalPages ?? 0;
+        }
+        catch
+        {
+            ErrorMessage =
+                "دریافت گزارش دوره‌ها با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        CurrentPage = 1;
+
+        await LoadReport();
+    }
+
+    private async Task ResetFilters()
+    {
+        Search = string.Empty;
+        InstructorId = string.Empty;
+        DeliveryType = string.Empty;
+        StatusFilter = string.Empty;
+
+        MinPrice = null;
+        MaxPrice = null;
+
+        SortBy = "title";
+        SortDescending = false;
+
+        PageSize = 20;
+        CurrentPage = 1;
+
+        await LoadReport();
+    }
+
+    private async Task PreviousPage()
+    {
+        if (CurrentPage <= 1)
+            return;
+
+        CurrentPage--;
+
+        await LoadReport();
+    }
+
+    private async Task NextPage()
+    {
+        if (CurrentPage >= TotalPages)
+            return;
+
+        CurrentPage++;
+
+        await LoadReport();
+    }
+
+    private async Task DownloadExport(string format)
+    {
+        IsExporting = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var parameters = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(Search))
+            {
+                parameters.Add(
+                    $"Search={Uri.EscapeDataString(Search.Trim())}");
+            }
+
+            if (int.TryParse(
+                InstructorId,
+                out var instructorId))
+            {
+                parameters.Add(
+                    $"InstructorId={instructorId}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(DeliveryType))
+            {
+                parameters.Add(
+                    $"DeliveryType={Uri.EscapeDataString(DeliveryType)}");
+            }
+
+            if (bool.TryParse(
+                StatusFilter,
+                out var active))
+            {
+                parameters.Add(
+                    $"IsActive={active.ToString().ToLowerInvariant()}");
+            }
+
+            if (MinPrice.HasValue)
+            {
+                parameters.Add(
+                    $"MinPrice={MinPrice.Value}");
+            }
+
+            if (MaxPrice.HasValue)
+            {
+                parameters.Add(
+                    $"MaxPrice={MaxPrice.Value}");
+            }
+
+            parameters.Add(
+                $"SortBy={Uri.EscapeDataString(SortBy)}");
+
+            parameters.Add(
+                $"SortDescending={SortDescending.ToString().ToLowerInvariant()}");
+
+            var query =
+                string.Join("&", parameters);
+
+            var response =
+                await client.GetAsync(
+                    $"api/CourseReportExports/{format}?{query}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage =
+                    "تهیه فایل خروجی با خطا مواجه شد.";
+
+                return;
+            }
+
+            var bytes =
+                await response.Content.ReadAsByteArrayAsync();
+
+            var contentType =
+                response.Content.Headers.ContentType?.ToString()
+                ?? "application/octet-stream";
+
+            var fileName =
+                format == "pdf"
+                    ? "course-report.pdf"
+                    : "course-report.xlsx";
+
+            await JS.InvokeVoidAsync(
+                "downloadFileFromBase64",
+                fileName,
+                contentType,
+                Convert.ToBase64String(bytes));
+        }
+        catch
+        {
+            ErrorMessage =
+                "دانلود فایل خروجی با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+
+    private static string GetDeliveryTypeName(
+        string type)
+    {
+        return type switch
+        {
+            "Online" => "آنلاین",
+            "InPerson" => "حضوری",
+            "Hybrid" => "ترکیبی",
+            _ => type
+        };
+    }
+
+    private sealed class InstructorDto
+    {
+        public int Id { get; set; }
+
+        public string FullName { get; set; } =
+            string.Empty;
+    }
+
+    private sealed class CourseReportItemDto
+    {
+        public int Id { get; set; }
+
+        public string Title { get; set; } =
+            string.Empty;
+
+        public string? Description { get; set; }
+
+        public decimal Price { get; set; }
+
+        public string DeliveryType { get; set; } =
+            string.Empty;
+
+        public int? InstructorId { get; set; }
+
+        public string? InstructorName { get; set; }
+
+        public bool IsActive { get; set; }
+    }
+
+    private sealed class CourseReportResultDto
+    {
+        public List<CourseReportItemDto> Items { get; set; } =
+            new();
+
+        public int TotalCount { get; set; }
+
+        public int Page { get; set; }
+
+        public int PageSize { get; set; }
+
+        public int TotalPages { get; set; }
+    }
+}

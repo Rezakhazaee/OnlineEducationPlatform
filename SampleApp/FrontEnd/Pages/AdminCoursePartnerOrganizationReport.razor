@@ -1,0 +1,509 @@
+@page "/admin/course-partner-organization-report"
+
+@using System.Net.Http.Json
+@using Microsoft.JSInterop
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject IJSRuntime JS
+
+<PageTitle>گزارش قراردادهای دوره | آموزش‌یار</PageTitle>
+
+<div class="admin-page">
+
+    <div class="admin-content-card">
+
+        <div class="admin-card-header">
+            <div>
+                <h2>گزارش تفصیلی قراردادهای دوره با سازمان‌های طرف قرارداد</h2>
+                <p>جست‌وجو، فیلتر، مرتب‌سازی و دریافت خروجی قراردادهای دوره</p>
+            </div>
+        </div>
+
+        @if (Loading)
+        {
+            <div class="admin-empty-state">
+                در حال دریافت گزارش...
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="admin-empty-state">
+                @ErrorMessage
+            </div>
+        }
+        else
+        {
+            <div class="admin-form-grid">
+
+                <div class="admin-form-group">
+                    <label>جست‌وجو</label>
+                    <input class="admin-input"
+                           @bind="Search"
+                           @bind:event="oninput"
+                           placeholder="دوره، سازمان، شماره قرارداد یا توضیحات" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label>شناسه دوره</label>
+                    <input type="number"
+                           class="admin-input"
+                           @bind="CourseId" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label>شناسه سازمان طرف قرارداد</label>
+                    <input type="number"
+                           class="admin-input"
+                           @bind="PartnerOrganizationId" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label>وضعیت</label>
+                    <select class="admin-input" @bind="IsActive">
+                        <option value="">همه</option>
+                        <option value="true">فعال</option>
+                        <option value="false">غیرفعال</option>
+                    </select>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>شروع قرارداد از</label>
+                    <input type="date"
+                           class="admin-input"
+                           @bind="StartFrom" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label>شروع قرارداد تا</label>
+                    <input type="date"
+                           class="admin-input"
+                           @bind="StartTo" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label>پایان قرارداد از</label>
+                    <input type="date"
+                           class="admin-input"
+                           @bind="EndFrom" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label>پایان قرارداد تا</label>
+                    <input type="date"
+                           class="admin-input"
+                           @bind="EndTo" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label>حداقل مبلغ توافقی</label>
+                    <input type="number"
+                           class="admin-input"
+                           @bind="MinAgreedPrice" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label>حداکثر مبلغ توافقی</label>
+                    <input type="number"
+                           class="admin-input"
+                           @bind="MaxAgreedPrice" />
+                </div>
+
+                <div class="admin-form-group">
+                    <label>مرتب‌سازی</label>
+                    <select class="admin-input" @bind="SortBy">
+                        <option value="id">شناسه</option>
+                        <option value="courseTitle">دوره</option>
+                        <option value="partnerOrganizationName">سازمان</option>
+                        <option value="contractNumber">شماره قرارداد</option>
+                        <option value="agreedPrice">مبلغ توافقی</option>
+                        <option value="startDate">شروع قرارداد</option>
+                        <option value="endDate">پایان قرارداد</option>
+                        <option value="contractStatus">وضعیت قرارداد</option>
+                    </select>
+                </div>
+
+                <div class="admin-form-group">
+                    <label>جهت مرتب‌سازی</label>
+                    <select class="admin-input" @bind="SortDescending">
+                        <option value="true">نزولی</option>
+                        <option value="false">صعودی</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="student-form-actions">
+
+                <button class="admin-primary-btn"
+                        @onclick="ApplyFilters">
+                    اعمال فیلتر
+                </button>
+
+                <button class="admin-outline-btn"
+                        @onclick="ResetFilters">
+                    پاک کردن فیلترها
+                </button>
+
+                <button class="admin-outline-btn"
+                        @onclick='() => DownloadExport("excel")'
+                        disabled="@IsExporting">
+                    @(IsExporting ? "در حال دریافت..." : "دریافت Excel")
+                </button>
+
+                <button class="admin-outline-btn"
+                        @onclick='() => DownloadExport("pdf")'
+                        disabled="@IsExporting">
+                    @(IsExporting ? "در حال دریافت..." : "دریافت PDF")
+                </button>
+
+            </div>
+
+            <div class="admin-report-summary">
+                <span>
+                    تعداد نتایج:
+                    <strong>@Report.TotalCount</strong>
+                </span>
+
+                <span>
+                    صفحه @Report.Page از @Report.TotalPages
+                </span>
+            </div>
+
+            @if (Report.Items.Count == 0)
+            {
+                <div class="admin-empty-state">
+                    موردی مطابق فیلترهای انتخاب‌شده پیدا نشد.
+                </div>
+            }
+            else
+            {
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>دوره</th>
+                                <th>سازمان</th>
+                                <th>شماره قرارداد</th>
+                                <th>مبلغ توافقی</th>
+                                <th>شروع</th>
+                                <th>پایان</th>
+                                <th>وضعیت قرارداد</th>
+                                <th>وضعیت</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var item in Report.Items)
+                            {
+                                <tr>
+                                    <td>@item.CourseTitle</td>
+                                    <td>@item.PartnerOrganizationName</td>
+                                    <td>@(item.ContractNumber ?? "-")</td>
+                                    <td>@FormatAmount(item.AgreedPrice)</td>
+                                    <td>@FormatDate(item.StartDate)</td>
+                                    <td>@FormatDate(item.EndDate)</td>
+                                    <td>@item.ContractStatus</td>
+                                    <td>@(item.IsActive ? "فعال" : "غیرفعال")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="student-form-actions">
+
+                    <button class="admin-outline-btn"
+                            @onclick="PreviousPage"
+                            disabled="@(Report.Page <= 1)">
+                        صفحه قبل
+                    </button>
+
+                    <button class="admin-outline-btn"
+                            @onclick="NextPage"
+                            disabled="@(Report.Page >= Report.TotalPages)">
+                        صفحه بعد
+                    </button>
+
+                </div>
+            }
+        }
+
+    </div>
+
+</div>
+
+@code {
+
+    private bool Loading = true;
+    private bool IsExporting;
+    private string? ErrorMessage;
+
+    private string Search = string.Empty;
+    private int? CourseId;
+    private int? PartnerOrganizationId;
+    private bool? IsActive;
+
+    private DateTime? StartFrom;
+    private DateTime? StartTo;
+    private DateTime? EndFrom;
+    private DateTime? EndTo;
+
+    private decimal? MinAgreedPrice;
+    private decimal? MaxAgreedPrice;
+
+    private string SortBy = "id";
+    private bool SortDescending = true;
+
+    private CoursePartnerOrganizationReportResult Report = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || !Auth.IsManagementPanelUser)
+        {
+            ErrorMessage = "دسترسی به این صفحه امکان‌پذیر نیست.";
+            Loading = false;
+            StateHasChanged();
+            return;
+        }
+
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        Loading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var url = BuildQuery(
+                "api/CoursePartnerOrganizationReports",
+                true);
+
+            var result =
+                await client.GetFromJsonAsync<CoursePartnerOrganizationReportResult>(url);
+
+            Report = result ?? new CoursePartnerOrganizationReportResult();
+        }
+        catch
+        {
+            ErrorMessage = "خطا در دریافت گزارش.";
+        }
+        finally
+        {
+            Loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        Report.Page = 1;
+        await LoadReport();
+    }
+
+    private async Task ResetFilters()
+    {
+        Search = string.Empty;
+        CourseId = null;
+        PartnerOrganizationId = null;
+        IsActive = null;
+
+        StartFrom = null;
+        StartTo = null;
+        EndFrom = null;
+        EndTo = null;
+
+        MinAgreedPrice = null;
+        MaxAgreedPrice = null;
+
+        SortBy = "id";
+        SortDescending = true;
+
+        Report.Page = 1;
+
+        await LoadReport();
+    }
+
+    private async Task PreviousPage()
+    {
+        if (Report.Page <= 1)
+            return;
+
+        Report.Page--;
+        await LoadReport();
+    }
+
+    private async Task NextPage()
+    {
+        if (Report.Page >= Report.TotalPages)
+            return;
+
+        Report.Page++;
+        await LoadReport();
+    }
+
+    private async Task DownloadExport(string type)
+    {
+        IsExporting = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var url = BuildQuery(
+                $"api/CoursePartnerOrganizationReportExports/{type}",
+                false);
+
+            var bytes = await client.GetByteArrayAsync(url);
+
+            var base64 = Convert.ToBase64String(bytes);
+
+            var fileName = type == "excel"
+                ? "course-partner-organization-report.xlsx"
+                : "course-partner-organization-report.pdf";
+
+            var contentType = type == "excel"
+                ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                : "application/pdf";
+
+            await JS.InvokeVoidAsync(
+                "downloadFileFromBase64",
+                fileName,
+                contentType,
+                base64);
+        }
+        catch
+        {
+            ErrorMessage = "خطا در دریافت فایل گزارش.";
+        }
+        finally
+        {
+            IsExporting = false;
+            StateHasChanged();
+        }
+    }
+
+    private string BuildQuery(
+        string baseUrl,
+        bool includePaging)
+    {
+        var parameters = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(Search))
+            parameters.Add(
+                $"Search={Uri.EscapeDataString(Search.Trim())}");
+
+        if (CourseId.HasValue)
+            parameters.Add($"CourseId={CourseId.Value}");
+
+        if (PartnerOrganizationId.HasValue)
+            parameters.Add(
+                $"PartnerOrganizationId={PartnerOrganizationId.Value}");
+
+        if (IsActive.HasValue)
+            parameters.Add(
+                $"IsActive={IsActive.Value.ToString().ToLowerInvariant()}");
+
+        if (StartFrom.HasValue)
+            parameters.Add(
+                $"StartFrom={StartFrom.Value:yyyy-MM-dd}");
+
+        if (StartTo.HasValue)
+            parameters.Add(
+                $"StartTo={StartTo.Value:yyyy-MM-dd}");
+
+        if (EndFrom.HasValue)
+            parameters.Add(
+                $"EndFrom={EndFrom.Value:yyyy-MM-dd}");
+
+        if (EndTo.HasValue)
+            parameters.Add(
+                $"EndTo={EndTo.Value:yyyy-MM-dd}");
+
+        if (MinAgreedPrice.HasValue)
+            parameters.Add(
+                $"MinAgreedPrice={MinAgreedPrice.Value}");
+
+        if (MaxAgreedPrice.HasValue)
+            parameters.Add(
+                $"MaxAgreedPrice={MaxAgreedPrice.Value}");
+
+        parameters.Add(
+            $"SortBy={Uri.EscapeDataString(SortBy)}");
+
+        parameters.Add(
+            $"SortDescending={SortDescending.ToString().ToLowerInvariant()}");
+
+        if (includePaging)
+        {
+            parameters.Add($"Page={Report.Page}");
+            parameters.Add("PageSize=20");
+        }
+
+        return $"{baseUrl}?{string.Join("&", parameters)}";
+    }
+
+    private static string FormatDate(DateTime? value)
+    {
+        return value.HasValue
+            ? value.Value.ToString("yyyy/MM/dd")
+            : "-";
+    }
+
+    private static string FormatAmount(decimal? value)
+    {
+        return value.HasValue
+            ? value.Value.ToString("N0")
+            : "-";
+    }
+
+    private class CoursePartnerOrganizationReportResult
+    {
+        public List<CoursePartnerOrganizationReportItem> Items { get; set; } = new();
+
+        public int TotalCount { get; set; }
+
+        public int Page { get; set; } = 1;
+
+        public int PageSize { get; set; } = 20;
+
+        public int TotalPages { get; set; }
+    }
+
+    private class CoursePartnerOrganizationReportItem
+    {
+        public int Id { get; set; }
+
+        public int CourseId { get; set; }
+
+        public string CourseTitle { get; set; } = string.Empty;
+
+        public int PartnerOrganizationId { get; set; }
+
+        public string PartnerOrganizationName { get; set; } = string.Empty;
+
+        public string? ContractNumber { get; set; }
+
+        public decimal? AgreedPrice { get; set; }
+
+        public DateTime? StartDate { get; set; }
+
+        public DateTime? EndDate { get; set; }
+
+        public bool IsActive { get; set; }
+
+        public string ContractStatus { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
+    }
+}

@@ -1,3 +1,5 @@
+using QuestPDF.Drawing;
+using QuestPDF.Infrastructure;
 using BackEnd.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +9,11 @@ using System.Text;
 using BackEnd.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+QuestPDF.Settings.License = LicenseType.Community;
+QuestPDF.Settings.UseSystemFonts = true;
+FontManager.RegisterFontsFromDirectory("/usr/share/fonts/truetype/noto");
+QuestPDF.Settings.FontDiscoveryPaths.Add("/usr/share/fonts/truetype/noto");
 
 // Controllers
 builder.Services.AddControllers();
