@@ -31,6 +31,7 @@ public DbSet<OrganizationSettings> OrganizationSettings { get; set; }
     public DbSet<Enrollment> Enrollments { get; set; }
 
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<PaymentGatewaySettings> PaymentGatewaySettings { get; set; }
 
     public DbSet<StudentFollowUp> StudentFollowUps { get; set; }
 

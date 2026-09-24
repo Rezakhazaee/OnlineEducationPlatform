@@ -1,0 +1,674 @@
+@page "/admin/payment-gateway"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>درگاه پرداخت | آموزش‌یار</PageTitle>
+
+<div class="admin-page">
+
+    <AdminSidebar ActivePage="settings" />
+
+    <main class="admin-main">
+
+        <header class="admin-topbar">
+
+            <div>
+                <span class="admin-label">
+                    تنظیمات سامانه
+                </span>
+
+                <h1>
+                    درگاه پرداخت
+                </h1>
+            </div>
+
+            <AdminLogout />
+
+            <div class="admin-user">
+
+                <div class="admin-avatar">
+                    ا
+                </div>
+
+                <div>
+                    <strong>
+                        @(Auth.FullName ?? "مدیر سیستم")
+                    </strong>
+
+                    <small>
+                        Administrator
+                    </small>
+                </div>
+
+            </div>
+
+        </header>
+
+        @if (IsLoading)
+        {
+            <div class="admin-loading">
+
+                <div class="admin-loading-icon">↻</div>
+
+                <h3>
+                    در حال دریافت تنظیمات درگاه...
+                </h3>
+
+                <p>
+                    اطلاعات درگاه پرداخت در حال بارگذاری است.
+                </p>
+
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="admin-error">
+
+                <strong>
+                    خطا
+                </strong>
+
+                <p>
+                    @ErrorMessage
+                </p>
+
+                <button
+                    class="admin-outline-btn"
+                    @onclick="LoadSettings">
+
+                    تلاش مجدد
+
+                </button>
+
+            </div>
+        }
+        else
+        {
+            <!-- =========================
+                 Gateway Status
+            ========================== -->
+
+            <section class="admin-content-card">
+
+                <div class="admin-card-header">
+
+                    <div>
+                        <span>
+                            وضعیت درگاه
+                        </span>
+
+                        <h2>
+                            تنظیمات اتصال به درگاه پرداخت
+                        </h2>
+                    </div>
+
+                </div>
+
+                <div class="organization-management-form">
+
+                    <div class="organization-form-grid">
+
+                        <div class="admin-form">
+
+                            <label>
+                                درگاه پرداخت
+                            </label>
+
+                            <select
+                                class="admin-input"
+                                @bind="GatewayName">
+
+                                <option value="ZarinPal">
+                                    زرین‌پال
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="admin-form">
+
+                            <label>
+                                حالت درگاه
+                            </label>
+
+                            <select
+                                class="admin-input"
+                                @bind="Mode">
+
+                                <option value="Sandbox">
+                                    آزمایشی (Sandbox)
+                                </option>
+
+                                <option value="Production">
+                                    عملیاتی (Production)
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                    <div class="theme-active-field">
+
+                        <label>
+
+                            <input
+                                type="checkbox"
+                                @bind="IsActive" />
+
+                            فعال بودن درگاه پرداخت
+
+                        </label>
+
+                    </div>
+
+                    <div class="admin-form">
+
+                        <label>
+                            Merchant ID
+                        </label>
+
+                        <input
+                            class="admin-input"
+                            type="password"
+                            @bind="MerchantId"
+                            placeholder="شناسه پذیرنده زرین‌پال" />
+
+                        <div class="theme-color-description">
+                            شناسه پذیرنده درگاه زرین‌پال را وارد کنید.
+                            این مقدار فقط برای اتصال سامانه به درگاه استفاده می‌شود.
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- =========================
+                 Gateway URLs
+            ========================== -->
+
+            <section class="admin-content-card">
+
+                <div class="admin-card-header">
+
+                    <div>
+                        <span>
+                            اتصال فنی
+                        </span>
+
+                        <h2>
+                            آدرس‌های درگاه
+                        </h2>
+                    </div>
+
+                </div>
+
+                <div class="organization-management-form">
+
+                    <div class="admin-form">
+
+                        <label>
+                            API URL
+                        </label>
+
+                        <input
+                            class="admin-input"
+                            @bind="ApiBaseUrl"
+                            placeholder="https://..." />
+
+                    </div>
+
+                    <div class="admin-form">
+
+                        <label>
+                            Payment URL
+                        </label>
+
+                        <input
+                            class="admin-input"
+                            @bind="PaymentBaseUrl"
+                            placeholder="https://..." />
+
+                    </div>
+
+                    <div class="admin-form">
+
+                        <label>
+                            Callback URL
+                        </label>
+
+                        <input
+                            class="admin-input"
+                            @bind="CallbackBaseUrl"
+                            placeholder="https://..." />
+
+                        <div class="theme-color-description">
+                            پس از پرداخت، زرین‌پال کاربر را به این آدرس بازمی‌گرداند.
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- =========================
+                 Current Status
+            ========================== -->
+
+            <section class="admin-content-card">
+
+                <div class="admin-card-header">
+
+                    <div>
+                        <span>
+                            وضعیت فعلی
+                        </span>
+
+                        <h2>
+                            خلاصه تنظیمات
+                        </h2>
+                    </div>
+
+                </div>
+
+                <div class="organization-form-grid">
+
+                    <div class="admin-form">
+
+                        <label>
+                            وضعیت
+                        </label>
+
+                        <div class="theme-color-description">
+                            @(IsActive ? "درگاه فعال است" : "درگاه غیرفعال است")
+                        </div>
+
+                    </div>
+
+                    <div class="admin-form">
+
+                        <label>
+                            حالت
+                        </label>
+
+                        <div class="theme-color-description">
+                            @(Mode == "Production"
+                                ? "عملیاتی"
+                                : "آزمایشی")
+                        </div>
+
+                    </div>
+
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(UpdatedAt))
+                {
+                    <div class="theme-color-description">
+                        آخرین بروزرسانی: @UpdatedAt
+                    </div>
+                }
+
+            </section>
+
+            <!-- =========================
+                 Save
+            ========================== -->
+
+            <section class="admin-content-card">
+
+                <div class="admin-card-header">
+
+                    <div>
+                        <span>
+                            ذخیره تنظیمات
+                        </span>
+
+                        <h2>
+                            اعمال تغییرات
+                        </h2>
+                    </div>
+
+                </div>
+
+                <div class="organization-form-actions">
+
+                    <button
+                        class="admin-primary-btn"
+                        @onclick="SaveSettings"
+                        disabled="@IsSaving">
+
+                        @(IsSaving
+                            ? "در حال ذخیره..."
+                            : "ذخیره تنظیمات درگاه")
+
+                    </button>
+
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(SuccessMessage))
+                {
+                    <div class="admin-success">
+                        @SuccessMessage
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(SaveErrorMessage))
+                {
+                    <div class="admin-error">
+                        @SaveErrorMessage
+                    </div>
+                }
+
+            </section>
+        }
+
+    </main>
+
+</div>
+
+@code {
+
+    private string GatewayName { get; set; } = "ZarinPal";
+
+    private bool IsActive { get; set; }
+
+    private string Mode { get; set; } = "Sandbox";
+
+    private string MerchantId { get; set; } = string.Empty;
+
+    private string ApiBaseUrl { get; set; } = string.Empty;
+
+    private string PaymentBaseUrl { get; set; } = string.Empty;
+
+    private string CallbackBaseUrl { get; set; } = string.Empty;
+
+    private string? UpdatedAt { get; set; }
+
+    private bool IsLoading { get; set; } = true;
+
+    private bool IsSaving { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+    private string? SuccessMessage { get; set; }
+
+    private string? SaveErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Auth.IsLoggedIn || !Auth.IsAdmin)
+        {
+            Navigation.NavigateTo(
+                Auth.IsLoggedIn
+                    ? "/admin"
+                    : "/login");
+
+            return;
+        }
+
+        await LoadSettings();
+    }
+
+    private async Task LoadSettings()
+    {
+        IsLoading = true;
+
+        ErrorMessage = null;
+        SuccessMessage = null;
+        SaveErrorMessage = null;
+
+        try
+        {
+            var client =
+                Auth.CreateAuthenticatedClient();
+
+            var settings =
+                await client.GetFromJsonAsync<PaymentGatewaySettingsDto>(
+                    "api/PaymentGatewaySettings");
+
+            if (settings == null)
+            {
+                ErrorMessage =
+                    "تنظیمات درگاه دریافت نشد.";
+
+                return;
+            }
+
+            GatewayName =
+                string.IsNullOrWhiteSpace(settings.GatewayName)
+                    ? "ZarinPal"
+                    : settings.GatewayName;
+
+            IsActive =
+                settings.IsActive;
+
+            Mode =
+                string.Equals(
+                    settings.Mode,
+                    "Production",
+                    StringComparison.OrdinalIgnoreCase)
+                    ? "Production"
+                    : "Sandbox";
+
+            MerchantId =
+                settings.MerchantId ?? string.Empty;
+
+            ApiBaseUrl =
+                settings.ApiBaseUrl ?? string.Empty;
+
+            PaymentBaseUrl =
+                settings.PaymentBaseUrl ?? string.Empty;
+
+            CallbackBaseUrl =
+                settings.CallbackBaseUrl ?? string.Empty;
+
+            UpdatedAt =
+                settings.UpdatedAt;
+        }
+        catch
+        {
+            ErrorMessage =
+                "ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task SaveSettings()
+    {
+        SuccessMessage = null;
+        SaveErrorMessage = null;
+
+        if (string.IsNullOrWhiteSpace(GatewayName))
+        {
+            SaveErrorMessage =
+                "نوع درگاه مشخص نشده است.";
+
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Mode))
+        {
+            SaveErrorMessage =
+                "حالت درگاه مشخص نشده است.";
+
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(ApiBaseUrl))
+        {
+            SaveErrorMessage =
+                "API URL الزامی است.";
+
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(PaymentBaseUrl))
+        {
+            SaveErrorMessage =
+                "Payment URL الزامی است.";
+
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(CallbackBaseUrl))
+        {
+            SaveErrorMessage =
+                "Callback URL الزامی است.";
+
+            return;
+        }
+
+        IsSaving = true;
+
+        try
+        {
+            var client =
+                Auth.CreateAuthenticatedClient();
+
+            var request =
+                new PaymentGatewaySettingsRequest
+                {
+                    GatewayName =
+                        GatewayName.Trim(),
+
+                    IsActive =
+                        IsActive,
+
+                    Mode =
+                        Mode,
+
+                    MerchantId =
+                        string.IsNullOrWhiteSpace(MerchantId)
+                            ? null
+                            : MerchantId.Trim(),
+
+                    ApiBaseUrl =
+                        ApiBaseUrl.Trim(),
+
+                    PaymentBaseUrl =
+                        PaymentBaseUrl.Trim(),
+
+                    CallbackBaseUrl =
+                        CallbackBaseUrl.Trim()
+                };
+
+            var response =
+                await client.PutAsJsonAsync(
+                    "api/PaymentGatewaySettings",
+                    request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var updated =
+                    await response.Content
+                        .ReadFromJsonAsync<PaymentGatewaySettingsDto>();
+
+                if (updated != null)
+                {
+                    GatewayName =
+                        updated.GatewayName ?? GatewayName;
+
+                    IsActive =
+                        updated.IsActive;
+
+                    Mode =
+                        updated.Mode ?? Mode;
+
+                    MerchantId =
+                        updated.MerchantId ?? MerchantId;
+
+                    ApiBaseUrl =
+                        updated.ApiBaseUrl ?? ApiBaseUrl;
+
+                    PaymentBaseUrl =
+                        updated.PaymentBaseUrl ?? PaymentBaseUrl;
+
+                    CallbackBaseUrl =
+                        updated.CallbackBaseUrl ?? CallbackBaseUrl;
+
+                    UpdatedAt =
+                        updated.UpdatedAt;
+                }
+
+                SuccessMessage =
+                    "تنظیمات درگاه با موفقیت ذخیره شد.";
+            }
+            else if (response.StatusCode ==
+                     System.Net.HttpStatusCode.Unauthorized)
+            {
+                SaveErrorMessage =
+                    "دسترسی مدیر تأیید نشد. لطفاً دوباره وارد حساب مدیر شوید.";
+            }
+            else if (response.StatusCode ==
+                     System.Net.HttpStatusCode.Forbidden)
+            {
+                SaveErrorMessage =
+                    "شما دسترسی لازم برای تغییر تنظیمات درگاه را ندارید.";
+            }
+            else
+            {
+                SaveErrorMessage =
+                    "ذخیره تنظیمات درگاه با خطا مواجه شد.";
+            }
+        }
+        catch
+        {
+            SaveErrorMessage =
+                "ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.";
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private class PaymentGatewaySettingsDto
+    {
+        public int Id { get; set; }
+
+        public string? GatewayName { get; set; }
+
+        public bool IsActive { get; set; }
+
+        public string? Mode { get; set; }
+
+        public string? MerchantId { get; set; }
+
+        public string? ApiBaseUrl { get; set; }
+
+        public string? PaymentBaseUrl { get; set; }
+
+        public string? CallbackBaseUrl { get; set; }
+
+        public string? UpdatedAt { get; set; }
+    }
+
+    private class PaymentGatewaySettingsRequest
+    {
+        public string GatewayName { get; set; } = "ZarinPal";
+
+        public bool IsActive { get; set; }
+
+        public string Mode { get; set; } = "Sandbox";
+
+        public string? MerchantId { get; set; }
+
+        public string? ApiBaseUrl { get; set; }
+
+        public string? PaymentBaseUrl { get; set; }
+
+        public string? CallbackBaseUrl { get; set; }
+    }
+}
