@@ -1,5 +1,6 @@
 using BackEnd.Data;
 using BackEnd.DTOs;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,17 +13,25 @@ namespace BackEnd.Controllers;
 public class PartnerOrganizationReportsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly PackageAccessService _packageAccess;
 
-    public PartnerOrganizationReportsController(
+    public PartnerOrganizationReportsController(PackageAccessService packageAccess,
         ApplicationDbContext context)
     {
         _context = context;
+        _packageAccess = packageAccess;
+        _packageAccess = packageAccess;
     }
 
     [HttpGet]
     public async Task<ActionResult<PartnerOrganizationReportResultDto>> Get(
         [FromQuery] PartnerOrganizationReportQueryDto query)
     {
+        if (!await _packageAccess.HasPackageAsync(4))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "قابلیت سازمان‌های طرف قرارداد فقط در پکیج سازمانی فعال است." });
+        }
+
         query.Page = query.Page < 1 ? 1 : query.Page;
         query.PageSize = Math.Clamp(query.PageSize, 5, 100);
 

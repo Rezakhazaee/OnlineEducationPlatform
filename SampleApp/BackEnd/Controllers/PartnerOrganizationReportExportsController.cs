@@ -7,6 +7,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using BackEnd.Data;
 using BackEnd.DTOs;
+using BackEnd.Services;
 
 namespace BackEnd.Controllers;
 
@@ -16,15 +17,28 @@ namespace BackEnd.Controllers;
 public class PartnerOrganizationReportExportsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly PackageAccessService _packageAccess;
 
-    public PartnerOrganizationReportExportsController(ApplicationDbContext context)
+    public PartnerOrganizationReportExportsController(ApplicationDbContext context, PackageAccessService packageAccess)
     {
         _context = context;
+        _packageAccess = packageAccess;
+        _packageAccess = packageAccess;
     }
 
     [HttpGet("excel")]
     public async Task<IActionResult> ExportExcel([FromQuery] PartnerOrganizationReportQueryDto query)
     {
+        if (!await _packageAccess.HasPackageAsync(4))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "قابلیت سازمان‌های طرف قرارداد فقط در پکیج سازمانی فعال است." });
+        }
+
+        if (!await _packageAccess.HasPackageAsync(4))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "قابلیت سازمان‌های طرف قرارداد فقط در پکیج سازمانی فعال است." });
+        }
+
         var items = await BuildReport(query);
 
         using var workbook = new XLWorkbook();
@@ -89,6 +103,16 @@ public class PartnerOrganizationReportExportsController : ControllerBase
     [HttpGet("pdf")]
     public async Task<IActionResult> ExportPdf([FromQuery] PartnerOrganizationReportQueryDto query)
     {
+        if (!await _packageAccess.HasPackageAsync(4))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "قابلیت سازمان‌های طرف قرارداد فقط در پکیج سازمانی فعال است." });
+        }
+
+        if (!await _packageAccess.HasPackageAsync(4))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "قابلیت سازمان‌های طرف قرارداد فقط در پکیج سازمانی فعال است." });
+        }
+
         var items = await BuildReport(query);
 
         var document = Document.Create(container =>

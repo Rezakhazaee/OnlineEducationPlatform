@@ -1,5 +1,6 @@
 using BackEnd.Data;
 using BackEnd.DTOs;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,17 +17,25 @@ namespace BackEnd.Controllers;
 public class CoursePartnerOrganizationReportExportsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly PackageAccessService _packageAccess;
 
     public CoursePartnerOrganizationReportExportsController(
-        ApplicationDbContext context)
+        ApplicationDbContext context,
+        PackageAccessService packageAccess)
     {
         _context = context;
+        _packageAccess = packageAccess;
     }
 
     [HttpGet("excel")]
     public async Task<IActionResult> ExportExcel(
         [FromQuery] CoursePartnerOrganizationReportQueryDto query)
     {
+        if (!await _packageAccess.HasPackageAsync(4))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "قابلیت سازمان‌های طرف قرارداد فقط در پکیج سازمانی فعال است." });
+        }
+
         var items = await BuildReport(query);
 
         using var workbook = new XLWorkbook();
@@ -108,6 +117,11 @@ public class CoursePartnerOrganizationReportExportsController : ControllerBase
     public async Task<IActionResult> ExportPdf(
         [FromQuery] CoursePartnerOrganizationReportQueryDto query)
     {
+        if (!await _packageAccess.HasPackageAsync(4))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "قابلیت سازمان‌های طرف قرارداد فقط در پکیج سازمانی فعال است." });
+        }
+
         var items = await BuildReport(query);
 
         var document = Document.Create(container =>
