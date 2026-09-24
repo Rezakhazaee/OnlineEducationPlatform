@@ -1,19 +1,21 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using BackEnd.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace BackEnd.Services;
 
 public class ZarinPalService
 {
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IConfiguration _configuration;
+    private readonly ApplicationDbContext _db;
 
     public ZarinPalService(
         IHttpClientFactory httpClientFactory,
-        IConfiguration configuration)
+        ApplicationDbContext db)
     {
         _httpClientFactory = httpClientFactory;
-        _configuration = configuration;
+        _db = db;
     }
 
     public async Task<(bool Success, string? Authority, string? PaymentUrl, string? Error)>
@@ -23,36 +25,67 @@ public class ZarinPalService
             string description,
             string? mobile)
     {
-        var merchantId =
-            _configuration["ZarinPal:MerchantId"];
+        var settings = await GetSettingsAsync();
 
-        if (string.IsNullOrWhiteSpace(merchantId))
+        if (settings == null)
         {
             return (
                 false,
                 null,
                 null,
-                "MerchantId زرین‌پال در تنظیمات سیستم وارد نشده است.");
+                "تنظیمات درگاه پرداخت در سیستم ثبت نشده است.");
         }
 
-        var apiBaseUrl =
-            _configuration["ZarinPal:ApiBaseUrl"]
-            ?? "https://sandbox.zarinpal.com/pg/v4/payment/";
+        if (!settings.IsActive)
+        {
+            return (
+                false,
+                null,
+                null,
+                "درگاه پرداخت در حال حاضر غیرفعال است.");
+        }
 
-        var paymentBaseUrl =
-            _configuration["ZarinPal:PaymentBaseUrl"]
-            ?? "https://sandbox.zarinpal.com/pg/StartPay/";
+        if (string.IsNullOrWhiteSpace(settings.MerchantId))
+        {
+            return (
+                false,
+                null,
+                null,
+                "MerchantId زرین‌پال در تنظیمات درگاه وارد نشده است.");
+        }
 
-          var amountValue =
-              Convert.ToInt64(
-                  Math.Round(
-                      amount * 10m,
-                      0,
-                      MidpointRounding.AwayFromZero));
+        var apiBaseUrl = GetApiBaseUrl(settings);
+
+        var paymentBaseUrl = GetPaymentBaseUrl(settings);
+
+        if (string.IsNullOrWhiteSpace(apiBaseUrl))
+        {
+            return (
+                false,
+                null,
+                null,
+                "API URL درگاه پرداخت تنظیم نشده است.");
+        }
+
+        if (string.IsNullOrWhiteSpace(paymentBaseUrl))
+        {
+            return (
+                false,
+                null,
+                null,
+                "Payment URL درگاه پرداخت تنظیم نشده است.");
+        }
+
+        var amountValue =
+            Convert.ToInt64(
+                Math.Round(
+                    amount * 10m,
+                    0,
+                    MidpointRounding.AwayFromZero));
 
         var body = new
         {
-            merchant_id = merchantId,
+            merchant_id = settings.MerchantId,
             amount = amountValue,
             callback_url = callbackUrl,
             description = description,
@@ -82,7 +115,8 @@ public class ZarinPalService
                     "data",
                     out var data))
             {
-                var errorMessage = "پاسخ نامعتبر از زرین‌پال دریافت شد.";
+                var errorMessage =
+                    "پاسخ نامعتبر از زرین‌پال دریافت شد.";
 
                 if (json.RootElement.TryGetProperty(
                         "errors",
@@ -161,32 +195,56 @@ public class ZarinPalService
             decimal amount,
             string authority)
     {
-        var merchantId =
-            _configuration["ZarinPal:MerchantId"];
+        var settings = await GetSettingsAsync();
 
-        if (string.IsNullOrWhiteSpace(merchantId))
+        if (settings == null)
         {
             return (
                 false,
                 null,
                 0,
-                "MerchantId زرین‌پال در تنظیمات سیستم وارد نشده است.");
+                "تنظیمات درگاه پرداخت در سیستم ثبت نشده است.");
         }
 
-        var apiBaseUrl =
-            _configuration["ZarinPal:ApiBaseUrl"]
-            ?? "https://sandbox.zarinpal.com/pg/v4/payment/";
+        if (!settings.IsActive)
+        {
+            return (
+                false,
+                null,
+                0,
+                "درگاه پرداخت در حال حاضر غیرفعال است.");
+        }
 
-          var amountValue =
-              Convert.ToInt64(
-                  Math.Round(
-                      amount * 10m,
-                      0,
-                      MidpointRounding.AwayFromZero));
+        if (string.IsNullOrWhiteSpace(settings.MerchantId))
+        {
+            return (
+                false,
+                null,
+                0,
+                "MerchantId زرین‌پال در تنظیمات درگاه وارد نشده است.");
+        }
+
+        var apiBaseUrl = GetApiBaseUrl(settings);
+
+        if (string.IsNullOrWhiteSpace(apiBaseUrl))
+        {
+            return (
+                false,
+                null,
+                0,
+                "API URL درگاه پرداخت تنظیم نشده است.");
+        }
+
+        var amountValue =
+            Convert.ToInt64(
+                Math.Round(
+                    amount * 10m,
+                    0,
+                    MidpointRounding.AwayFromZero));
 
         var body = new
         {
-            merchant_id = merchantId,
+            merchant_id = settings.MerchantId,
             amount = amountValue,
             authority
         };
@@ -207,32 +265,46 @@ public class ZarinPalService
             using var json =
                 JsonDocument.Parse(content);
 
-              if (!json.RootElement.TryGetProperty("data", out var data) ||
-                  !data.TryGetProperty("code", out _))
-              {
-                  var errorCode = 0;
-                  string? errorMessage = null;
+            if (!json.RootElement.TryGetProperty(
+                    "data",
+                    out var data) ||
+                !data.TryGetProperty(
+                    "code",
+                    out _))
+            {
+                var errorCode = 0;
+                string? errorMessage = null;
 
-                  if (json.RootElement.TryGetProperty("errors", out var errors))
-                  {
-                      if (errors.TryGetProperty("code", out var errorCodeProperty) &&
-                          errorCodeProperty.TryGetInt32(out var parsedErrorCode))
-                      {
-                          errorCode = parsedErrorCode;
-                      }
+                if (json.RootElement.TryGetProperty(
+                        "errors",
+                        out var errors))
+                {
+                    if (errors.TryGetProperty(
+                            "code",
+                            out var errorCodeProperty) &&
+                        errorCodeProperty.TryGetInt32(
+                            out var parsedErrorCode))
+                    {
+                        errorCode = parsedErrorCode;
+                    }
 
-                      if (errors.TryGetProperty("message", out var errorMessageProperty))
-                      {
-                          errorMessage = errorMessageProperty.GetString();
-                      }
-                  }
+                    if (errors.TryGetProperty(
+                            "message",
+                            out var errorMessageProperty))
+                    {
+                        errorMessage =
+                            errorMessageProperty.GetString();
+                    }
+                }
 
-                  return (
-                      false,
-                      null,
-                      errorCode,
-                      errorMessage ?? "پاسخ نامعتبر از زرین‌پال دریافت شد.");
-              }
+                return (
+                    false,
+                    null,
+                    errorCode,
+                    errorMessage
+                    ?? "پاسخ نامعتبر از زرین‌پال دریافت شد.");
+            }
+
             var code =
                 data.TryGetProperty(
                     "code",
@@ -265,5 +337,41 @@ public class ZarinPalService
                 "ارتباط با زرین‌پال برقرار نشد: " +
                 ex.Message);
         }
+    }
+
+    private async Task<BackEnd.Models.PaymentGatewaySettings?> GetSettingsAsync()
+    {
+        return await _db.PaymentGatewaySettings
+            .AsNoTracking()
+            .OrderByDescending(x => x.Id)
+            .FirstOrDefaultAsync();
+    }
+
+    private static string? GetApiBaseUrl(
+        BackEnd.Models.PaymentGatewaySettings settings)
+    {
+        if (string.Equals(
+                settings.Mode,
+                "Production",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return settings.ApiBaseUrl;
+        }
+
+        return settings.ApiBaseUrl;
+    }
+
+    private static string? GetPaymentBaseUrl(
+        BackEnd.Models.PaymentGatewaySettings settings)
+    {
+        if (string.Equals(
+                settings.Mode,
+                "Production",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return settings.PaymentBaseUrl;
+        }
+
+        return settings.PaymentBaseUrl;
     }
 }

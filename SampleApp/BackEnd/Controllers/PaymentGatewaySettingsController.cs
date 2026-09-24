@@ -41,12 +41,14 @@ public class PaymentGatewaySettingsController : ControllerBase
             settings.ApiBaseUrl,
             settings.PaymentBaseUrl,
             settings.CallbackBaseUrl,
+            settings.FrontendBaseUrl,
             settings.UpdatedAt
         });
     }
 
     [HttpPut]
-    public async Task<IActionResult> Update([FromBody] PaymentGatewaySettings model)
+    public async Task<IActionResult> Update(
+        [FromBody] PaymentGatewaySettings model)
     {
         var settings = await _db.PaymentGatewaySettings
             .OrderByDescending(x => x.Id)
@@ -58,34 +60,45 @@ public class PaymentGatewaySettingsController : ControllerBase
             _db.PaymentGatewaySettings.Add(settings);
         }
 
-        settings.GatewayName = string.IsNullOrWhiteSpace(model.GatewayName)
-            ? "ZarinPal"
-            : model.GatewayName.Trim();
+        settings.GatewayName =
+            string.IsNullOrWhiteSpace(model.GatewayName)
+                ? "ZarinPal"
+                : model.GatewayName.Trim();
 
         settings.IsActive = model.IsActive;
 
-        settings.Mode = string.Equals(
-            model.Mode,
-            "Production",
-            StringComparison.OrdinalIgnoreCase)
-            ? "Production"
-            : "Sandbox";
+        settings.Mode =
+            string.Equals(
+                model.Mode,
+                "Production",
+                StringComparison.OrdinalIgnoreCase)
+                ? "Production"
+                : "Sandbox";
 
-        settings.MerchantId = string.IsNullOrWhiteSpace(model.MerchantId)
-            ? null
-            : model.MerchantId.Trim();
+        settings.MerchantId =
+            string.IsNullOrWhiteSpace(model.MerchantId)
+                ? null
+                : model.MerchantId.Trim();
 
-        settings.ApiBaseUrl = string.IsNullOrWhiteSpace(model.ApiBaseUrl)
-            ? null
-            : model.ApiBaseUrl.Trim();
+        settings.ApiBaseUrl =
+            string.IsNullOrWhiteSpace(model.ApiBaseUrl)
+                ? null
+                : model.ApiBaseUrl.Trim();
 
-        settings.PaymentBaseUrl = string.IsNullOrWhiteSpace(model.PaymentBaseUrl)
-            ? null
-            : model.PaymentBaseUrl.Trim();
+        settings.PaymentBaseUrl =
+            string.IsNullOrWhiteSpace(model.PaymentBaseUrl)
+                ? null
+                : model.PaymentBaseUrl.Trim();
 
-        settings.CallbackBaseUrl = string.IsNullOrWhiteSpace(model.CallbackBaseUrl)
-            ? null
-            : model.CallbackBaseUrl.Trim();
+        settings.CallbackBaseUrl =
+            string.IsNullOrWhiteSpace(model.CallbackBaseUrl)
+                ? null
+                : model.CallbackBaseUrl.Trim();
+
+        settings.FrontendBaseUrl =
+            string.IsNullOrWhiteSpace(model.FrontendBaseUrl)
+                ? null
+                : model.FrontendBaseUrl.Trim();
 
         settings.UpdatedAt = DateTime.Now;
 
@@ -102,6 +115,7 @@ public class PaymentGatewaySettingsController : ControllerBase
             settings.ApiBaseUrl,
             settings.PaymentBaseUrl,
             settings.CallbackBaseUrl,
+            settings.FrontendBaseUrl,
             settings.UpdatedAt
         });
     }

@@ -18,5 +18,7 @@ public class PaymentGatewaySettings
 
     public string? CallbackBaseUrl { get; set; }
 
+    public string? FrontendBaseUrl { get; set; }
+
     public DateTime UpdatedAt { get; set; } = DateTime.Now;
 }
