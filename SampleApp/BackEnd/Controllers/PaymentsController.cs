@@ -409,8 +409,11 @@ public async Task<ActionResult<List<PaymentDetailDto>>> Get()
             });
         }
 
-        var frontendBaseUrl =
-            _configuration["ZarinPal:FrontendBaseUrl"];
+        var gatewaySettings = await _context.PaymentGatewaySettings
+            .OrderByDescending(x => x.Id)
+            .FirstOrDefaultAsync();
+
+        var frontendBaseUrl = gatewaySettings?.FrontendBaseUrl;
 
         string BuildRedirect(string result, string? refId = null, int? code = null)
         {
