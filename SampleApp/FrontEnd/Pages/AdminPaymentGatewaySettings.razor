@@ -385,6 +385,8 @@
 
     private string MerchantId { get; set; } = string.Empty;
 
+    private bool MerchantIdConfigured { get; set; }
+
     private string ApiBaseUrl { get; set; } = string.Empty;
 
     private string PaymentBaseUrl { get; set; } = string.Empty;
@@ -416,6 +418,43 @@
         }
 
         await LoadSettings();
+    }
+
+    private async Task ClearMerchantId()
+    {
+        SaveErrorMessage = null;
+        SuccessMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var response = await client.DeleteAsync(
+                "api/PaymentGatewaySettings/merchant-id");
+
+            if (response.IsSuccessStatusCode)
+            {
+                MerchantId = string.Empty;
+                MerchantIdConfigured = false;
+                SuccessMessage = "Merchant ID با موفقیت حذف شد.";
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                SaveErrorMessage = "دسترسی مدیر تأیید نشد. لطفاً دوباره وارد حساب مدیر شوید.";
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                SaveErrorMessage = "شما دسترسی لازم برای حذف Merchant ID را ندارید.";
+            }
+            else
+            {
+                SaveErrorMessage = "حذف Merchant ID با خطا مواجه شد.";
+            }
+        }
+        catch
+        {
+            SaveErrorMessage = "ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.";
+        }
     }
 
     private async Task LoadSettings()
@@ -459,8 +498,9 @@
                     ? "Production"
                     : "Sandbox";
 
-            MerchantId =
-                settings.MerchantId ?? string.Empty;
+            MerchantId = string.Empty;
+
+            MerchantIdConfigured = settings.MerchantIdConfigured;
 
             ApiBaseUrl =
                 settings.ApiBaseUrl ?? string.Empty;
@@ -586,8 +626,9 @@
                     Mode =
                         updated.Mode ?? Mode;
 
-                    MerchantId =
-                        updated.MerchantId ?? MerchantId;
+                    MerchantId = string.Empty;
+
+                    MerchantIdConfigured = updated.MerchantIdConfigured;
 
                     ApiBaseUrl =
                         updated.ApiBaseUrl ?? ApiBaseUrl;
@@ -644,7 +685,7 @@
 
         public string? Mode { get; set; }
 
-        public string? MerchantId { get; set; }
+        public bool MerchantIdConfigured { get; set; }
 
         public string? ApiBaseUrl { get; set; }
 

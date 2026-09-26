@@ -37,11 +37,36 @@ public class PaymentGatewaySettingsController : ControllerBase
             settings.GatewayName,
             settings.IsActive,
             settings.Mode,
-            settings.MerchantId,
+            MerchantIdConfigured = !string.IsNullOrWhiteSpace(settings.MerchantId),
             settings.ApiBaseUrl,
             settings.PaymentBaseUrl,
             settings.CallbackBaseUrl,
             settings.FrontendBaseUrl,
+            settings.UpdatedAt
+        });
+    }
+
+    [HttpDelete("merchant-id")]
+    public async Task<IActionResult> ClearMerchantId()
+    {
+        var settings = await _db.PaymentGatewaySettings
+            .OrderByDescending(x => x.Id)
+            .FirstOrDefaultAsync();
+
+        if (settings == null)
+        {
+            return NotFound(new { message = "تنظیمات درگاه پیدا نشد." });
+        }
+
+        settings.MerchantId = null;
+        settings.UpdatedAt = DateTime.Now;
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "شناسه پذیرنده با موفقیت حذف شد.",
+            merchantIdConfigured = false,
             settings.UpdatedAt
         });
     }
@@ -75,10 +100,10 @@ public class PaymentGatewaySettingsController : ControllerBase
                 ? "Production"
                 : "Sandbox";
 
-        settings.MerchantId =
-            string.IsNullOrWhiteSpace(model.MerchantId)
-                ? null
-                : model.MerchantId.Trim();
+        if (!string.IsNullOrWhiteSpace(model.MerchantId))
+        {
+            settings.MerchantId = model.MerchantId.Trim();
+        }
 
         settings.ApiBaseUrl =
             string.IsNullOrWhiteSpace(model.ApiBaseUrl)
@@ -111,7 +136,7 @@ public class PaymentGatewaySettingsController : ControllerBase
             settings.GatewayName,
             settings.IsActive,
             settings.Mode,
-            settings.MerchantId,
+            MerchantIdConfigured = !string.IsNullOrWhiteSpace(settings.MerchantId),
             settings.ApiBaseUrl,
             settings.PaymentBaseUrl,
             settings.CallbackBaseUrl,
