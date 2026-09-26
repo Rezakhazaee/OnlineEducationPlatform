@@ -321,8 +321,11 @@ public async Task<ActionResult<List<PaymentDetailDto>>> Get()
         _context.Payments.Add(payment);
         await _context.SaveChangesAsync();
 
-        var callbackBaseUrl =
-            _configuration["ZarinPal:CallbackBaseUrl"];
+        var gatewaySettings = await _context.PaymentGatewaySettings
+            .OrderByDescending(x => x.Id)
+            .FirstOrDefaultAsync();
+
+        var callbackBaseUrl = gatewaySettings?.CallbackBaseUrl;
 
         if (string.IsNullOrWhiteSpace(callbackBaseUrl))
         {
