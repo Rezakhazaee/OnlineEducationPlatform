@@ -21,6 +21,12 @@ public class EnrollmentDto
     // مبلغ باقی‌مانده
     public decimal RemainingAmount { get; set; }
 
+    // نوع برگزاری دوره
+    public string DeliveryType { get; set; } = string.Empty;
+
+    // هشدار مالی برای آموزشگاه (پرداخت ناقص دوره حضوری)
+    public bool HasPaymentWarning { get; set; }
+
     // وضعیت مالی
     public string PaymentStatus { get; set; } = string.Empty;
 

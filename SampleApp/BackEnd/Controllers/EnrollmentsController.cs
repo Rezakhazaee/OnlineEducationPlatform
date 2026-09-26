@@ -209,11 +209,19 @@ public async Task<ActionResult<EnrollmentFinancialDto>> GetMyFinancial(int id)
         });
     }
 
-    var totalPaid = await _context.Payments
-        .Where(p =>
-            p.EnrollmentId == id &&
-            p.Status == "Paid")
-        .SumAsync(p => (decimal?)p.Amount) ?? 0;
+    var payments = await _context.Payments
+        .Where(p => p.EnrollmentId == id)
+        .Select(p => new
+        {
+            p.Amount,
+            p.Status,
+            p.DueDate
+        })
+        .ToListAsync();
+
+    var totalPaid = payments
+        .Where(p => string.Equals(p.Status, "Paid", StringComparison.OrdinalIgnoreCase))
+        .Sum(p => p.Amount);
 
     var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
     var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
@@ -237,6 +245,22 @@ public async Task<ActionResult<EnrollmentFinancialDto>> GetMyFinancial(int id)
         paymentStatus = "Overpaid";
     }
 
+    var today = DateTime.Today;
+
+    var unpaidPayments = payments
+        .Where(p => !string.Equals(p.Status, "Paid", StringComparison.OrdinalIgnoreCase))
+        .Where(p => p.DueDate.HasValue)
+        .OrderBy(p => p.DueDate)
+        .ToList();
+
+    var nextPayment = unpaidPayments.FirstOrDefault();
+
+    var overdueInstallmentCount = payments
+        .Count(p =>
+            !string.Equals(p.Status, "Paid", StringComparison.OrdinalIgnoreCase) &&
+            p.DueDate.HasValue &&
+            p.DueDate.Value.Date < today);
+
     var result = new EnrollmentFinancialDto
     {
         EnrollmentId = enrollment.Id,
@@ -247,7 +271,16 @@ public async Task<ActionResult<EnrollmentFinancialDto>> GetMyFinancial(int id)
         CoursePrice = coursePrice,
         TotalPaid = totalPaid,
         RemainingAmount = remainingAmount,
-        PaymentStatus = paymentStatus
+        PaymentStatus = paymentStatus,
+        NextDueDate = nextPayment?.DueDate,
+        NextDueStatus = nextPayment == null
+            ? string.Empty
+            : nextPayment.DueDate!.Value.Date < today
+                ? "Overdue"
+                : nextPayment.DueDate.Value.Date == today
+                    ? "Due"
+                    : "Future",
+        OverdueInstallmentCount = overdueInstallmentCount
     };
 
     return Ok(result);
@@ -305,20 +338,48 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetMyFinancialDeta
 
     var payments = await _context.Payments
         .Where(p => p.EnrollmentId == id)
-        .OrderBy(p => p.PaymentDate)
+        .OrderBy(p => p.DueDate ?? DateTime.MaxValue)
+        .ThenBy(p => p.PaymentDate)
         .Select(p => new PaymentItemDto
         {
             Id = p.Id,
             Amount = p.Amount,
             PaymentDate = p.PaymentDate,
+            DueDate = p.DueDate,
             PaymentType = p.PaymentType,
             Description = p.Description,
             Status = p.Status
         })
         .ToListAsync();
 
+    var today = DateTime.Today;
+
+    foreach (var payment in payments)
+    {
+        if (string.Equals(payment.Status, "Paid", StringComparison.OrdinalIgnoreCase))
+        {
+            payment.DueStatus = "Paid";
+        }
+        else if (!payment.DueDate.HasValue)
+        {
+            payment.DueStatus = "NoDueDate";
+        }
+        else if (payment.DueDate.Value.Date < today)
+        {
+            payment.DueStatus = "Overdue";
+        }
+        else if (payment.DueDate.Value.Date == today)
+        {
+            payment.DueStatus = "Due";
+        }
+        else
+        {
+            payment.DueStatus = "Future";
+        }
+    }
+
     var totalPaid = payments
-        .Where(p => p.Status == "Paid")
+        .Where(p => string.Equals(p.Status, "Paid", StringComparison.OrdinalIgnoreCase))
         .Sum(p => p.Amount);
 
     var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
@@ -344,6 +405,17 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetMyFinancialDeta
         paymentStatus = "Overpaid";
     }
 
+    var unpaidPayments = payments
+        .Where(p => !string.Equals(p.Status, "Paid", StringComparison.OrdinalIgnoreCase))
+        .Where(p => p.DueDate.HasValue)
+        .OrderBy(p => p.DueDate)
+        .ToList();
+
+    var nextPayment = unpaidPayments.FirstOrDefault();
+
+    var overdueInstallmentCount = payments
+        .Count(p => p.DueStatus == "Overdue");
+
     var result = new EnrollmentFinancialDetailDto
     {
         EnrollmentId = enrollment.Id,
@@ -361,6 +433,12 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetMyFinancialDeta
         RemainingAmount = remainingAmount,
 
         PaymentStatus = paymentStatus,
+
+        NextDueDate = nextPayment?.DueDate,
+
+        NextDueStatus = nextPayment?.DueStatus ?? string.Empty,
+
+        OverdueInstallmentCount = overdueInstallmentCount,
 
         Payments = payments
     };
@@ -598,6 +676,12 @@ public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
                 RemainingAmount = remainingAmount,
 
                 PaymentStatus = paymentStatus,
+
+                DeliveryType = e.Course?.DeliveryType ?? string.Empty,
+
+                HasPaymentWarning =
+                    string.Equals(e.Course?.DeliveryType, "InPerson", StringComparison.OrdinalIgnoreCase)
+                    && remainingAmount > 0,
 
                 SupportUserId = e.SupportUserId,
 

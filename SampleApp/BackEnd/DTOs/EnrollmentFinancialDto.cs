@@ -15,4 +15,10 @@ public class EnrollmentFinancialDto
     public decimal RemainingAmount { get; set; }
 
     public string PaymentStatus { get; set; } = string.Empty;
+
+    public DateTime? NextDueDate { get; set; }
+
+    public string NextDueStatus { get; set; } = string.Empty;
+
+    public int OverdueInstallmentCount { get; set; }
 }

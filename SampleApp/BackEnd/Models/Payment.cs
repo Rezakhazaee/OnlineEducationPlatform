@@ -18,6 +18,11 @@ public class Payment
     // تاریخ پرداخت
     public DateTime PaymentDate { get; set; } = DateTime.Now;
 
+    // تاریخ سررسید قسط
+    // برای پرداخت کامل می‌تواند خالی باشد
+    public DateTime? DueDate { get; set; }
+
+
 
     // نوع پرداخت
     // مثال: پیش پرداخت، قسط اول، قسط دوم

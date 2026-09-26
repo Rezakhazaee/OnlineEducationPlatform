@@ -107,16 +107,6 @@ public class StudentCourseContentController : ControllerBase
                 .SumAsync(p => (decimal?)p.Amount)
             ?? 0;
 
-        if (coursePrice > 0 && totalPaid < coursePrice)
-        {
-            return StatusCode(
-                StatusCodes.Status403Forbidden,
-                new
-                {
-                    message = "برای دسترسی به محتوای این دوره، ابتدا مبلغ ثبت‌نام را به‌طور کامل تسویه کنید."
-                });
-        }
-
         var modules = await _context.CourseModules
             .Where(m =>
                 m.CourseId == courseId &&
@@ -128,7 +118,6 @@ public class StudentCourseContentController : ControllerBase
                 Id = m.Id,
                 Title = m.Title,
                 SortOrder = m.SortOrder,
-
                 Lessons = m.Lessons
                     .Where(l => l.IsActive)
                     .OrderBy(l => l.SortOrder)
@@ -147,6 +136,45 @@ public class StudentCourseContentController : ControllerBase
                     .ToList()
             })
             .ToListAsync();
+
+        var allLessons = modules
+            .SelectMany(m => m.Lessons)
+            .ToList();
+
+        var totalLessons = allLessons.Count;
+        var accessibleLessons = totalLessons;
+
+        if (coursePrice > 0 && totalLessons > 0)
+        {
+            var paidRatio = totalPaid / coursePrice;
+
+            if (paidRatio < 0)
+            {
+                paidRatio = 0;
+            }
+
+            if (paidRatio > 1)
+            {
+                paidRatio = 1;
+            }
+
+            accessibleLessons = (int)Math.Floor(
+                totalLessons * paidRatio);
+        }
+
+        for (var i = 0; i < allLessons.Count; i++)
+        {
+            var lesson = allLessons[i];
+            var isPaidAccess = i < accessibleLessons;
+
+            lesson.IsLocked =
+                !lesson.IsFreePreview && !isPaidAccess;
+
+            if (lesson.IsLocked)
+            {
+                lesson.ContentUrl = null;
+            }
+        }
 
         return Ok(new StudentCourseContentDto
         {

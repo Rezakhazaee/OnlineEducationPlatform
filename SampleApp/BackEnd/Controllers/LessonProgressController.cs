@@ -38,7 +38,8 @@ public class LessonProgressController : ControllerBase
             .FirstOrDefaultAsync(s => s.UserId == userId);
     }
 
-    private async Task<bool> CanAccessEnrollmentAsync(Enrollment enrollment)
+    private async Task<bool> CanAccessEnrollmentAsync(
+        Enrollment enrollment)
     {
         if (enrollment.Status != "Active")
         {
@@ -50,14 +51,38 @@ public class LessonProgressController : ControllerBase
             return false;
         }
 
-        if (enrollment.Course == null)
+        return enrollment.Course != null;
+    }
+
+    private async Task<bool> CanAccessLessonAsync(
+        Enrollment enrollment,
+        CourseLesson lesson)
+    {
+        if (!await CanAccessEnrollmentAsync(enrollment))
         {
             return false;
         }
 
+        if (!lesson.IsActive ||
+            lesson.CourseModule == null ||
+            !lesson.CourseModule.IsActive)
+        {
+            return false;
+        }
+
+        if (lesson.CourseModule.CourseId != enrollment.CourseId)
+        {
+            return false;
+        }
+
+        if (lesson.IsFreePreview)
+        {
+            return true;
+        }
+
         var coursePrice =
             enrollment.CoursePartnerOrganization?.AgreedPrice
-            ?? enrollment.Course.Price;
+            ?? enrollment.Course!.Price;
 
         if (coursePrice <= 0)
         {
@@ -72,7 +97,43 @@ public class LessonProgressController : ControllerBase
                 .SumAsync(p => (decimal?)p.Amount)
             ?? 0;
 
-        return totalPaid >= coursePrice;
+        var activeLessonIds = await _context.CourseLessons
+            .Where(l =>
+                l.CourseModule != null &&
+                l.CourseModule.CourseId == enrollment.CourseId &&
+                l.CourseModule.IsActive &&
+                l.IsActive)
+            .OrderBy(l => l.CourseModule!.SortOrder)
+            .ThenBy(l => l.CourseModule!.Id)
+            .ThenBy(l => l.SortOrder)
+            .ThenBy(l => l.Id)
+            .Select(l => l.Id)
+            .ToListAsync();
+
+        var lessonIndex = activeLessonIds.IndexOf(lesson.Id);
+
+        if (lessonIndex < 0)
+        {
+            return false;
+        }
+
+        var paidRatio = totalPaid / coursePrice;
+
+        if (paidRatio < 0)
+        {
+            paidRatio = 0;
+        }
+
+        if (paidRatio > 1)
+        {
+            paidRatio = 1;
+        }
+
+        var accessibleLessons =
+            (int)Math.Floor(
+                activeLessonIds.Count * paidRatio);
+
+        return lessonIndex < accessibleLessons;
     }
 
     [Authorize(Roles = "Student")]
@@ -86,7 +147,8 @@ public class LessonProgressController : ControllerBase
                 StatusCodes.Status403Forbidden,
                 new
                 {
-                    message = "دسترسی به محتوای آنلاین در پکیج پایه فعال نیست."
+                    message =
+                        "دسترسی به محتوای آنلاین در پکیج پایه فعال نیست."
                 });
         }
 
@@ -121,7 +183,7 @@ public class LessonProgressController : ControllerBase
                 StatusCodes.Status403Forbidden,
                 new
                 {
-                    message = "برای مشاهده پیشرفت دوره، وضعیت مالی ثبت‌نام باید تسویه شده باشد."
+                    message = "ثبت‌نام این دوره فعال نیست."
                 });
         }
 
@@ -150,7 +212,8 @@ public class LessonProgressController : ControllerBase
                 StatusCodes.Status403Forbidden,
                 new
                 {
-                    message = "دسترسی به محتوای آنلاین در پکیج پایه فعال نیست."
+                    message =
+                        "دسترسی به محتوای آنلاین در پکیج پایه فعال نیست."
                 });
         }
 
@@ -170,7 +233,7 @@ public class LessonProgressController : ControllerBase
             .FirstOrDefaultAsync(e =>
                 e.Id == dto.EnrollmentId &&
                 e.StudentId == student.Id &&
-                e.Status != "Cancelled");
+                e.Status == "Active");
 
         if (enrollment == null)
         {
@@ -180,14 +243,12 @@ public class LessonProgressController : ControllerBase
             });
         }
 
-        if (!await CanAccessEnrollmentAsync(enrollment))
+        if (enrollment.Course == null)
         {
-            return StatusCode(
-                StatusCodes.Status403Forbidden,
-                new
-                {
-                    message = "برای ثبت پیشرفت درس، وضعیت مالی ثبت‌نام باید تسویه شده باشد."
-                });
+            return NotFound(new
+            {
+                message = "دوره پیدا نشد"
+            });
         }
 
         var lesson = await _context.CourseLessons
@@ -209,6 +270,27 @@ public class LessonProgressController : ControllerBase
             {
                 message = "این درس متعلق به دوره ثبت‌نام‌شده نیست"
             });
+        }
+
+        if (!lesson.IsActive || !lesson.CourseModule.IsActive)
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message = "این درس فعال نیست."
+                });
+        }
+
+        if (!await CanAccessLessonAsync(enrollment, lesson))
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                new
+                {
+                    message =
+                        "این درس هنوز در محدوده دسترسی شما قرار نگرفته است."
+                });
         }
 
         var progress =

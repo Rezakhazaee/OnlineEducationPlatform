@@ -82,6 +82,22 @@
     }
     else
     {
+        @if (OverduePaymentsCount > 0 || DueTodayPaymentsCount > 0)
+        {
+            <div class="student-payment-warning">
+                @if (OverduePaymentsCount > 0)
+                {
+                    <strong>یک قسط شما سررسید گذشته است.</strong>
+                    <span>لطفاً وضعیت پرداخت خود را بررسی کنید.</span>
+                }
+                else if (DueTodayPaymentsCount > 0)
+                {
+                    <strong>امروز موعد پرداخت یکی از اقساط شماست.</strong>
+                    <span>لطفاً در صورت نیاز پرداخت خود را پیگیری کنید.</span>
+                }
+            </div>
+        }
+
         <section class="student-summary-grid">
 
             <div class="student-stat-card">
@@ -454,6 +470,14 @@
     private Dictionary<int, EnrollmentFinancialDto> Financials { get; set; } = new();
 
 
+    private int OverduePaymentsCount =>
+        Financials.Values.Sum(x => x.OverdueInstallmentCount);
+
+    private int DueTodayPaymentsCount =>
+        Financials.Values.Count(x =>
+            x.RemainingAmount > 0
+            && x.NextDueStatus == "Due");
+
     private bool IsLoading { get; set; } = true;
 
     private string? ErrorMessage { get; set; }
@@ -513,47 +537,62 @@
         {
             var client = Auth.CreateAuthenticatedClient();
 
-            var profileTask =
-                client.GetFromJsonAsync<StudentDto>(
+            Profile =
+                await client.GetFromJsonAsync<StudentDto>(
                     "api/Students/me");
 
-            var enrollmentsTask =
-                client.GetFromJsonAsync<List<EnrollmentDto>>(
-                    "api/Enrollments/my");
-
-            var paymentsTask =
-                client.GetFromJsonAsync<List<PaymentDto>>(
-                    "api/Payments/my");
-
-            await Task.WhenAll(
-                profileTask,
-                enrollmentsTask,
-                paymentsTask);
-
-            Profile =
-                profileTask.Result;
-
             Enrollments =
-                enrollmentsTask.Result
+                await client.GetFromJsonAsync<List<EnrollmentDto>>(
+                    "api/Enrollments/my")
                 ?? new List<EnrollmentDto>();
 
-            Payments =
-                paymentsTask.Result
-                ?? new List<PaymentDto>();
-
             Financials.Clear();
+            Payments.Clear();
 
             foreach (var enrollment in Enrollments)
             {
                 try
                 {
                     var financial =
-                        await client.GetFromJsonAsync<EnrollmentFinancialDto>(
-                            $"api/Enrollments/my/{enrollment.Id}/financial");
+                        await client.GetFromJsonAsync<EnrollmentFinancialDetailDto>(
+                            $"api/Enrollments/my/{enrollment.Id}/financial-details");
 
                     if (financial != null)
                     {
-                        Financials[enrollment.Id] = financial;
+                        Financials[enrollment.Id] =
+                            new EnrollmentFinancialDto
+                            {
+                                EnrollmentId = financial.EnrollmentId,
+                                StudentName = financial.StudentName,
+                                CourseTitle = financial.CourseTitle,
+                                CoursePrice = financial.CoursePrice,
+                                TotalPaid = financial.TotalPaid,
+                                RemainingAmount = financial.RemainingAmount,
+                                PaymentStatus = financial.PaymentStatus,
+                                NextDueDate = financial.NextDueDate,
+                                NextDueStatus = financial.NextDueStatus,
+                                OverdueInstallmentCount =
+                                    financial.OverdueInstallmentCount
+                            };
+
+                        foreach (var payment in financial.Payments)
+                        {
+                            Payments.Add(
+                                new PaymentDto
+                                {
+                                    Id = payment.Id,
+                                    EnrollmentId = financial.EnrollmentId,
+                                    StudentName = financial.StudentName,
+                                    CourseTitle = financial.CourseTitle,
+                                    Amount = payment.Amount,
+                                    PaymentDate = payment.PaymentDate,
+                                    DueDate = payment.DueDate,
+                                    DueStatus = payment.DueStatus,
+                                    PaymentType = payment.PaymentType,
+                                    Description = payment.Description,
+                                    Status = payment.Status
+                                });
+                        }
                     }
                 }
                 catch
@@ -570,6 +609,137 @@
         {
             IsLoading = false;
         }
+    }
+
+
+    public class StudentDto
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string NationalCode { get; set; } = string.Empty;
+        public DateTime? BirthDate { get; set; }
+        public string Mobile { get; set; } = string.Empty;
+        public string? Address { get; set; }
+        public string? GuardianName { get; set; }
+        public string? GuardianMobile { get; set; }
+        public int? MarketingUserId { get; set; }
+        public int? SupportUserId { get; set; }
+        public DateTime CreatedDate { get; set; }
+    }
+
+
+    public class EnrollmentDto
+    {
+        public int Id { get; set; }
+        public int StudentId { get; set; }
+        public string? StudentName { get; set; }
+        public int CourseId { get; set; }
+        public string? CourseTitle { get; set; }
+        public int? SupportUserId { get; set; }
+        public string? SupportUserName { get; set; }
+        public int? InstructorId { get; set; }
+        public string? InstructorName { get; set; }
+        public DateTime StartDate { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string DeliveryType { get; set; } = string.Empty;
+        public bool HasPaymentWarning { get; set; }
+    }
+
+    public class EnrollmentFinancialDetailDto
+    {
+        public int EnrollmentId { get; set; }
+
+        public string StudentName { get; set; } = string.Empty;
+
+        public string CourseTitle { get; set; } = string.Empty;
+
+        public decimal CoursePrice { get; set; }
+
+        public decimal TotalPaid { get; set; }
+
+        public decimal RemainingAmount { get; set; }
+
+        public string PaymentStatus { get; set; } = string.Empty;
+
+        public DateTime? NextDueDate { get; set; }
+
+        public string NextDueStatus { get; set; } = string.Empty;
+
+        public int OverdueInstallmentCount { get; set; }
+
+        public List<PaymentItemDto> Payments { get; set; } = new();
+    }
+
+
+    public class PaymentItemDto
+    {
+        public int Id { get; set; }
+
+        public decimal Amount { get; set; }
+
+        public DateTime PaymentDate { get; set; }
+
+        public DateTime? DueDate { get; set; }
+
+        public string PaymentType { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
+
+        public string Status { get; set; } = string.Empty;
+
+        public string DueStatus { get; set; } = string.Empty;
+    }
+
+
+    public class EnrollmentFinancialDto
+    {
+        public int EnrollmentId { get; set; }
+
+        public string StudentName { get; set; } = string.Empty;
+
+        public string CourseTitle { get; set; } = string.Empty;
+
+        public decimal CoursePrice { get; set; }
+
+        public decimal TotalPaid { get; set; }
+
+        public decimal RemainingAmount { get; set; }
+
+        public string PaymentStatus { get; set; } = string.Empty;
+
+        public DateTime? NextDueDate { get; set; }
+
+        public string NextDueStatus { get; set; } = string.Empty;
+
+        public int OverdueInstallmentCount { get; set; }
+    }
+
+
+    public class PaymentDto
+    {
+        public int Id { get; set; }
+
+        public int EnrollmentId { get; set; }
+
+        public string StudentName { get; set; } = string.Empty;
+
+        public string CourseTitle { get; set; } = string.Empty;
+
+        public decimal Amount { get; set; }
+
+        public DateTime PaymentDate { get; set; }
+
+        public DateTime? DueDate { get; set; }
+
+        public string DueStatus { get; set; } = string.Empty;
+
+        public string PaymentType { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
+
+        public string Status { get; set; } = string.Empty;
     }
 
 
@@ -642,102 +812,6 @@
                 ? "پرداخت"
                 : type
         };
-    }
-
-
-    public class StudentDto
-    {
-        public int Id { get; set; }
-
-        public string FirstName { get; set; } = string.Empty;
-
-        public string LastName { get; set; } = string.Empty;
-
-        public string NationalCode { get; set; } = string.Empty;
-
-        public DateTime? BirthDate { get; set; }
-
-        public string Mobile { get; set; } = string.Empty;
-
-        public string? Address { get; set; }
-
-        public string? GuardianName { get; set; }
-
-        public string? GuardianMobile { get; set; }
-
-        public int? MarketingUserId { get; set; }
-
-        public int? SupportUserId { get; set; }
-
-        public DateTime CreatedDate { get; set; }
-    }
-
-
-    public class EnrollmentDto
-    {
-        public int Id { get; set; }
-
-        public int StudentId { get; set; }
-
-        public string? StudentName { get; set; }
-
-        public int CourseId { get; set; }
-
-        public string? CourseTitle { get; set; }
-
-        public int? SupportUserId { get; set; }
-
-        public string? SupportUserName { get; set; }
-
-        public int? InstructorId { get; set; }
-
-        public string? InstructorName { get; set; }
-
-        public DateTime StartDate { get; set; }
-
-        public string Status { get; set; } = string.Empty;
-
-        public string? Description { get; set; }
-    }
-
-
-    public class EnrollmentFinancialDto
-    {
-        public int EnrollmentId { get; set; }
-
-        public string StudentName { get; set; } = string.Empty;
-
-        public string CourseTitle { get; set; } = string.Empty;
-
-        public decimal CoursePrice { get; set; }
-
-        public decimal TotalPaid { get; set; }
-
-        public decimal RemainingAmount { get; set; }
-
-        public string PaymentStatus { get; set; } = string.Empty;
-    }
-
-
-    public class PaymentDto
-    {
-        public int Id { get; set; }
-
-        public int EnrollmentId { get; set; }
-
-        public string StudentName { get; set; } = string.Empty;
-
-        public string CourseTitle { get; set; } = string.Empty;
-
-        public decimal Amount { get; set; }
-
-        public DateTime PaymentDate { get; set; }
-
-        public string PaymentType { get; set; } = string.Empty;
-
-        public string? Description { get; set; }
-
-        public string Status { get; set; } = string.Empty;
     }
 
 }

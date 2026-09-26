@@ -39,4 +39,6 @@ public class StudentCourseLessonDto
     public int SortOrder { get; set; }
 
     public bool IsFreePreview { get; set; }
+
+    public bool IsLocked { get; set; }
 }

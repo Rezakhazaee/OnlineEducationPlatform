@@ -335,6 +335,23 @@
         <div class="admin-card-header">
 
             <div>
+                @if (OverduePaymentsCount > 0 || DueTodayPaymentsCount > 0)
+                {
+                    <div class="payment-due-summary">
+                        @if (OverduePaymentsCount > 0)
+                        {
+                            <span class="payment-due-warning">
+                                @OverduePaymentsCount قسط سررسید گذشته
+                            </span>
+                        }
+                        @if (DueTodayPaymentsCount > 0)
+                        {
+                            <span class="payment-due-today">
+                                @DueTodayPaymentsCount قسط سررسید امروز
+                            </span>
+                        }
+                    </div>
+                }
                 <h3>لیست پرداخت‌ها</h3>
 
                 <p>
@@ -515,6 +532,11 @@ private List<PaymentDetailDto> Payments { get; set; } = new();
 
 private List<EnrollmentDto> Enrollments { get; set; } = new();
 
+private int OverduePaymentsCount =>
+    Payments.Count(x => x.Status != "Paid" && x.DueStatus == "Overdue");
+
+private int DueTodayPaymentsCount =>
+    Payments.Count(x => x.Status != "Paid" && x.DueStatus == "Due");
 private bool IsLoading { get; set; } = true;
 
 private bool IsSaving { get; set; }
@@ -941,6 +963,11 @@ public class PaymentDetailDto
 
     public DateTime PaymentDate { get; set; }
 
+    public DateTime? DueDate { get; set; }
+
+    public string DueStatus { get; set; } =
+        string.Empty;
+
     public string PaymentType { get; set; } =
         string.Empty;
 
@@ -996,6 +1023,11 @@ public class CreatePaymentDto
     public decimal Amount { get; set; }
 
     public DateTime PaymentDate { get; set; }
+
+    public DateTime? DueDate { get; set; }
+
+    public string DueStatus { get; set; } =
+        string.Empty;
 
     public string PaymentType { get; set; } =
         string.Empty;

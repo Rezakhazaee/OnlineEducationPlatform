@@ -7777,3 +7777,52 @@ grep -nE 'Admin Students|students-summary|student-summary-card|students-table|st
     }
 }
 
+
+/* خلاصه سررسید پرداخت‌ها */
+.payment-due-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 0 16px;
+}
+
+.payment-due-summary span {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.payment-due-warning {
+    background: #fff1f2;
+    color: #be123c;
+}
+
+.payment-due-today {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+
+/* هشدار مالی داشبورد دانشجو */
+.student-payment-warning {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border-right: 4px solid #d97706;
+    border-radius: 10px;
+    background: #fff7ed;
+}
+
+.student-payment-warning strong {
+    font-size: 14px;
+}
+
+.student-payment-warning span {
+    font-size: 13px;
+}
+
