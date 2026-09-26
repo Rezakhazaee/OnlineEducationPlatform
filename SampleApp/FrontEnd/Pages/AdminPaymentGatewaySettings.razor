@@ -411,6 +411,8 @@
 
     private string CallbackBaseUrl { get; set; } = string.Empty;
 
+    private string FrontendBaseUrl { get; set; } = string.Empty;
+
     private string? UpdatedAt { get; set; }
 
     private bool IsLoading { get; set; } = true;
@@ -529,6 +531,9 @@
             CallbackBaseUrl =
                 settings.CallbackBaseUrl ?? string.Empty;
 
+            FrontendBaseUrl =
+                settings.FrontendBaseUrl ?? string.Empty;
+
             UpdatedAt =
                 settings.UpdatedAt;
         }
@@ -620,6 +625,10 @@
 
                     CallbackBaseUrl =
                         CallbackBaseUrl.Trim()
+,
+
+                    FrontendBaseUrl =
+                        FrontendBaseUrl.Trim()
                 };
 
             var response =
@@ -656,6 +665,9 @@
 
                     CallbackBaseUrl =
                         updated.CallbackBaseUrl ?? CallbackBaseUrl;
+
+                    FrontendBaseUrl =
+                        updated.FrontendBaseUrl ?? FrontendBaseUrl;
 
                     UpdatedAt =
                         updated.UpdatedAt;
@@ -711,6 +723,9 @@
 
         public string? CallbackBaseUrl { get; set; }
 
+        public string? FrontendBaseUrl { get; set; }
+
+
         public string? UpdatedAt { get; set; }
     }
 
@@ -729,5 +744,7 @@
         public string? PaymentBaseUrl { get; set; }
 
         public string? CallbackBaseUrl { get; set; }
+
+        public string? FrontendBaseUrl { get; set; }
     }
 }
