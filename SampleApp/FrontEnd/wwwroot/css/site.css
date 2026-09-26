@@ -7712,3 +7712,68 @@ grep -nE 'Admin Students|students-summary|student-summary-card|students-table|st
     filter: brightness(0.97);
 }
 
+
+/* هشدار مالی دوره‌های حضوری */
+.payment-warning-card {
+    border-right: 4px solid #d97706;
+}
+
+.payment-warning-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.payment-warning-content strong {
+    display: block;
+}
+
+.payment-warning-content p {
+    margin: 8px 0 0;
+}
+
+.payment-warning-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    font-size: 18px;
+    font-weight: 700;
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.payment-warning-list {
+    margin-top: 16px;
+}
+
+.payment-warning-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 12px 0;
+    border-top: 1px solid #eee;
+}
+
+.payment-warning-item > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.payment-warning-amount {
+    white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+    .payment-warning-content,
+    .payment-warning-item {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
