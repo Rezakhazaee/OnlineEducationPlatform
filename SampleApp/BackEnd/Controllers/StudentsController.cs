@@ -48,6 +48,34 @@ public class StudentsController : ControllerBase
 
         if (student == null)
         {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                return Unauthorized(new
+                {
+                    message = "کاربر پیدا نشد"
+                });
+            }
+
+            var fullName = (user.FullName ?? string.Empty).Trim();
+            var parts = fullName.Split(" ", 2, StringSplitOptions.RemoveEmptyEntries);
+
+            student = new Student
+            {
+                UserId = userId,
+                FirstName = parts.Length > 0 ? parts[0] : "دانشجو",
+                LastName = parts.Length > 1 ? parts[1] : string.Empty,
+                Mobile = user.Mobile,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            _context.Students.Add(student);
+            await _context.SaveChangesAsync();
+        }
+        if (student == null)
+        {
             return NotFound(new
             {
                 message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
@@ -214,6 +242,81 @@ public class StudentsController : ControllerBase
     }
 
 
+
+
+    // ویرایش پروفایل توسط خود دانشجو
+    [Authorize(Roles = "Student")]
+    [HttpPut("me")]
+    public async Task<ActionResult<StudentDto>> UpdateMyProfile(
+        UpdateMyStudentProfileRequest dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+        if (userIdClaim == null ||
+            !int.TryParse(userIdClaim.Value, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (student == null)
+        {
+            return NotFound(new
+            {
+                message = "پروفایل دانشجویی پیدا نشد"
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.FirstName) ||
+            string.IsNullOrWhiteSpace(dto.LastName) ||
+            string.IsNullOrWhiteSpace(dto.NationalCode) ||
+            string.IsNullOrWhiteSpace(dto.Mobile))
+        {
+            return BadRequest(new
+            {
+                message = "نام، نام خانوادگی، کد ملی و موبایل الزامی هستند."
+            });
+        }
+
+        student.FirstName = dto.FirstName.Trim();
+        student.LastName = dto.LastName.Trim();
+        student.NationalCode = dto.NationalCode.Trim();
+        student.BirthDate = dto.BirthDate;
+        student.Mobile = dto.Mobile.Trim();
+        student.Address = string.IsNullOrWhiteSpace(dto.Address)
+            ? null
+            : dto.Address.Trim();
+        student.GuardianName = string.IsNullOrWhiteSpace(dto.GuardianName)
+            ? null
+            : dto.GuardianName.Trim();
+        student.GuardianMobile = string.IsNullOrWhiteSpace(dto.GuardianMobile)
+            ? null
+            : dto.GuardianMobile.Trim();
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new StudentDto
+        {
+            Id = student.Id,
+            FirstName = student.FirstName,
+            LastName = student.LastName,
+            NationalCode = student.NationalCode,
+            BirthDate = student.BirthDate,
+            Mobile = student.Mobile,
+            Address = student.Address,
+            GuardianName = student.GuardianName,
+            GuardianMobile = student.GuardianMobile,
+            MarketingUserId = student.MarketingUserId,
+            SupportUserId = student.SupportUserId,
+            CreatedDate = student.CreatedDate
+        });
+    }
+
     // اختصاص دانشجو به کارشناس پشتیبانی
     [HttpPut("{studentId}/assign-support")]
     [Authorize(Roles = "Admin")]
@@ -221,7 +324,6 @@ public class StudentsController : ControllerBase
         int studentId,
         AssignSupportDto dto)
     {
-        // پیدا کردن دانشجو
         var student = await _context.Students
             .FirstOrDefaultAsync(s => s.Id == studentId);
 
@@ -233,7 +335,6 @@ public class StudentsController : ControllerBase
             });
         }
 
-        // پیدا کردن کارشناس پشتیبانی
         var supportUser = await _context.Users
             .FirstOrDefaultAsync(u =>
                 u.Id == dto.SupportUserId &&
@@ -248,7 +349,6 @@ public class StudentsController : ControllerBase
             });
         }
 
-        // اختصاص Support
         student.SupportUserId = supportUser.Id;
 
         await _context.SaveChangesAsync();

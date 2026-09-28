@@ -18,6 +18,9 @@ public class ApplicationDbContext : DbContext
 
 
 
+    public DbSet<CourseModule> CourseModules { get; set; }
+    public DbSet<CourseLesson> CourseLessons { get; set; }
+
     public DbSet<OrganizationSettings> OrganizationSettings { get; set; }
     public DbSet<PartnerOrganization> PartnerOrganizations { get; set; }
     public DbSet<CoursePartnerOrganization> CoursePartnerOrganizations { get; set; }

@@ -1,7 +1,8 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @using FrontEnd.Services
 @inject ThemeService ThemeService
 @inject NavigationManager NavigationManager
+@inject AuthService Auth
 
 <PageTitle>سامانه آموزش آنلاین</PageTitle>
 
@@ -25,8 +26,15 @@
             </nav>
 
             <div class="header-actions">
-                <a href="/login" class="login-link">ورود</a>
-                <a href="/register" class="register-btn">ثبت‌نام</a>
+                @if (Auth.IsLoggedIn)
+                {
+                    <button type="button" class="register-btn" @onclick="Logout">خروج</button>
+                }
+                else
+                {
+                    <a href="/login" class="login-link">ورود</a>
+                    <a href="/register" class="register-btn">ثبت‌نام</a>
+                }
             </div>
         </div>
     </header>
@@ -62,6 +70,12 @@
                 $"--theme-secondary: {ThemeService.SecondaryColor}; " +
                 $"--theme-text: {ThemeService.SecondaryColor};";
         }
+    }
+
+    private void Logout()
+    {
+        Auth.Logout();
+        NavigationManager.NavigateTo("/login");
     }
 
     protected override async Task OnInitializedAsync()

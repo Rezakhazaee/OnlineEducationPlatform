@@ -1,4 +1,5 @@
 using BackEnd.Data;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -16,6 +17,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection")
     )
 );
+
+builder.Services.AddScoped<PackageAccessService>();
 
 // JWT Authentication
 var jwtKey = builder.Configuration["Jwt:Key"]

@@ -190,12 +190,6 @@
                 return;
             }
 
-            if (Auth.Role == "Instructor")
-            {
-                Navigation.NavigateTo("/instructor");
-                return;
-            }
-
             Navigation.NavigateTo("/");
         }
         catch

@@ -12,14 +12,12 @@
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     <link href="css/site.css" rel="stylesheet" />
     <link href="css/student-panel.css" rel="stylesheet" />
-    <link href="css/public-courses.css" rel="stylesheet" />
-    <link href="css/instructor-panel.css" rel="stylesheet" />
     <link href="FrontEnd.styles.css" rel="stylesheet" />
     <link rel="icon" type="image/png" href="favicon.png"/>
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
 </head>
 <body>
-    <component type="typeof(App)" render-mode="Server" />
+    <component type="typeof(App)" render-mode="ServerPrerendered" />
 
     <div id="blazor-error-ui">
         <environment include="Staging,Production">

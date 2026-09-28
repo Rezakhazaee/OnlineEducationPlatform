@@ -1,0 +1,444 @@
+@page "/student"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@layout StudentLayout
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>داشبورد دانشجو | آموزش‌یار</PageTitle>
+
+<div class="student-page">
+
+    <div class="student-topbar">
+
+        <div>
+            <span class="student-eyebrow">داشبورد دانشجو</span>
+
+            <h1>
+                سلام، @(string.IsNullOrWhiteSpace(Auth.FullName) ? "دانشجو" : Auth.FullName)
+            </h1>
+
+            <p>
+                خلاصه وضعیت دوره‌ها، ثبت‌نام‌ها و امور مالی شما
+            </p>
+        </div>
+
+        <a href="/student/profile" class="student-profile-btn">
+            پروفایل من
+        </a>
+
+    </div>
+
+    @if (IsLoading)
+    {
+        <section class="student-content-card">
+            <div class="student-loading">
+                <div class="student-loading-icon">◌</div>
+                <h3>در حال آماده‌سازی داشبورد</h3>
+                <p>اطلاعات دوره‌ها و وضعیت مالی در حال دریافت است.</p>
+            </div>
+        </section>
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <section class="student-content-card">
+            <div class="student-error">
+                <strong>خطا</strong>
+                <p>@ErrorMessage</p>
+            </div>
+        </section>
+    }
+    else
+    {
+        <div class="student-summary-grid">
+
+            <div class="student-stat-card">
+                <div class="student-stat-icon">▣</div>
+                <small>دوره‌های فعال</small>
+                <strong>@Enrollments.Count(x => x.Status != "Cancelled")</strong>
+                <em>ثبت‌نام‌های شما</em>
+            </div>
+
+            <div class="student-stat-card">
+                <div class="student-stat-icon">₿</div>
+                <small>مجموع پرداخت‌شده</small>
+                <strong>@Money(TotalPaid)</strong>
+                <em>پرداخت‌های تأییدشده</em>
+            </div>
+
+            <div class="student-stat-card">
+                <div class="student-stat-icon">◷</div>
+                <small>مجموع مانده</small>
+                <strong>@Money(TotalRemaining)</strong>
+                <em>مبلغ باقی‌مانده</em>
+            </div>
+
+        </div>
+
+        <section class="student-content-card">
+
+            <div class="student-section-header">
+                <div>
+                    <h2>دوره‌های من</h2>
+                    <span>ثبت‌نام‌ها و وضعیت فعلی دوره‌ها</span>
+                </div>
+
+                <a href="/student/courses" class="student-small-btn">
+                    مشاهده همه
+                </a>
+            </div>
+
+            @if (Enrollments.Count == 0)
+            {
+                <div class="student-empty-state">
+                    <div class="student-empty-icon">▣</div>
+                    <h3>هنوز در دوره‌ای ثبت‌نام نکرده‌اید</h3>
+                    <p>
+                        برای شروع یادگیری، دوره‌های موجود را مشاهده کنید.
+                    </p>
+                    <a href="/courses" class="student-primary-link">
+                        مشاهده دوره‌ها
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="student-dashboard-enrollments">
+
+                    @foreach (var enrollment in Enrollments
+                        .Where(x => x.Status != "Cancelled")
+                        .Take(5))
+                    {
+                        <div class="student-dashboard-enrollment">
+
+                            <div class="student-dashboard-course">
+
+                                <div class="student-course-icon">
+                                    آ
+                                </div>
+
+                                <div>
+                                    <strong>@enrollment.CourseTitle</strong>
+
+                                    <small>
+                                        شروع:
+                                        @enrollment.StartDate.ToString("yyyy/MM/dd")
+                                        |
+                                        @StatusText(enrollment.Status)
+                                    </small>
+                                </div>
+
+                            </div>
+
+                            <div class="student-dashboard-money">
+
+                                <div>
+                                    <small>پرداخت‌شده</small>
+                                    <strong>
+                                        @Money(GetFinancial(enrollment.Id)?.TotalPaid ?? 0)
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    <small>مانده</small>
+                                    <strong>
+                                        @Money(GetFinancial(enrollment.Id)?.RemainingAmount ?? 0)
+                                    </strong>
+                                </div>
+
+                                <a href="@($"/student/course-content/{enrollment.CourseId}")"
+                                   class="student-small-btn">
+                                    ورود به دوره
+                                </a>
+
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+            }
+
+        </section>
+
+        <section class="student-content-card">
+
+            <div class="student-section-header">
+                <div>
+                    <h2>آخرین پرداخت‌ها</h2>
+                    <span>آخرین تراکنش‌های ثبت‌شده برای ثبت‌نام‌های شما</span>
+                </div>
+
+                <a href="/student/payments" class="student-small-btn">
+                    همه پرداخت‌ها
+                </a>
+            </div>
+
+            @if (RecentPayments.Count == 0)
+            {
+                <div class="student-empty-state">
+                    <h3>هنوز پرداختی ثبت نشده است</h3>
+                </div>
+            }
+            else
+            {
+                <div class="student-dashboard-payments">
+
+                    @foreach (var payment in RecentPayments)
+                    {
+                        <div class="student-dashboard-payment">
+
+                            <div>
+                                <strong>@payment.CourseTitle</strong>
+
+                                <small>
+                                    @payment.PaymentDate.ToString("yyyy/MM/dd")
+                                    |
+                                    @(string.IsNullOrWhiteSpace(payment.PaymentType)
+                                        ? "نامشخص"
+                                        : payment.PaymentType)
+                                </small>
+                            </div>
+
+                            <div class="student-dashboard-payment-amount">
+                                @Money(payment.Amount)
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+            }
+
+        </section>
+
+        <section class="student-content-card">
+
+            <div class="student-section-header">
+                <div>
+                    <h2>دسترسی سریع</h2>
+                    <span>بخش‌های اصلی پنل دانشجو</span>
+                </div>
+            </div>
+
+            <div class="student-dashboard-actions">
+
+                <a href="/student/courses" class="student-dashboard-action">
+                    <div>
+                        <strong>دوره‌های من</strong>
+                        <small>مشاهده ثبت‌نام‌ها و ورود به دوره‌ها</small>
+                    </div>
+                    <span class="student-dashboard-action-arrow">←</span>
+                </a>
+
+                <a href="/student/payments" class="student-dashboard-action">
+                    <div>
+                        <strong>پرداخت‌های من</strong>
+                        <small>مشاهده اقساط و وضعیت مالی</small>
+                    </div>
+                    <span class="student-dashboard-action-arrow">←</span>
+                </a>
+
+                <a href="/student/profile" class="student-dashboard-action">
+                    <div>
+                        <strong>پروفایل من</strong>
+                        <small>مشاهده و ویرایش اطلاعات حساب</small>
+                    </div>
+                    <span class="student-dashboard-action-arrow">←</span>
+                </a>
+
+            </div>
+
+        </section>
+    }
+
+</div>
+
+@code {
+
+    private bool IsLoading { get; set; } = true;
+
+    private string? ErrorMessage { get; set; }
+
+    private List<EnrollmentItem> Enrollments { get; set; } = new();
+
+    private List<FinancialItem> Financials { get; set; } = new();
+
+    private List<RecentPayment> RecentPayments { get; set; } = new();
+
+    private decimal TotalPaid =>
+        Financials.Sum(x => x.TotalPaid);
+
+    private decimal TotalRemaining =>
+        Financials.Sum(x => x.RemainingAmount);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || !Auth.IsStudent)
+        {
+            Navigation.NavigateTo(
+                "/login?returnUrl=/student",
+                false);
+            return;
+        }
+
+        await LoadData();
+
+        StateHasChanged();
+    }
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Enrollments =
+                await client.GetFromJsonAsync<List<EnrollmentItem>>(
+                    "api/Enrollments/my")
+                ?? new();
+
+            Financials.Clear();
+            RecentPayments.Clear();
+
+            foreach (var enrollment in Enrollments.Where(x => x.Status != "Cancelled"))
+            {
+                try
+                {
+                    var detail =
+                        await client.GetFromJsonAsync<FinancialApi>(
+                            $"api/Enrollments/my/{enrollment.Id}/financial-details");
+
+                    if (detail == null)
+                        continue;
+
+                    Financials.Add(new FinancialItem
+                    {
+                        EnrollmentId = detail.EnrollmentId,
+                        CourseId = enrollment.CourseId,
+                        CourseTitle = detail.CourseTitle,
+                        CoursePrice = detail.CoursePrice,
+                        TotalPaid = detail.TotalPaid,
+                        RemainingAmount = detail.RemainingAmount,
+                        PaymentStatus = detail.PaymentStatus,
+                        Payments = detail.Payments
+                    });
+
+                    foreach (var payment in detail.Payments)
+                    {
+                        RecentPayments.Add(new RecentPayment
+                        {
+                            CourseTitle = detail.CourseTitle,
+                            Amount = payment.Amount,
+                            PaymentDate = payment.PaymentDate,
+                            PaymentType = payment.PaymentType,
+                            Status = payment.Status
+                        });
+                    }
+                }
+                catch
+                {
+                    // خطای یک ثبت‌نام نباید داشبورد را متوقف کند.
+                }
+            }
+
+            RecentPayments = RecentPayments
+                .OrderByDescending(x => x.PaymentDate)
+                .Take(5)
+                .ToList();
+        }
+        catch
+        {
+            ErrorMessage = "دریافت اطلاعات داشبورد با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private FinancialItem? GetFinancial(int enrollmentId)
+    {
+        return Financials.FirstOrDefault(
+            x => x.EnrollmentId == enrollmentId);
+    }
+
+    private string Money(decimal value)
+    {
+        return $"{value:N0} تومان";
+    }
+
+    private string StatusText(string? value)
+    {
+        return value switch
+        {
+            "Active" => "فعال",
+            "Inactive" => "غیرفعال",
+            "Cancelled" => "لغوشده",
+            _ => value ?? "نامشخص"
+        };
+    }
+
+    private class EnrollmentItem
+    {
+        public int Id { get; set; }
+        public int CourseId { get; set; }
+        public string CourseTitle { get; set; } = "";
+        public string? SupportUserName { get; set; }
+        public string? InstructorName { get; set; }
+        public DateTime StartDate { get; set; }
+        public string Status { get; set; } = "";
+    }
+
+    private class FinancialApi
+    {
+        public int EnrollmentId { get; set; }
+        public string CourseTitle { get; set; } = "";
+        public decimal CoursePrice { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal RemainingAmount { get; set; }
+        public string PaymentStatus { get; set; } = "";
+        public List<PaymentItem> Payments { get; set; } = new();
+    }
+
+    private class PaymentItem
+    {
+        public decimal Amount { get; set; }
+        public DateTime PaymentDate { get; set; }
+        public string? PaymentType { get; set; }
+        public string? Description { get; set; }
+        public string? Status { get; set; }
+    }
+
+    private class FinancialItem
+    {
+        public int EnrollmentId { get; set; }
+        public int CourseId { get; set; }
+        public string CourseTitle { get; set; } = "";
+        public decimal CoursePrice { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal RemainingAmount { get; set; }
+        public string PaymentStatus { get; set; } = "";
+        public List<PaymentItem> Payments { get; set; } = new();
+    }
+
+    private class RecentPayment
+    {
+        public string CourseTitle { get; set; } = "";
+        public decimal Amount { get; set; }
+        public DateTime PaymentDate { get; set; }
+        public string? PaymentType { get; set; }
+        public string? Status { get; set; }
+    }
+}
