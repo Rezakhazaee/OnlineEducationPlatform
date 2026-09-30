@@ -38,6 +38,13 @@
                 <strong>@Certificate.IssuedAtUtc.ToLocalTime().ToString("yyyy/MM/dd")</strong>
             </div>
         </div>
+
+        <div class="student-form-actions">
+            <a href="@($"/certificate-pdf/{Certificate.CertificateNumber}")"
+               class="student-primary-link">
+                دانلود گواهی PDF
+            </a>
+        </div>
     }
     else if (Progress != null &&
              Progress.TotalLessons > 0 &&
