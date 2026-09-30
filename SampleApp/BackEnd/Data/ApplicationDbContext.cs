@@ -20,6 +20,7 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<CourseModule> CourseModules { get; set; }
     public DbSet<CourseLesson> CourseLessons { get; set; }
+    public DbSet<LessonProgress> LessonProgresses { get; set; }
 
     public DbSet<OrganizationSettings> OrganizationSettings { get; set; }
     public DbSet<PartnerOrganization> PartnerOrganizations { get; set; }
@@ -37,7 +38,23 @@ public class ApplicationDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
 
-        // =========================
+
+
+        modelBuilder.Entity<LessonProgress>()
+            .HasOne(p => p.Enrollment)
+            .WithMany()
+            .HasForeignKey(p => p.EnrollmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LessonProgress>()
+            .HasOne(p => p.CourseLesson)
+            .WithMany()
+            .HasForeignKey(p => p.CourseLessonId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LessonProgress>()
+            .HasIndex(p => new { p.EnrollmentId, p.CourseLessonId })
+            .IsUnique();// =========================
         // Enrollment -> CoursePartnerOrganization
         // =========================
 

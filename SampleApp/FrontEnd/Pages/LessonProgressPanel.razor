@@ -1,0 +1,146 @@
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+
+@if (Progress != null)
+{
+    <section class="student-content-card" style="margin-top:20px;">
+
+        <div class="student-section-header">
+            <div>
+                <h2>پیشرفت دوره</h2>
+                <span>
+                    @Progress.CompletedLessons از @Progress.TotalLessons درس
+                </span>
+            </div>
+
+            <strong>
+                @Progress.ProgressPercent.ToString("0")%
+            </strong>
+        </div>
+
+        <div style="height:10px;background:#e7eef2;border-radius:10px;overflow:hidden;margin-bottom:16px;">
+            <div style="height:100%;width:@($"{Progress.ProgressPercent}%");background:#568fa8;border-radius:10px;"></div>
+        </div>
+
+        <button type="button"
+                class="student-primary-link"
+                @onclick="ToggleCompletion"
+                disabled="@IsSaving">
+
+            @(IsSaving
+                ? "در حال ذخیره..."
+                : IsCompleted
+                    ? "برگرداندن درس به حالت ناتمام"
+                    : "علامت‌گذاری به‌عنوان تکمیل‌شده")
+
+        </button>
+
+    </section>
+}
+
+@code {
+    [Parameter]
+    public int CourseId { get; set; }
+
+    [Parameter]
+    public int LessonId { get; set; }
+
+    private LessonProgressSummaryDto? Progress { get; set; }
+
+    private int EnrollmentId { get; set; }
+
+    private bool IsCompleted =>
+        Progress?.Lessons.FirstOrDefault(
+            x => x.LessonId == LessonId)?.IsCompleted == true;
+
+    private bool IsSaving { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        var client = Auth.CreateAuthenticatedClient();
+
+        var enrollments =
+            await client.GetFromJsonAsync<List<EnrollmentDto>>(
+                "api/Enrollments/my")
+            ?? new();
+
+        var enrollment = enrollments.FirstOrDefault(x =>
+            x.CourseId == CourseId &&
+            x.Status == "Active");
+
+        if (enrollment == null)
+            return;
+
+        EnrollmentId = enrollment.Id;
+
+        Progress =
+            await client.GetFromJsonAsync<LessonProgressSummaryDto>(
+                $"api/LessonProgress/enrollment/{EnrollmentId}");
+    }
+
+    private async Task ToggleCompletion()
+    {
+        if (EnrollmentId <= 0)
+            return;
+
+        IsSaving = true;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var response =
+                await client.PutAsJsonAsync(
+                    $"api/LessonProgress/enrollment/{EnrollmentId}/lesson/{LessonId}",
+                    new UpdateLessonProgressDto
+                    {
+                        Completed = !IsCompleted
+                    });
+
+            if (response.IsSuccessStatusCode)
+            {
+                await Load();
+            }
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private class EnrollmentDto
+    {
+        public int Id { get; set; }
+        public int CourseId { get; set; }
+        public string Status { get; set; } = "";
+    }
+
+    private class LessonProgressSummaryDto
+    {
+        public int EnrollmentId { get; set; }
+        public int CourseId { get; set; }
+        public int TotalLessons { get; set; }
+        public int CompletedLessons { get; set; }
+        public decimal ProgressPercent { get; set; }
+        public List<LessonProgressItemDto> Lessons { get; set; } = new();
+    }
+
+    private class LessonProgressItemDto
+    {
+        public int LessonId { get; set; }
+        public bool IsCompleted { get; set; }
+        public DateTime? CompletedAt { get; set; }
+    }
+
+    private class UpdateLessonProgressDto
+    {
+        public bool Completed { get; set; }
+    }
+}
