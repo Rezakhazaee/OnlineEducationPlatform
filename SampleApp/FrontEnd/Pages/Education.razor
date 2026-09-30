@@ -172,6 +172,7 @@
                                             <td>@item.InstructorName</td>
                                             <td>@item.StartDate.ToString("yyyy/MM/dd")</td>
                                             <td><a class="education-btn secondary" href="/education/enrollments/@item.Id/edit">ویرایش</a></td>
+                                            <td><EducationEnrollmentFinancial EnrollmentId="@item.Id" /></td>
                                             <td>@item.Status</td>
                                         </tr>
                                     }
