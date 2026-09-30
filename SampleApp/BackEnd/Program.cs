@@ -1,3 +1,5 @@
+using QuestPDF.Drawing;
+using QuestPDF.Infrastructure;
 using BackEnd.Data;
 using BackEnd.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -7,6 +9,9 @@ using Scalar.AspNetCore;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+QuestPDF.Settings.License = LicenseType.Community;
+QuestPDF.Settings.UseSystemFonts = false;
+QuestPDF.Settings.FontDiscoveryPath = "Fonts";
 
 // Controllers
 builder.Services.AddControllers();

@@ -62,6 +62,20 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.MapGet("/certificate-pdf/{certificateNumber}", async (string certificateNumber, IHttpClientFactory httpClientFactory) =>
+{
+    var client = httpClientFactory.CreateClient("Backend");
+    var response = await client.GetAsync($"api/CertificateVerification/{Uri.EscapeDataString(certificateNumber)}/pdf");
+
+    if (!response.IsSuccessStatusCode)
+    {
+        return Results.StatusCode((int)response.StatusCode);
+    }
+
+    var bytes = await response.Content.ReadAsByteArrayAsync();
+    return Results.File(bytes, "application/pdf", $"{certificateNumber}.pdf");
+});
+
 app.MapBlazorHub();
 
 app.MapFallbackToPage("/_Host");
