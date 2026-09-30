@@ -43,7 +43,7 @@ public CourseLessonsController(
             return false;
         }
 
-        if (IsManagementUser)
+        if (IsManagementUser || User.IsInRole("EducationStaff"))
         {
             return true;
         }

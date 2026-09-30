@@ -50,7 +50,7 @@ private async Task<bool> CanManageCourse(int courseId)
         return false;
     }
 
-    if (IsManagementUser)
+    if (IsManagementUser || User.IsInRole("EducationStaff"))
     {
         return true;
     }

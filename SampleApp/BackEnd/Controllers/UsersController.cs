@@ -116,6 +116,8 @@ public class UsersController : ControllerBase
         var allowedRoles = new[]
         {
             "Admin",
+            "EducationStaff",
+            "Marketer",
             "Instructor",
             "Support",
             "Student"
@@ -266,6 +268,8 @@ public async Task<IActionResult> ChangePassword(
         var allowedRoles = new[]
         {
             "Admin",
+            "EducationStaff",
+            "Marketer",
             "Instructor",
             "Support",
             "Student"

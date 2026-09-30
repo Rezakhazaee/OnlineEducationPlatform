@@ -1,0 +1,277 @@
+@page "/education/students/new"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>دانشجوی جدید | آموزش‌یار</PageTitle>
+
+<div class="education-page">
+
+    <aside class="education-sidebar">
+
+        <div class="education-brand">
+            <div class="education-logo">آ</div>
+            <div>
+                <strong>آموزش‌یار</strong>
+                <small>پنل آموزش</small>
+            </div>
+        </div>
+
+        <nav class="education-nav">
+            <a href="/education"
+               class="education-nav-btn active"
+               style="text-decoration:none;">
+                بازگشت به پنل آموزش
+            </a>
+        </nav>
+
+    </aside>
+
+    <main class="education-main">
+
+        <header class="education-topbar">
+            <div>
+                <h1>ثبت دانشجوی جدید</h1>
+                <p>ایجاد پروفایل آموزشی برای حساب دانشجویی موجود</p>
+            </div>
+        </header>
+
+        @if (IsLoading)
+        {
+            <div class="education-card">
+                در حال دریافت اطلاعات...
+            </div>
+        }
+        else
+        {
+            <section class="education-card">
+
+                @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                {
+                    <div class="education-error">
+                        @ErrorMessage
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(SuccessMessage))
+                {
+                    <div class="education-success">
+                        @SuccessMessage
+                    </div>
+                }
+
+                <EditForm Model="Model" OnValidSubmit="CreateStudent">
+
+                    <DataAnnotationsValidator />
+
+                    <div class="education-form-grid">
+
+                        <div class="education-form-field education-form-field-full">
+                            <label>حساب کاربری دانشجو</label>
+
+                            <InputSelect @bind-Value="Model.UserId">
+                                <option value="0">انتخاب حساب دانشجویی</option>
+
+                                @foreach (var user in StudentUsers)
+                                {
+                                    <option value="@user.Id">
+                                        @user.FullName - @user.Username
+                                    </option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="education-form-field">
+                            <label>نام</label>
+                            <InputText @bind-Value="Model.FirstName" />
+                        </div>
+
+                        <div class="education-form-field">
+                            <label>نام خانوادگی</label>
+                            <InputText @bind-Value="Model.LastName" />
+                        </div>
+
+                        <div class="education-form-field">
+                            <label>کد ملی</label>
+                            <InputText @bind-Value="Model.NationalCode" />
+                        </div>
+
+                        <div class="education-form-field">
+                            <label>تاریخ تولد</label>
+                            <InputDate @bind-Value="Model.BirthDate" />
+                        </div>
+
+                        <div class="education-form-field">
+                            <label>موبایل</label>
+                            <InputText @bind-Value="Model.Mobile" />
+                        </div>
+
+                        <div class="education-form-field">
+                            <label>نام ولی</label>
+                            <InputText @bind-Value="Model.GuardianName" />
+                        </div>
+
+                        <div class="education-form-field">
+                            <label>موبایل ولی</label>
+                            <InputText @bind-Value="Model.GuardianMobile" />
+                        </div>
+
+                        <div class="education-form-field education-form-field-full">
+                            <label>آدرس</label>
+                            <InputText @bind-Value="Model.Address" />
+                        </div>
+
+                    </div>
+
+                    <div style="display:flex;gap:10px;margin-top:24px;">
+                        <button type="submit"
+                                class="education-primary-btn"
+                                disabled="@IsSaving">
+                            @(IsSaving ? "در حال ثبت..." : "ثبت دانشجو")
+                        </button>
+
+                        <a href="/education"
+                           class="education-secondary-btn">
+                            انصراف
+                        </a>
+                    </div>
+
+                </EditForm>
+
+            </section>
+        }
+
+    </main>
+</div>
+
+@code {
+
+    private bool IsLoading { get; set; } = true;
+    private bool IsSaving { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? SuccessMessage { get; set; }
+
+    private List<StudentUserDto> StudentUsers { get; set; } = new();
+
+    private StudentCreateModel Model { get; set; } = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || Auth.Role != "EducationStaff")
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        await LoadStudentUsers();
+
+        StateHasChanged();
+    }
+
+    private async Task LoadStudentUsers()
+    {
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            StudentUsers =
+                await client.GetFromJsonAsync<List<StudentUserDto>>(
+                    "api/Students/available-users"
+                ) ?? new();
+        }
+        catch
+        {
+            ErrorMessage = "دریافت حساب‌های دانشجویی با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task CreateStudent()
+    {
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        if (Model.UserId <= 0)
+        {
+            ErrorMessage = "یک حساب دانشجویی انتخاب کنید.";
+            return;
+        }
+
+        IsSaving = true;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var response = await client.PostAsJsonAsync(
+                "api/Students",
+                Model
+            );
+
+            if (response.IsSuccessStatusCode)
+            {
+                SuccessMessage = "دانشجو با موفقیت ثبت شد.";
+
+                await Task.Delay(500);
+
+                Navigation.NavigateTo("/education");
+                return;
+            }
+
+            ErrorMessage =
+                await response.Content.ReadAsStringAsync();
+        }
+        catch
+        {
+            ErrorMessage = "ثبت دانشجو با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    public class StudentUserDto
+    {
+        public int Id { get; set; }
+        public string? FullName { get; set; }
+        public string? Username { get; set; }
+        public string? Mobile { get; set; }
+    }
+
+    public class StudentCreateModel
+    {
+        public int UserId { get; set; }
+
+        public string FirstName { get; set; } = "";
+
+        public string LastName { get; set; } = "";
+
+        public string NationalCode { get; set; } = "";
+
+        public DateTime? BirthDate { get; set; }
+
+        public string Mobile { get; set; } = "";
+
+        public string? Address { get; set; }
+
+        public string? GuardianName { get; set; }
+
+        public string? GuardianMobile { get; set; }
+
+        public int? MarketingUserId { get; set; }
+
+        public int? SupportUserId { get; set; }
+    }
+}

@@ -1,0 +1,285 @@
+@page "/marketer"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>پنل بازاریابی | آموزش‌یار</PageTitle>
+
+<div class="education-page">
+
+    <aside class="education-sidebar">
+
+        <div class="education-brand">
+            <div class="education-logo">آ</div>
+            <div>
+                <strong>آموزش‌یار</strong>
+                <small>پنل بازاریابی</small>
+            </div>
+        </div>
+
+        <nav class="education-nav">
+
+            <button class="education-nav-btn @(ActiveTab == "students" ? "active" : "")"
+                    @onclick='() => ActiveTab = "students"'>
+                دانشجویان من
+            </button>
+
+            <button class="education-nav-btn @(ActiveTab == "enrollments" ? "active" : "")"
+                    @onclick='() => ActiveTab = "enrollments"'>
+                ثبت‌نام‌ها
+            </button>
+
+        </nav>
+
+        <button class="education-logout" @onclick="Logout">
+            خروج
+        </button>
+
+    </aside>
+
+    <main class="education-main">
+
+        <header class="education-topbar">
+            <div>
+                <h1>پنل بازاریابی</h1>
+                <p>مدیریت دانشجویان و ثبت‌نام‌های اختصاص داده شده</p>
+            </div>
+
+            <div class="education-user">
+                <strong>@Auth.FullName</strong>
+                <span>بازاریاب</span>
+            </div>
+        </header>
+
+        @if (IsLoading)
+        {
+            <div class="education-card">
+                در حال دریافت اطلاعات...
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="education-error">
+                @ErrorMessage
+            </div>
+        }
+        else
+        {
+            @if (ActiveTab == "students")
+            {
+                <section class="education-card">
+
+                    <div class="education-card-header">
+                        <div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                                <h2>دانشجویان من</h2>
+
+                                <a href="/marketer/students/new"
+                                   class="education-primary-btn">
+                                    دانشجوی جدید
+                                </a>
+                            </div>
+
+                            <span>@Students.Count دانشجو</span>
+                        </div>
+                    </div>
+
+                    @if (Students.Count == 0)
+                    {
+                        <div class="education-empty">
+                            هنوز دانشجویی به شما اختصاص داده نشده است.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="education-table-wrapper">
+
+                            <table class="education-table">
+
+                                <thead>
+                                    <tr>
+                                        <th>نام</th>
+                                        <th>عملیات</th>
+                                        <th>موبایل</th>
+                                        <th>کد ملی</th>
+                                        <th>تاریخ ایجاد</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @foreach (var student in Students)
+                                    {
+                                        <tr>
+                                            <td>@student.FirstName @student.LastName</td>
+                                            <td><a class="education-btn secondary" href="/marketer/students/@student.Id/edit">ویرایش</a></td>
+                                            <td>@student.Mobile</td>
+                                            <td>@student.NationalCode</td>
+                                            <td>@student.CreatedDate.ToString("yyyy/MM/dd")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+
+                            </table>
+
+                        </div>
+                    }
+
+                </section>
+            }
+
+            @if (ActiveTab == "enrollments")
+            {
+                <section class="education-card">
+
+                    <div class="education-card-header">
+                        <div>
+                            <h2>ثبت‌نام‌های من</h2>
+                            <a href="/marketer/enrollments/new" class="education-primary-btn">ثبت‌نام جدید</a>
+                            <span>@Enrollments.Count ثبت‌نام</span>
+                        </div>
+                    </div>
+
+                    @if (Enrollments.Count == 0)
+                    {
+                        <div class="education-empty">
+                            هنوز ثبت‌نامی برای دانشجویان شما ثبت نشده است.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="education-table-wrapper">
+
+                            <table class="education-table">
+
+                                <thead>
+                                    <tr>
+                                        <th>دانشجو</th>
+                                        <th>دوره</th>
+                                        <th>شروع</th>
+                                        <th>وضعیت</th>
+                                        <th>توضیحات</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @foreach (var item in Enrollments)
+                                    {
+                                        <tr>
+                                            <td>@item.StudentName</td>
+                                            <td>@item.CourseTitle</td>
+                                            <td>@item.StartDate.ToString("yyyy/MM/dd")</td>
+                                            <td>@item.Status</td>
+                                            <td>@item.Description</td>
+                                        </tr>
+                                    }
+                                </tbody>
+
+                            </table>
+
+                        </div>
+                    }
+
+                </section>
+            }
+        }
+
+    </main>
+
+</div>
+
+@code {
+
+    private string ActiveTab { get; set; } = "students";
+
+    [SupplyParameterFromQuery(Name = "tab")]
+    private string? Tab { get; set; }
+
+    private bool IsLoading { get; set; } = true;
+
+    private string? ErrorMessage { get; set; }
+
+    private List<StudentDto> Students { get; set; } = new();
+
+    private List<EnrollmentDto> Enrollments { get; set; } = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || Auth.Role != "Marketer")
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        if (Tab == "enrollments" || Tab == "students")
+            ActiveTab = Tab;
+
+        await LoadData();
+
+        StateHasChanged();
+    }
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Students =
+                await client.GetFromJsonAsync<List<StudentDto>>(
+                    "api/Students"
+                ) ?? new();
+
+            Enrollments =
+                await client.GetFromJsonAsync<List<EnrollmentDto>>(
+                    "api/Enrollments"
+                ) ?? new();
+        }
+        catch
+        {
+            ErrorMessage = "دریافت اطلاعات از سرور با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task Logout()
+    {
+        await Auth.LogoutAsync();
+        Navigation.NavigateTo("/login");
+    }
+
+    public class StudentDto
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
+        public string? NationalCode { get; set; }
+        public string? Mobile { get; set; }
+        public DateTime CreatedDate { get; set; }
+    }
+
+    public class EnrollmentDto
+    {
+        public int Id { get; set; }
+        public int StudentId { get; set; }
+        public string StudentName { get; set; } = "";
+        public int CourseId { get; set; }
+        public string CourseTitle { get; set; } = "";
+        public DateTime StartDate { get; set; }
+        public string Status { get; set; } = "";
+        public string? Description { get; set; }
+    }
+}

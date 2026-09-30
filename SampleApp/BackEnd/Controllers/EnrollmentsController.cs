@@ -346,7 +346,7 @@ public async Task<ActionResult<List<EnrollmentDetailDto>>> GetMySupportEnrollmen
 
     // دریافت لیست ثبت نام ها با اطلاعات دانشجو، دوره، پشتیبان و استاد
     
-    [Authorize(Roles = "Admin,Support,Student")]
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Student")]
 [HttpGet]
 public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
 {
@@ -404,6 +404,24 @@ public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
             e.Student.SupportUserId == userId);
     }
 
+    // Marketer → فقط ثبت‌نام دانشجویان اختصاص داده شده به خودش
+    if (User.IsInRole("Marketer"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        query = query.Where(e =>
+            e.Student != null &&
+            e.Student.MarketingUserId == userId);
+    }
+
     var enrollments = await query
         .Select(e => new EnrollmentDto
         {
@@ -455,8 +473,60 @@ public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
     return Ok(enrollments);
 }
 
+    // دریافت جزئیات یک ثبت‌نام برای Admin و EducationStaff و Support
+    [Authorize(Roles = "Admin,EducationStaff,Support")]
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<EnrollmentDto>> GetById(int id)
+    {
+        var enrollment = await _context.Enrollments
+            .Include(e => e.Student)
+            .Include(e => e.Course)
+            .Include(e => e.SupportUser)
+            .Include(e => e.Instructor)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (enrollment == null)
+            return NotFound(new { message = "ثبت‌نام مورد نظر پیدا نشد" });
+
+        if (User.IsInRole("Support"))
+        {
+            var supportUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(supportUserIdClaim, out var supportUserId))
+            {
+                return Unauthorized(new { message = "شناسه کاربر معتبر نیست" });
+            }
+
+            if (enrollment.Student == null || enrollment.Student.SupportUserId != supportUserId)
+            {
+                return NotFound(new { message = "ثبت‌نام مورد نظر پیدا نشد" });
+            }
+        }
+
+        return Ok(new EnrollmentDto
+        {
+            Id = enrollment.Id,
+            StudentId = enrollment.StudentId,
+            StudentName = enrollment.Student != null
+                ? enrollment.Student.FirstName + " " + enrollment.Student.LastName
+                : string.Empty,
+            CourseId = enrollment.CourseId,
+            CoursePartnerOrganizationId = enrollment.CoursePartnerOrganizationId,
+            CourseTitle = enrollment.Course != null
+                ? enrollment.Course.Title
+                : string.Empty,
+            SupportUserId = enrollment.SupportUserId,
+            SupportUserName = enrollment.SupportUser?.FullName,
+            InstructorId = enrollment.InstructorId,
+            InstructorName = enrollment.Instructor?.FullName,
+            StartDate = enrollment.StartDate,
+            Status = enrollment.Status,
+            Description = enrollment.Description
+        });
+    }
+
     // گزارش مالی یک ثبت نام
-    [Authorize(Roles = "Admin,Support,Student")]
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Student")]
 [HttpGet("{id}/financial")]
 public async Task<ActionResult<EnrollmentFinancialDto>> GetFinancial(int id)
 {
@@ -583,7 +653,7 @@ public async Task<ActionResult<EnrollmentFinancialDto>> GetFinancial(int id)
 }
 
     // جزئیات مالی ثبت نام به همراه لیست پرداخت‌ها
-    [Authorize(Roles = "Admin,Support,Student")]
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Student")]
 [HttpGet("{id}/financial-details")]
 public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetails(int id)
 {
@@ -723,7 +793,7 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
 }
 
     // ثبت نام دانشجو در دوره
-    [Authorize]
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Student")]
     [HttpPost]
     public async Task<ActionResult<EnrollmentDto>> Create(CreateEnrollmentDto dto)
     {
@@ -767,6 +837,25 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             {
                 message = "دانشجوی مورد نظر وجود ندارد"
             });
+        }
+
+
+        if (User.IsInRole("Marketer"))
+        {
+            var marketerStudent = await _context.Students
+                .FirstOrDefaultAsync(s =>
+                    s.Id == dto.StudentId &&
+                    s.MarketingUserId == userId);
+
+            if (marketerStudent == null)
+            {
+                return Forbid();
+            }
+
+            if (dto.CoursePartnerOrganizationId.HasValue)
+            {
+                return Forbid();
+            }
         }
 
 
@@ -876,6 +965,7 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             Id = enrollment.Id,
             StudentId = enrollment.StudentId,
             CourseId = enrollment.CourseId,
+            CoursePartnerOrganizationId = enrollment.CoursePartnerOrganizationId,
             SupportUserId = enrollment.SupportUserId,
             InstructorId = enrollment.InstructorId,
             StartDate = enrollment.StartDate,
@@ -888,7 +978,7 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         
     }
         // ویرایش ثبت نام
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Roles = "Admin,EducationStaff,Support")]
     [HttpPut("{id}")]
     public async Task<ActionResult<EnrollmentDto>> Update(
         int id,
@@ -908,6 +998,21 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             {
                 message = "ثبت نام مورد نظر پیدا نشد"
             });
+        }
+
+        if (User.IsInRole("Support"))
+        {
+            var supportUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(supportUserIdClaim, out var supportUserId))
+            {
+                return Unauthorized(new { message = "شناسه کاربر معتبر نیست" });
+            }
+
+            if (enrollment.Student == null || enrollment.Student.SupportUserId != supportUserId)
+            {
+                return NotFound(new { message = "ثبت نام مورد نظر پیدا نشد" });
+            }
         }
 
         // وضعیت های مجاز ثبت نام
@@ -1060,6 +1165,7 @@ if (dto.InstructorId.HasValue)
                   enrollment.Student.LastName
                 : string.Empty,
             CourseId = enrollment.CourseId,
+            CoursePartnerOrganizationId = enrollment.CoursePartnerOrganizationId,
             CourseTitle = enrollment.Course?.Title,
             SupportUserId = enrollment.SupportUserId,
             InstructorId = enrollment.InstructorId,

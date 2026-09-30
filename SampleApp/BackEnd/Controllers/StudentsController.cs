@@ -103,6 +103,7 @@ public class StudentsController : ControllerBase
 
 
     // دریافت لیست دانشجویان
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support")]
     [HttpGet]
     public async Task<ActionResult<List<StudentDto>>> Get()
     {
@@ -132,11 +133,17 @@ public class StudentsController : ControllerBase
         IQueryable<Student> query = _context.Students;
 
         // Admin می‌تواند همه دانشجویان را ببیند
-        if (currentUser.Role == "Admin")
+        if (currentUser.Role == "Admin" || currentUser.Role == "EducationStaff")
         {
             query = _context.Students;
         }
         // Support فقط دانشجویان اختصاص داده شده به خودش را می‌بیند
+        // Marketer فقط دانشجویان اختصاص داده شده به خودش را می‌بیند
+        else if (currentUser.Role == "Marketer")
+        {
+            query = _context.Students
+                .Where(s => s.MarketingUserId == currentUser.Id);
+        }
         else if (currentUser.Role == "Support")
         {
             query = _context.Students
@@ -168,9 +175,29 @@ public class StudentsController : ControllerBase
         return Ok(students);
     }
 
+    // حساب‌های Student که هنوز پروفایل دانشجویی ندارند
+    [Authorize(Roles = "Admin,EducationStaff,Marketer")]
+    [HttpGet("available-users")]
+    public async Task<IActionResult> GetAvailableStudentUsers()
+    {
+        var users = await _context.Users
+            .Where(u => u.Role == "Student" && u.IsActive)
+            .Where(u => !_context.Students.Any(s => s.UserId == u.Id))
+            .Select(u => new
+            {
+                u.Id,
+                u.FullName,
+                u.Username,
+                u.Mobile
+            })
+            .OrderBy(u => u.FullName)
+            .ToListAsync();
+
+        return Ok(users);
+    }
 
     // ثبت دانشجوی جدید
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,EducationStaff,Marketer")]
     [HttpPost]
     public async Task<ActionResult<StudentDto>> Create(CreateStudentDto dto)
     {
@@ -198,7 +225,7 @@ public class StudentsController : ControllerBase
         }
 
         // فقط Admin می‌تواند دانشجوی جدید ایجاد کند
-        if (currentUser.Role != "Admin")
+        if (currentUser.Role != "Admin" && currentUser.Role != "EducationStaff" && currentUser.Role != "Marketer")
         {
             return Forbid();
         }
@@ -214,7 +241,7 @@ public class StudentsController : ControllerBase
             Address = dto.Address,
             GuardianName = dto.GuardianName,
             GuardianMobile = dto.GuardianMobile,
-            MarketingUserId = dto.MarketingUserId,
+            MarketingUserId = currentUser.Role == "Marketer" ? currentUser.Id : dto.MarketingUserId,
             SupportUserId = dto.SupportUserId
         };
 
@@ -240,13 +267,106 @@ public class StudentsController : ControllerBase
 
         return Ok(result);
     }
+    // ویرایش اطلاعات دانشجو توسط Admin و EducationStaff
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support")]
+    [HttpPut("{studentId}")]
+    public async Task<ActionResult<StudentDto>> UpdateStudent(
+        int studentId,
+        UpdateMyStudentProfileRequest dto)
+    {
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.Id == studentId);
 
+        if (student == null)
+        {
+            return NotFound(new
+            {
+                message = "دانشجو پیدا نشد"
+            });
+        }
+        var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        if ((User.IsInRole("Marketer") && student.MarketingUserId != currentUserId) || (User.IsInRole("Support") && student.SupportUserId != currentUserId))
+        {
+            return Forbid();
+        }
 
+        if (string.IsNullOrWhiteSpace(dto.FirstName) ||
+            string.IsNullOrWhiteSpace(dto.LastName) ||
+            string.IsNullOrWhiteSpace(dto.NationalCode) ||
+            string.IsNullOrWhiteSpace(dto.Mobile))
+        {
+            return BadRequest(new
+            {
+                message = "نام، نام خانوادگی، کد ملی و موبایل الزامی هستند."
+            });
+        }
 
+        student.FirstName = dto.FirstName.Trim();
+        student.LastName = dto.LastName.Trim();
+        student.NationalCode = dto.NationalCode.Trim();
+        student.BirthDate = dto.BirthDate;
+        student.Mobile = dto.Mobile.Trim();
+        student.Address = string.IsNullOrWhiteSpace(dto.Address)
+            ? null
+            : dto.Address.Trim();
+        student.GuardianName = string.IsNullOrWhiteSpace(dto.GuardianName)
+            ? null
+            : dto.GuardianName.Trim();
+        student.GuardianMobile = string.IsNullOrWhiteSpace(dto.GuardianMobile)
+            ? null
+            : dto.GuardianMobile.Trim();
 
-    // ویرایش پروفایل توسط خود دانشجو
-    [Authorize(Roles = "Student")]
-    [HttpPut("me")]
+        await _context.SaveChangesAsync();
+
+        return Ok(new StudentDto
+        {
+            Id = student.Id,
+            FirstName = student.FirstName,
+            LastName = student.LastName,
+            NationalCode = student.NationalCode,
+            BirthDate = student.BirthDate,
+            Mobile = student.Mobile,
+            Address = student.Address,
+            GuardianName = student.GuardianName,
+            GuardianMobile = student.GuardianMobile,
+            MarketingUserId = student.MarketingUserId,
+            SupportUserId = student.SupportUserId,
+            CreatedDate = student.CreatedDate
+        });
+    }
+
+    // دریافت اطلاعات یک دانشجو برای Admin و EducationStaff
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support")]
+    [HttpGet("{studentId:int}")]
+    public async Task<ActionResult<StudentDto>> GetStudentById(int studentId)
+    {
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.Id == studentId);
+
+        if (student == null)
+            return NotFound(new { message = "دانشجو پیدا نشد" });
+        var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        if ((User.IsInRole("Marketer") && student.MarketingUserId != currentUserId) || (User.IsInRole("Support") && student.SupportUserId != currentUserId))
+        {
+            return Forbid();
+        }
+
+        return Ok(new StudentDto
+        {
+            Id = student.Id,
+            FirstName = student.FirstName,
+            LastName = student.LastName,
+            NationalCode = student.NationalCode,
+            BirthDate = student.BirthDate,
+            Mobile = student.Mobile,
+            Address = student.Address,
+            GuardianName = student.GuardianName,
+            GuardianMobile = student.GuardianMobile,
+            MarketingUserId = student.MarketingUserId,
+            SupportUserId = student.SupportUserId,
+            CreatedDate = student.CreatedDate
+        });
+    }
     public async Task<ActionResult<StudentDto>> UpdateMyProfile(
         UpdateMyStudentProfileRequest dto)
     {

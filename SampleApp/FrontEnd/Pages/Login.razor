@@ -196,6 +196,18 @@
                 return;
             }
 
+        if (Auth.Role == "Marketer")
+        {
+            Navigation.NavigateTo("/marketer");
+            return;
+        }
+
+        if (Auth.Role == "EducationStaff")
+        {
+            Navigation.NavigateTo("/education");
+            return;
+        }
+
             Navigation.NavigateTo("/");
         }
         catch

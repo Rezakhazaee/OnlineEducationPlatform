@@ -9,6 +9,7 @@ public class EnrollmentDto
     public string? StudentName { get; set; }
 
     public int CourseId { get; set; }
+    public int? CoursePartnerOrganizationId { get; set; }
 
     public string? CourseTitle { get; set; }
 
