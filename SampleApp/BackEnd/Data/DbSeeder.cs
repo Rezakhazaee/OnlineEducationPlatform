@@ -75,10 +75,34 @@ public static class DbSeeder
             };
 
             db.Users.Add(support);
-            await db.SaveChangesAsync();
         }
 
         // ==========================================
+        // ==========================================
+        // 4. Test Education Staff
+        // ==========================================
+
+        var educationStaff = await db.Users
+            .FirstOrDefaultAsync(u => u.Username == "test.education");
+
+        if (educationStaff == null)
+        {
+            educationStaff = new User
+            {
+                FullName = "کارشناس آموزش تست",
+                Mobile = "09120000006",
+                Username = "test.education",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@12345"),
+                Role = "EducationStaff",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            db.Users.Add(educationStaff);
+            await db.SaveChangesAsync();
+        }
+
+
         // 4. Organization Settings
         // ==========================================
 
