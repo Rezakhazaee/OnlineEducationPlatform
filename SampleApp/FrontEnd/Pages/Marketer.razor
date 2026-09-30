@@ -161,6 +161,7 @@
                                         <th>شروع</th>
                                         <th>وضعیت</th>
                                         <th>توضیحات</th>
+                                        <th>مالی</th>
                                     </tr>
                                 </thead>
 
@@ -173,6 +174,9 @@
                                             <td>@item.StartDate.ToString("yyyy/MM/dd")</td>
                                             <td>@item.Status</td>
                                             <td>@item.Description</td>
+                                            <td>
+                                                <MarketerEnrollmentFinancial EnrollmentId="@item.Id" />
+                                            </td>
                                         </tr>
                                     }
                                 </tbody>

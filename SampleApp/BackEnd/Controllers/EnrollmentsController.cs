@@ -600,6 +600,21 @@ public async Task<ActionResult<EnrollmentFinancialDto>> GetFinancial(int id)
         }
     }
 
+    if (User.IsInRole("Marketer"))
+    {
+        var marketerUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(marketerUserIdClaim, out var marketerUserId))
+        {
+            return Unauthorized(new { message = "شناسه کاربر معتبر نیست" });
+        }
+
+        if (enrollment.Student == null ||
+            enrollment.Student.MarketingUserId != marketerUserId)
+        {
+            return NotFound(new { message = "ثبت نام مورد نظر پیدا نشد" });
+        }
+    }
     if (enrollment.Course == null)
     {
         return BadRequest(new
@@ -727,6 +742,21 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         }
     }
 
+    if (User.IsInRole("Marketer"))
+    {
+        var marketerUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(marketerUserIdClaim, out var marketerUserId))
+        {
+            return Unauthorized(new { message = "شناسه کاربر معتبر نیست" });
+        }
+
+        if (enrollment.Student == null ||
+            enrollment.Student.MarketingUserId != marketerUserId)
+        {
+            return NotFound(new { message = "ثبت نام مورد نظر پیدا نشد" });
+        }
+    }
     if (enrollment.Course == null)
     {
         return BadRequest(new

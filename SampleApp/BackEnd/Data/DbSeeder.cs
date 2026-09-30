@@ -79,6 +79,30 @@ public static class DbSeeder
 
         // ==========================================
         // ==========================================
+        // ==========================================
+        // 5. Test Marketer
+        // ==========================================
+
+        var marketer = await db.Users
+            .FirstOrDefaultAsync(u => u.Username == "test.marketer");
+
+        if (marketer == null)
+        {
+            marketer = new User
+            {
+                FullName = "بازاریاب تست",
+                Mobile = "09120000007",
+                Username = "test.marketer",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@12345"),
+                Role = "Marketer",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            db.Users.Add(marketer);
+            await db.SaveChangesAsync();
+        }
+
         // 4. Test Education Staff
         // ==========================================
 
@@ -259,6 +283,12 @@ public static class DbSeeder
             db.Students.Add(student);
             await db.SaveChangesAsync();
         }
+        if (student.MarketingUserId != marketer.Id)
+        {
+            student.MarketingUserId = marketer.Id;
+            await db.SaveChangesAsync();
+        }
+
 
         // ==========================================
         // 10. Enrollment
