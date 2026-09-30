@@ -5,53 +5,85 @@
 
 @if (Progress != null)
 {
-    <section class="student-content-card">
+    @if (Compact)
+    {
+        <div class="student-course-progress-compact">
 
-        <div class="student-section-header">
-            <div>
-                <h2>پیشرفت دوره</h2>
-                <span>
-                    @Progress.CompletedLessons از @Progress.TotalLessons درس تکمیل شده
-                </span>
+            <div class="student-course-progress-head">
+                <span>پیشرفت دوره</span>
+                <strong>@Progress.ProgressPercent.ToString("0")%</strong>
             </div>
 
-            <strong>
-                @Progress.ProgressPercent.ToString("0")%
-            </strong>
-        </div>
+            <div class="student-course-progress-bar">
+                <div style="width:@($"{Progress.ProgressPercent}%")"></div>
+            </div>
 
-        <div style="height:10px;background:#e7eef2;border-radius:10px;overflow:hidden;">
-            <div style="height:100%;width:@($"{Progress.ProgressPercent}%");background:#568fa8;border-radius:10px;"></div>
-        </div>
+            <small>
+                @Progress.CompletedLessons از @Progress.TotalLessons درس تکمیل شده
+            </small>
 
-    </section>
+        </div>
+    }
+    else
+    {
+        <section class="student-content-card">
+
+            <div class="student-section-header">
+                <div>
+                    <h2>پیشرفت دوره</h2>
+                    <span>
+                        @Progress.CompletedLessons از @Progress.TotalLessons درس تکمیل شده
+                    </span>
+                </div>
+
+                <strong>
+                    @Progress.ProgressPercent.ToString("0")%
+                </strong>
+            </div>
+
+            <div class="student-course-progress-bar">
+                <div style="width:@($"{Progress.ProgressPercent}%")"></div>
+            </div>
+
+        </section>
+    }
 }
 
 @code {
     [Parameter]
     public int CourseId { get; set; }
 
+    [Parameter]
+    public bool Compact { get; set; }
+
     private LessonProgressSummaryDto? Progress { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        var client = Auth.CreateAuthenticatedClient();
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
 
-        var enrollments =
-            await client.GetFromJsonAsync<List<EnrollmentDto>>(
-                "api/Enrollments/my")
-            ?? new();
+            var enrollments =
+                await client.GetFromJsonAsync<List<EnrollmentDto>>(
+                    "api/Enrollments/my")
+                ?? new();
 
-        var enrollment = enrollments.FirstOrDefault(x =>
-            x.CourseId == CourseId &&
-            x.Status == "Active");
+            var enrollment = enrollments.FirstOrDefault(x =>
+                x.CourseId == CourseId &&
+                x.Status == "Active");
 
-        if (enrollment == null)
-            return;
+            if (enrollment == null)
+                return;
 
-        Progress =
-            await client.GetFromJsonAsync<LessonProgressSummaryDto>(
-                $"api/LessonProgress/enrollment/{enrollment.Id}");
+            Progress =
+                await client.GetFromJsonAsync<LessonProgressSummaryDto>(
+                    $"api/LessonProgress/enrollment/{enrollment.Id}");
+        }
+        catch
+        {
+            Progress = null;
+        }
     }
 
     private class EnrollmentDto
