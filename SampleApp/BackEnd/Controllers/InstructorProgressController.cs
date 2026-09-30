@@ -21,24 +21,15 @@ public class InstructorProgressController : ControllerBase
     [HttpGet("course/{courseId:int}")]
     public async Task<IActionResult> GetCourseStudents(int courseId)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var instructorId = GetInstructorId();
+        if (instructorId == null) return Unauthorized();
 
-        if (!int.TryParse(userIdClaim, out var instructorId))
-            return Unauthorized();
+        var courseExists = await _context.Courses.AnyAsync(c =>
+            c.Id == courseId &&
+            c.InstructorId == instructorId.Value);
 
-        var course = await _context.Courses
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c =>
-                c.Id == courseId &&
-                c.InstructorId == instructorId);
-
-        if (course == null)
-        {
-            return NotFound(new
-            {
-                message = "دوره مورد نظر برای این مدرس پیدا نشد."
-            });
-        }
+        if (!courseExists)
+            return NotFound(new { message = "دوره مورد نظر پیدا نشد." });
 
         var lessonIds = await _context.CourseLessons
             .Where(l =>
@@ -59,31 +50,20 @@ public class InstructorProgressController : ControllerBase
             .ThenBy(e => e.Student!.LastName)
             .ToListAsync();
 
-        var enrollmentIds = enrollments
-            .Select(e => e.Id)
-            .ToList();
+        var ids = enrollments.Select(e => e.Id).ToList();
 
-        var completedByEnrollment = await _context.LessonProgresses
+        var completed = await _context.LessonProgresses
             .Where(p =>
-                enrollmentIds.Contains(p.EnrollmentId) &&
+                ids.Contains(p.EnrollmentId) &&
                 p.IsCompleted &&
                 lessonIds.Contains(p.CourseLessonId))
             .GroupBy(p => p.EnrollmentId)
-            .Select(g => new
-            {
-                EnrollmentId = g.Key,
-                CompletedLessons = g.Count()
-            })
-            .ToDictionaryAsync(
-                x => x.EnrollmentId,
-                x => x.CompletedLessons);
+            .Select(g => new { g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Key, x => x.Count);
 
-        var result = enrollments.Select(e =>
+        return Ok(enrollments.Select(e =>
         {
-            completedByEnrollment.TryGetValue(
-                e.Id,
-                out var completed);
-
+            completed.TryGetValue(e.Id, out var done);
             var total = lessonIds.Count;
 
             return new
@@ -97,13 +77,87 @@ public class InstructorProgressController : ControllerBase
                 startDate = e.StartDate,
                 status = e.Status,
                 totalLessons = total,
-                completedLessons = completed,
+                completedLessons = done,
                 progressPercent = total == 0
                     ? 0
-                    : Math.Round(completed * 100m / total, 2)
+                    : Math.Round(done * 100m / total, 2)
             };
-        }).ToList();
+        }));
+    }
 
-        return Ok(result);
+    [HttpGet("enrollment/{enrollmentId:int}")]
+    public async Task<IActionResult> GetStudentDetails(int enrollmentId)
+    {
+        var instructorId = GetInstructorId();
+        if (instructorId == null) return Unauthorized();
+
+        var enrollment = await _context.Enrollments
+            .AsNoTracking()
+            .Include(e => e.Student)
+            .Include(e => e.Course)
+            .FirstOrDefaultAsync(e => e.Id == enrollmentId);
+
+        if (enrollment == null ||
+            enrollment.Course == null ||
+            enrollment.Course.InstructorId != instructorId.Value)
+        {
+            return NotFound(new { message = "ثبت‌نام مورد نظر پیدا نشد." });
+        }
+
+        var lessons = await _context.CourseLessons
+            .AsNoTracking()
+            .Where(l =>
+                l.IsActive &&
+                l.CourseModule != null &&
+                l.CourseModule.IsActive &&
+                l.CourseModule.CourseId == enrollment.CourseId)
+            .OrderBy(l => l.CourseModule!.SortOrder)
+            .ThenBy(l => l.SortOrder)
+            .ThenBy(l => l.Id)
+            .Select(l => new
+            {
+                lessonId = l.Id,
+                title = l.Title,
+                contentType = l.ContentType,
+                durationMinutes = l.DurationMinutes
+            })
+            .ToListAsync();
+
+        var lessonIds = lessons.Select(x => x.lessonId).ToList();
+
+        var progress = await _context.LessonProgresses
+            .AsNoTracking()
+            .Where(p =>
+                p.EnrollmentId == enrollmentId &&
+                lessonIds.Contains(p.CourseLessonId))
+            .ToDictionaryAsync(p => p.CourseLessonId);
+
+        return Ok(new
+        {
+            enrollmentId = enrollment.Id,
+            studentName = enrollment.Student == null
+                ? string.Empty
+                : $"{enrollment.Student.FirstName} {enrollment.Student.LastName}".Trim(),
+            lessons = lessons.Select(l =>
+            {
+                progress.TryGetValue(l.lessonId, out var p);
+
+                return new
+                {
+                    l.lessonId,
+                    l.title,
+                    l.contentType,
+                    l.durationMinutes,
+                    isCompleted = p?.IsCompleted ?? false,
+                    completedAt = p?.CompletedAt
+                };
+            })
+        });
+    }
+
+    private int? GetInstructorId()
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return int.TryParse(claim, out var id) ? id : null;
     }
 }

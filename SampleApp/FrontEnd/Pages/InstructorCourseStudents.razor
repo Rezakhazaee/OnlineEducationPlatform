@@ -9,7 +9,6 @@
             <small>STUDENTS</small>
             <h3>دانشجویان دوره</h3>
         </div>
-
         <span>@Students.Count نفر</span>
     </div>
 
@@ -21,9 +20,7 @@
     }
     else if (!string.IsNullOrWhiteSpace(ErrorMessage))
     {
-        <div class="instructor-error">
-            @ErrorMessage
-        </div>
+        <div class="instructor-error">@ErrorMessage</div>
     }
     else if (Students.Count == 0)
     {
@@ -34,38 +31,74 @@
     else
     {
         <div class="instructor-course-list">
-
             @foreach (var student in Students)
             {
-                <div class="instructor-course-item">
+                <div>
+                    <div class="instructor-course-item">
 
-                    <div class="course-item-icon">
-                        @(string.IsNullOrWhiteSpace(student.StudentName)
-                            ? "د"
-                            : student.StudentName.Substring(0, 1))
+                        <div class="course-item-icon">
+                            @(string.IsNullOrWhiteSpace(student.StudentName)
+                                ? "د"
+                                : student.StudentName.Substring(0, 1))
+                        </div>
+
+                        <div class="course-item-info">
+                            <strong>@student.StudentName</strong>
+                            <small>
+                                @student.CompletedLessons از @student.TotalLessons درس
+                                · @student.ProgressPercent٪
+                            </small>
+
+                            @if (!string.IsNullOrWhiteSpace(student.Mobile))
+                            {
+                                <small>@student.Mobile</small>
+                            }
+                        </div>
+
+                        <strong>@student.ProgressPercent%</strong>
+
+                        <button class="instructor-small-btn"
+                                @onclick="() => ToggleDetails(student.EnrollmentId)">
+                            @(ExpandedEnrollmentId == student.EnrollmentId
+                                ? "بستن"
+                                : "جزئیات")
+                        </button>
                     </div>
 
-                    <div class="course-item-info">
-                        <strong>@student.StudentName</strong>
-
-                        <small>
-                            @student.CompletedLessons از @student.TotalLessons درس
-                            · @student.ProgressPercent٪
-                        </small>
-
-                        @if (!string.IsNullOrWhiteSpace(student.Mobile))
+                    @if (ExpandedEnrollmentId == student.EnrollmentId)
+                    {
+                        @if (DetailLoading)
                         {
-                            <small>@student.Mobile</small>
+                            <div class="instructor-mini-empty">
+                                در حال بارگذاری جزئیات...
+                            </div>
                         }
-                    </div>
+                        else if (SelectedDetails != null)
+                        {
+                            <div class="instructor-content-card">
 
-                    <strong>
-                        @student.ProgressPercent%
-                    </strong>
+                                @foreach (var lesson in SelectedDetails.Lessons)
+                                {
+                                    <div class="instructor-lesson-row">
+                                        <div>
+                                            <strong>@lesson.Title</strong>
+                                            <small>
+                                                @(lesson.ContentType == "Video" ? "ویدئویی" : "متنی")
+                                                · @lesson.DurationMinutes دقیقه
+                                            </small>
+                                        </div>
 
+                                        <strong>
+                                            @(lesson.IsCompleted ? "✓ تکمیل شده" : "○ تکمیل نشده")
+                                        </strong>
+                                    </div>
+                                }
+
+                            </div>
+                        }
+                    }
                 </div>
             }
-
         </div>
     }
 </section>
@@ -74,10 +107,13 @@
     [Parameter]
     public int CourseId { get; set; }
 
-    private readonly List<StudentProgressDto> Students = new();
+    private List<StudentProgressDto> Students { get; set; } = new();
+    private StudentDetailsDto? SelectedDetails { get; set; }
 
     private bool Loading { get; set; } = true;
+    private bool DetailLoading { get; set; }
     private string? ErrorMessage { get; set; }
+    private int ExpandedEnrollmentId { get; set; }
     private int LastLoadedCourseId { get; set; }
 
     protected override async Task OnParametersSetAsync()
@@ -93,7 +129,6 @@
     {
         Loading = true;
         ErrorMessage = null;
-        Students.Clear();
 
         try
         {
@@ -107,11 +142,10 @@
 
             var client = Auth.CreateAuthenticatedClient();
 
-            var result =
+            Students =
                 await client.GetFromJsonAsync<List<StudentProgressDto>>(
-                    $"api/InstructorProgress/course/{CourseId}");
-
-            Students.AddRange(result ?? new());
+                    $"api/InstructorProgress/course/{CourseId}")
+                ?? new();
         }
         catch
         {
@@ -123,16 +157,62 @@
         }
     }
 
+    private async Task ToggleDetails(int enrollmentId)
+    {
+        if (ExpandedEnrollmentId == enrollmentId)
+        {
+            ExpandedEnrollmentId = 0;
+            SelectedDetails = null;
+            return;
+        }
+
+        ExpandedEnrollmentId = enrollmentId;
+        SelectedDetails = null;
+        DetailLoading = true;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            SelectedDetails =
+                await client.GetFromJsonAsync<StudentDetailsDto>(
+                    $"api/InstructorProgress/enrollment/{enrollmentId}");
+        }
+        catch
+        {
+            ErrorMessage = "دریافت جزئیات پیشرفت دانشجو با خطا مواجه شد.";
+        }
+        finally
+        {
+            DetailLoading = false;
+        }
+    }
+
     private class StudentProgressDto
     {
         public int EnrollmentId { get; set; }
         public int StudentId { get; set; }
-        public string StudentName { get; set; } = string.Empty;
+        public string StudentName { get; set; } = "";
         public string? Mobile { get; set; }
-        public DateTime StartDate { get; set; }
-        public string Status { get; set; } = string.Empty;
         public int TotalLessons { get; set; }
         public int CompletedLessons { get; set; }
         public decimal ProgressPercent { get; set; }
+    }
+
+    private class StudentDetailsDto
+    {
+        public int EnrollmentId { get; set; }
+        public string StudentName { get; set; } = "";
+        public List<LessonDetailDto> Lessons { get; set; } = new();
+    }
+
+    private class LessonDetailDto
+    {
+        public int LessonId { get; set; }
+        public string Title { get; set; } = "";
+        public string ContentType { get; set; } = "";
+        public int DurationMinutes { get; set; }
+        public bool IsCompleted { get; set; }
+        public DateTime? CompletedAt { get; set; }
     }
 }
