@@ -168,6 +168,12 @@
                     @Model.StudentName
                     <span style="margin:0 12px;">|</span>
                     <strong>دوره:</strong>
+                    <span style="margin:0 12px;">|</span>
+                    <strong>پشتیبان:</strong>
+                    @Model.SupportUserName
+                    <span style="margin:0 12px;">|</span>
+                    <strong>مدرس:</strong>
+                    @Model.InstructorName
                     @Model.CourseTitle
                 </div>
 
@@ -203,6 +209,10 @@
                         @ErrorMessage
                     </div>
                 }
+
+                <div style="margin-top:22px;">
+                    <EducationEnrollmentFinancial EnrollmentId="@EnrollmentId" />
+                </div>
 
                 <div class="education-form-actions">
 
@@ -350,6 +360,8 @@
         public string CourseTitle { get; set; } = "";
         public int? CoursePartnerOrganizationId { get; set; }
         public int? SupportUserId { get; set; }
+        public string? SupportUserName { get; set; }
+        public string? InstructorName { get; set; }
         public int? InstructorId { get; set; }
         public DateTime StartDate { get; set; }
         public string Status { get; set; } = "Active";
