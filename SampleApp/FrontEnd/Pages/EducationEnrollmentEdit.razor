@@ -177,6 +177,23 @@
                     @Model.CourseTitle
                 </div>
 
+                @if (StudentDetails != null)
+                {
+                    <div class="education-info">
+                        <strong>اطلاعات دانشجو</strong>
+                        <div style="margin-top:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+                            <div><strong>نام:</strong> @StudentDetails.FirstName @StudentDetails.LastName</div>
+                            <div><strong>موبایل:</strong> @StudentDetails.Mobile</div>
+                            <div><strong>کد ملی:</strong> @StudentDetails.NationalCode</div>
+                            <div><strong>تاریخ تولد:</strong> @(StudentDetails.BirthDate?.ToString("yyyy/MM/dd") ?? "-")</div>
+                            <div><strong>ولی:</strong> @StudentDetails.GuardianName</div>
+                            <div><strong>موبایل ولی:</strong> @StudentDetails.GuardianMobile</div>
+                            <div style="grid-column:1 / -1;"><strong>آدرس:</strong> @StudentDetails.Address</div>
+                        </div>
+                    </div>
+                }
+
+
                 <div class="education-form-grid">
 
                     <div class="education-form-group">
@@ -249,6 +266,8 @@
     private string StartDateText = "";
 
     private EnrollmentEditModel Model = new();
+    private StudentDetailsModel? StudentDetails { get; set; }
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -280,6 +299,11 @@
             }
 
             Model = result;
+
+            StudentDetails = await client.GetFromJsonAsync<StudentDetailsModel>(
+                $"api/Students/{Model.StudentId}"
+            );
+
             StartDateText = Model.StartDate.ToString("yyyy-MM-dd");
         }
         catch
@@ -367,4 +391,18 @@
         public string Status { get; set; } = "Active";
         public string? Description { get; set; }
     }
+
+    public class StudentDetailsModel
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
+        public string? NationalCode { get; set; }
+        public DateTime? BirthDate { get; set; }
+        public string? Mobile { get; set; }
+        public string? Address { get; set; }
+        public string? GuardianName { get; set; }
+        public string? GuardianMobile { get; set; }
+    }
+
 }
