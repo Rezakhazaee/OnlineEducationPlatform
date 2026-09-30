@@ -29,13 +29,32 @@ public class ApplicationDbContext : DbContext
     public DbSet<Enrollment> Enrollments { get; set; }
 
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<Certificate> Certificates { get; set; }
 
     public DbSet<StudentFollowUp> StudentFollowUps { get; set; }
 
 
+    protected void ConfigureCertificates(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Certificate>()
+            .HasOne(c => c.Enrollment)
+            .WithMany()
+            .HasForeignKey(c => c.EnrollmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Certificate>()
+            .HasIndex(c => c.EnrollmentId)
+            .IsUnique();
+
+        modelBuilder.Entity<Certificate>()
+            .HasIndex(c => c.CertificateNumber)
+            .IsUnique();
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        ConfigureCertificates(modelBuilder);
 
 
 
