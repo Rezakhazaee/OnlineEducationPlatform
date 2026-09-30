@@ -32,6 +32,10 @@
                 ثبت‌نام‌ها
             </button>
 
+            <a class="education-nav-btn @(ActiveTab == "progress" ? "active" : "")" href="/education?tab=progress">
+                پیشرفت دانشجویان
+            </a>
+
             <button class="education-nav-btn @(ActiveTab == "courses" ? "active" : "")"
                     @onclick='() => ActiveTab = "courses"'>
                 محتوای دوره‌ها
@@ -177,6 +181,16 @@
                     }
                 </section>
             }
+
+            <a class="education-nav-btn @(ActiveTab == "progress" ? "active" : "")" href="/education?tab=progress">
+                پیشرفت دانشجویان
+            </a>
+
+            @if (ActiveTab == "progress")
+            {
+                <EducationProgressPanel />
+            }
+
 
             @if (ActiveTab == "courses")
             {

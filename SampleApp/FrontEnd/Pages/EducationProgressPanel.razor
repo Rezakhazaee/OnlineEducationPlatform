@@ -1,0 +1,146 @@
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+
+<section class="education-card">
+
+    <div class="education-card-header">
+        <div>
+            <h2>پیشرفت دانشجویان</h2>
+            <span>@Items.Count ثبت‌نام فعال</span>
+        </div>
+    </div>
+
+    @if (Loading)
+    {
+        <div class="education-empty">
+            در حال دریافت اطلاعات پیشرفت...
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="education-error">
+            @ErrorMessage
+        </div>
+    }
+    else if (Items.Count == 0)
+    {
+        <div class="education-empty">
+            هنوز داده‌ای برای پیشرفت دانشجویان وجود ندارد.
+        </div>
+    }
+    else
+    {
+        <div class="education-table-wrapper">
+
+            <table class="education-table">
+
+                <thead>
+                    <tr>
+                        <th>دانشجو</th>
+                        <th>دوره</th>
+                        <th>پشتیبان</th>
+                        <th>مدرس</th>
+                        <th>پیشرفت</th>
+                        <th>درس تکمیل‌شده</th>
+                        <th>شروع</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var item in Items)
+                    {
+                        <tr>
+                            <td>@item.StudentName</td>
+                            <td>@item.CourseTitle</td>
+                            <td>@item.SupportUserName</td>
+                            <td>@item.InstructorName</td>
+                            <td>@item.ProgressPercent٪</td>
+                            <td>
+                                @item.CompletedLessons
+                                از
+                                @item.TotalLessons
+                            </td>
+                            <td>
+                                @item.StartDate.ToString("yyyy/MM/dd")
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+    }
+</section>
+
+@code {
+
+    private List<ProgressDto> Items { get; set; } = new();
+
+    private bool Loading { get; set; } = true;
+
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || Auth.Role != "EducationStaff")
+        {
+            ErrorMessage = "دسترسی غیرمجاز.";
+            Loading = false;
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Items =
+                await client.GetFromJsonAsync<List<ProgressDto>>(
+                    "api/EducationProgress")
+                ?? new();
+        }
+        catch
+        {
+            ErrorMessage =
+                "دریافت اطلاعات پیشرفت با خطا مواجه شد.";
+        }
+        finally
+        {
+            Loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private class ProgressDto
+    {
+        public int EnrollmentId { get; set; }
+
+        public string StudentName { get; set; } = "";
+
+        public string CourseTitle { get; set; } = "";
+
+        public string? SupportUserName { get; set; }
+
+        public string? InstructorName { get; set; }
+
+        public DateTime StartDate { get; set; }
+
+        public string Status { get; set; } = "";
+
+        public int TotalLessons { get; set; }
+
+        public int CompletedLessons { get; set; }
+
+        public decimal ProgressPercent { get; set; }
+    }
+}
