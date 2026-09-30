@@ -51,6 +51,7 @@ public class PublicCoursesController : ControllerBase
 
                 LessonCount = _context.CourseLessons
                     .Count(l =>
+                        l.CourseModule != null &&
                         l.CourseModule.CourseId == c.Id &&
                         l.CourseModule.IsActive &&
                         l.IsActive)
