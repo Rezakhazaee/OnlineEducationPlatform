@@ -1,0 +1,479 @@
+@page "/support"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>پنل پشتیبانی | آموزش‌یار</PageTitle>
+
+<div class="education-page">
+
+    <aside class="education-sidebar">
+
+        <div class="education-brand">
+            <div class="education-logo">آ</div>
+            <div>
+                <strong>آموزش‌یار</strong>
+                <small>پنل پشتیبانی</small>
+            </div>
+        </div>
+
+        <nav class="education-nav">
+
+            <button class="education-nav-btn @(ActiveTab == "students" ? "active" : "")"
+                    @onclick='() => ActiveTab = "students"'>
+                دانشجویان من
+            </button>
+
+            <button class="education-nav-btn @(ActiveTab == "enrollments" ? "active" : "")"
+                    @onclick='() => ActiveTab = "enrollments"'>
+                ثبت‌نام‌ها
+            </button>
+
+            <button class="education-nav-btn @(ActiveTab == "financial" ? "active" : "")"
+                    @onclick='() => ActiveTab = "financial"'>
+                گزارش مالی
+            </button>
+
+        </nav>
+
+        <button class="education-logout" @onclick="Logout">
+            خروج
+        </button>
+
+    </aside>
+
+    <main class="education-main">
+
+        <header class="education-topbar">
+            <div>
+                <h1>پنل پشتیبانی</h1>
+                <p>مدیریت دانشجویان، ثبت‌نام‌ها و گزارش‌های مالی</p>
+            </div>
+
+            <div class="education-user">
+                <strong>@Auth.FullName</strong>
+                <span>کارشناس پشتیبانی</span>
+            </div>
+        </header>
+
+        @if (IsLoading)
+        {
+            <div class="education-card">
+                در حال دریافت اطلاعات...
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="education-error">
+                @ErrorMessage
+            </div>
+        }
+        else
+        {
+            @if (ActiveTab == "students")
+            {
+                <section class="education-card">
+
+                    <div class="education-card-header">
+                        <div>
+                            <h2>دانشجویان من</h2>
+                            <span>@Students.Count دانشجو</span>
+                        </div>
+                    </div>
+
+                    @if (Students.Count == 0)
+                    {
+                        <div class="education-empty">
+                            هنوز دانشجویی به شما اختصاص داده نشده است.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="education-table-wrapper">
+                            <table class="education-table">
+                                <thead>
+                                    <tr>
+                                        <th>نام</th>
+                                        <th>موبایل</th>
+                                        <th>کد ملی</th>
+                                        <th>تاریخ ایجاد</th>
+                                        <th>عملیات</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @foreach (var student in Students)
+                                    {
+                                        <tr>
+                                            <td>@student.FirstName @student.LastName</td>
+                                            <td>@student.Mobile</td>
+                                            <td>@student.NationalCode</td>
+                                            <td>@student.CreatedDate.ToString("yyyy/MM/dd")</td>
+                                            <td>
+                                                <a class="education-btn secondary"
+                                                   href="/support/students/@student.Id/edit">
+                                                    ویرایش
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
+                </section>
+            }
+
+            @if (ActiveTab == "enrollments")
+            {
+                <section class="education-card">
+
+                    <div class="education-card-header">
+                        <div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                                <h2>ثبت‌نام‌ها</h2>
+
+                                <a href="/support/enrollments/new"
+                                   class="education-primary-btn">
+                                    ثبت‌نام جدید
+                                </a>
+                            </div>
+
+                            <span>@Enrollments.Count ثبت‌نام</span>
+                        </div>
+                    </div>
+
+                    @if (Enrollments.Count == 0)
+                    {
+                        <div class="education-empty">
+                            ثبت‌نامی برای دانشجویان شما ثبت نشده است.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="education-table-wrapper">
+                            <table class="education-table">
+                                <thead>
+                                    <tr>
+                                        <th>دانشجو</th>
+                                        <th>دوره</th>
+                                        <th>استاد</th>
+                                        <th>شروع</th>
+                                        <th>وضعیت</th>
+                                        <th>عملیات</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @foreach (var item in Enrollments)
+                                    {
+                                        <tr>
+                                            <td>@item.StudentName</td>
+                                            <td>@item.CourseTitle</td>
+                                            <td>@item.InstructorName</td>
+                                            <td>@item.StartDate.ToString("yyyy/MM/dd")</td>
+                                            <td>@item.Status</td>
+                                            <td>
+                                                <div style="display:flex;gap:7px;">
+                                                    <a class="education-btn secondary"
+                                                       href="/support/enrollments/@item.Id/edit">
+                                                        ویرایش
+                                                    </a>
+
+                                                    <button class="education-btn primary"
+                                                            @onclick="() => OpenFinancial(item.Id)">
+                                                        مالی
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
+                </section>
+            }
+
+            @if (ActiveTab == "financial")
+            {
+                <section class="education-card">
+
+                    <div class="education-card-header">
+                        <div>
+                            <h2>گزارش مالی</h2>
+                            <span>اطلاعات مالی ثبت‌نام‌های دانشجویان شما</span>
+                        </div>
+                    </div>
+
+                    <div class="education-course-select">
+                        <label>ثبت‌نام</label>
+
+                        <select @bind="SelectedEnrollmentId">
+                            <option value="0">انتخاب ثبت‌نام</option>
+
+                            @foreach (var item in Enrollments)
+                            {
+                                <option value="@item.Id">
+                                    @item.StudentName - @item.CourseTitle
+                                </option>
+                            }
+                        </select>
+
+                        <button class="education-btn primary"
+                                style="margin-top:12px;"
+                                @onclick="LoadFinancial">
+                            مشاهده گزارش
+                        </button>
+                    </div>
+
+                    @if (FinancialLoading)
+                    {
+                        <div class="education-empty">
+                            در حال دریافت گزارش مالی...
+                        </div>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(FinancialError))
+                    {
+                        <div class="education-error">
+                            @FinancialError
+                        </div>
+                    }
+                    else if (Financial != null)
+                    {
+                        <div class="education-form-grid">
+
+                            <div class="education-card">
+                                <strong>دانشجو</strong>
+                                <div style="margin-top:8px;">@Financial.StudentName</div>
+                            </div>
+
+                            <div class="education-card">
+                                <strong>دوره</strong>
+                                <div style="margin-top:8px;">@Financial.CourseTitle</div>
+                            </div>
+
+                            <div class="education-card">
+                                <strong>قیمت دوره</strong>
+                                <div style="margin-top:8px;">@Financial.CoursePrice.ToString("N0")</div>
+                            </div>
+
+                            <div class="education-card">
+                                <strong>پرداخت‌شده</strong>
+                                <div style="margin-top:8px;">@Financial.TotalPaid.ToString("N0")</div>
+                            </div>
+
+                            <div class="education-card">
+                                <strong>مانده</strong>
+                                <div style="margin-top:8px;">@Financial.RemainingAmount.ToString("N0")</div>
+                            </div>
+
+                            <div class="education-card">
+                                <strong>وضعیت پرداخت</strong>
+                                <div style="margin-top:8px;">@Financial.PaymentStatus</div>
+                            </div>
+
+                        </div>
+
+                        @if (Financial.Payments.Count > 0)
+                        {
+                            <div class="education-table-wrapper" style="margin-top:24px;">
+                                <table class="education-table">
+                                    <thead>
+                                        <tr>
+                                            <th>مبلغ</th>
+                                            <th>تاریخ</th>
+                                            <th>نوع پرداخت</th>
+                                            <th>وضعیت</th>
+                                            <th>توضیحات</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        @foreach (var payment in Financial.Payments)
+                                        {
+                                            <tr>
+                                                <td>@payment.Amount.ToString("N0")</td>
+                                                <td>@payment.PaymentDate.ToString("yyyy/MM/dd")</td>
+                                                <td>@payment.PaymentType</td>
+                                                <td>@payment.Status</td>
+                                                <td>@payment.Description</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    }
+
+                </section>
+            }
+        }
+
+    </main>
+</div>
+
+@code {
+
+    private string ActiveTab { get; set; } = "students";
+
+    [SupplyParameterFromQuery(Name = "tab")]
+    private string? Tab { get; set; }
+
+    private bool IsLoading { get; set; } = true;
+    private string? ErrorMessage { get; set; }
+
+    private bool FinancialLoading { get; set; }
+    private string? FinancialError { get; set; }
+
+    private int SelectedEnrollmentId { get; set; }
+
+    private List<StudentDto> Students { get; set; } = new();
+    private List<EnrollmentDto> Enrollments { get; set; } = new();
+
+    private EnrollmentFinancialDetailDto? Financial { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || Auth.Role != "Support")
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        if (Tab == "students" || Tab == "enrollments" || Tab == "financial")
+            ActiveTab = Tab;
+
+        await LoadData();
+
+        StateHasChanged();
+    }
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Students =
+                await client.GetFromJsonAsync<List<StudentDto>>(
+                    "api/Students"
+                ) ?? new();
+
+            Enrollments =
+                await client.GetFromJsonAsync<List<EnrollmentDto>>(
+                    "api/Enrollments"
+                ) ?? new();
+        }
+        catch
+        {
+            ErrorMessage = "دریافت اطلاعات از سرور با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void OpenFinancial(int enrollmentId)
+    {
+        SelectedEnrollmentId = enrollmentId;
+        ActiveTab = "financial";
+        _ = LoadFinancial();
+    }
+
+    private async Task LoadFinancial()
+    {
+        FinancialError = null;
+        Financial = null;
+
+        if (SelectedEnrollmentId <= 0)
+        {
+            FinancialError = "یک ثبت‌نام را انتخاب کنید.";
+            return;
+        }
+
+        FinancialLoading = true;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Financial =
+                await client.GetFromJsonAsync<EnrollmentFinancialDetailDto>(
+                    $"api/Enrollments/{SelectedEnrollmentId}/financial-details"
+                );
+        }
+        catch
+        {
+            FinancialError = "دریافت گزارش مالی با خطا مواجه شد.";
+        }
+        finally
+        {
+            FinancialLoading = false;
+        }
+    }
+
+    private async Task Logout()
+    {
+        await Auth.LogoutAsync();
+        Navigation.NavigateTo("/login");
+    }
+
+    public class StudentDto
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
+        public string? NationalCode { get; set; }
+        public string? Mobile { get; set; }
+        public DateTime CreatedDate { get; set; }
+    }
+
+    public class EnrollmentDto
+    {
+        public int Id { get; set; }
+        public int StudentId { get; set; }
+        public string StudentName { get; set; } = "";
+        public int CourseId { get; set; }
+        public string CourseTitle { get; set; } = "";
+        public string? InstructorName { get; set; }
+        public DateTime StartDate { get; set; }
+        public string Status { get; set; } = "";
+    }
+
+    public class EnrollmentFinancialDetailDto
+    {
+        public int EnrollmentId { get; set; }
+        public string StudentName { get; set; } = "";
+        public string CourseTitle { get; set; } = "";
+        public decimal CoursePrice { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal RemainingAmount { get; set; }
+        public string PaymentStatus { get; set; } = "";
+        public List<PaymentItemDto> Payments { get; set; } = new();
+    }
+
+    public class PaymentItemDto
+    {
+        public int Id { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime PaymentDate { get; set; }
+        public string? PaymentType { get; set; }
+        public string? Description { get; set; }
+        public string? Status { get; set; }
+    }
+}

@@ -202,6 +202,13 @@
             return;
         }
 
+        if (Auth.Role == "Support")
+        {
+            Navigation.NavigateTo("/support");
+            return;
+        }
+
+
         if (Auth.Role == "EducationStaff")
         {
             Navigation.NavigateTo("/education");

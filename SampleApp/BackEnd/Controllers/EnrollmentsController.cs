@@ -1013,7 +1013,10 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             {
                 return NotFound(new { message = "ثبت نام مورد نظر پیدا نشد" });
             }
+
+            dto.SupportUserId = supportUserId;
         }
+
 
         // وضعیت های مجاز ثبت نام
         var allowedStatuses = new[]
