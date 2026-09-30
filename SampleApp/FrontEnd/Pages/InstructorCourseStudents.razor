@@ -30,6 +30,15 @@
     }
     else
     {
+        <div class="instructor-course-count">
+            <span>تعداد دانشجو</span>
+            <strong>@Students.Count</strong>
+            <span>میانگین پیشرفت</span>
+            <strong>@(Students.Count == 0 ? 0 : Math.Round(Students.Average(x => x.ProgressPercent), 2))٪</strong>
+            <span>تکمیل‌کنندگان</span>
+            <strong>@Students.Count(x => x.ProgressPercent >= 100) نفر</strong>
+        </div>
+
         <div class="instructor-course-list">
             @foreach (var student in Students)
             {
