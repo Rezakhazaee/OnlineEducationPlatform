@@ -32,6 +32,10 @@
                 ثبت‌نام‌ها
             </button>
 
+            <button class="education-nav-btn @(ActiveTab == "progress" ? "active" : "")" @onclick='() => ActiveTab = "progress"'>
+                پیشرفت آموزشی
+            </button>
+
             <button class="education-nav-btn @(ActiveTab == "financial" ? "active" : "")"
                     @onclick='() => ActiveTab = "financial"'>
                 گزارش مالی
@@ -200,6 +204,16 @@
                 </section>
             }
 
+            <button class="education-nav-btn @(ActiveTab == "progress" ? "active" : "")" @onclick='() => ActiveTab = "progress"'>
+                پیشرفت آموزشی
+            </button>
+
+            @if (ActiveTab == "progress")
+            {
+                <SupportProgressPanel />
+            }
+
+
             @if (ActiveTab == "financial")
             {
                 <section class="education-card">
@@ -351,7 +365,7 @@
             return;
         }
 
-        if (Tab == "students" || Tab == "enrollments" || Tab == "financial")
+        if (Tab == "students" || Tab == "enrollments" || Tab == "financial" || Tab == "progress")
             ActiveTab = Tab;
 
         await LoadData();
