@@ -25,7 +25,24 @@ public class PaymentsController : ControllerBase
     [HttpGet]
     public async Task<List<PaymentDetailDto>> Get()
     {
-        return await _context.Payments
+        var query = _context.Payments.AsQueryable();
+
+        if (User.IsInRole("Support"))
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(userIdClaim, out var supportUserId))
+            {
+                return new List<PaymentDetailDto>();
+            }
+
+            query = query.Where(p =>
+                p.Enrollment != null &&
+                p.Enrollment.Student != null &&
+                p.Enrollment.Student.SupportUserId == supportUserId);
+        }
+
+        return await query
             .Select(p => new PaymentDetailDto
             {
                 Id = p.Id,
@@ -421,6 +438,8 @@ public async Task<IActionResult> Pay(int id)
         .ThenInclude(e => e!.Course)
         .Include(p => p.Enrollment)
         .ThenInclude(e => e!.CoursePartnerOrganization)
+                .Include(p => p.Enrollment)
+        .ThenInclude(e => e!.Student)
         .FirstOrDefaultAsync(p => p.Id == id);
 
     if (payment == null)
@@ -448,7 +467,22 @@ public async Task<IActionResult> Pay(int id)
         });
     }
 
-    if (payment.Enrollment.Status == "Cancelled" ||
+
+    if (User.IsInRole("Support"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var supportUserId) ||
+            payment.Enrollment.Student?.SupportUserId != supportUserId)
+        {
+            return NotFound(new
+            {
+                message = "پرداخت مورد نظر پیدا نشد"
+            });
+        }
+    }
+
+if (payment.Enrollment.Status == "Cancelled" ||
     payment.Enrollment.Status == "Suspended")
 {
     return BadRequest(new
@@ -562,6 +596,8 @@ public async Task<IActionResult> Pay(int id)
 public async Task<IActionResult> Cancel(int id)
 {
     var payment = await _context.Payments
+        .Include(p => p.Enrollment)
+        .ThenInclude(e => e!.Student)
         .FirstOrDefaultAsync(p => p.Id == id);
 
     if (payment == null)
@@ -572,7 +608,22 @@ public async Task<IActionResult> Cancel(int id)
         });
     }
 
-    if (payment.Status != "Pending")
+    
+    if (User.IsInRole("Support"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var supportUserId) ||
+            payment.Enrollment?.Student?.SupportUserId != supportUserId)
+        {
+            return NotFound(new
+            {
+                message = "پرداخت مورد نظر پیدا نشد"
+            });
+        }
+    }
+
+if (payment.Status != "Pending")
     {
         return BadRequest(new
         {
