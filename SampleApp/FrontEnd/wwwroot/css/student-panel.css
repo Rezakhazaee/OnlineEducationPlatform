@@ -2248,3 +2248,60 @@
         flex: 1 1 calc(50% - 7px) !important;
     }
 }
+
+/* ===== Student navigation visibility fix ===== */
+
+.student-nav a,
+.student-nav a span {
+    color: #dbe5e9 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.student-nav a {
+    background: transparent !important;
+}
+
+.student-nav a:hover {
+    background: #314d5b !important;
+    color: #ffffff !important;
+}
+
+.student-nav a.active {
+    background: #568fa8 !important;
+    color: #ffffff !important;
+}
+
+.student-nav a.active span,
+.student-nav a:hover span {
+    color: #ffffff !important;
+}
+
+
+/* ===== Student navigation visibility fix ===== */
+
+.student-nav a,
+.student-nav a span {
+    color: #dbe5e9 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.student-nav a {
+    background: transparent !important;
+}
+
+.student-nav a:hover {
+    background: #314d5b !important;
+    color: #ffffff !important;
+}
+
+.student-nav a.active {
+    background: #568fa8 !important;
+    color: #ffffff !important;
+}
+
+.student-nav a.active span,
+.student-nav a:hover span {
+    color: #ffffff !important;
+}

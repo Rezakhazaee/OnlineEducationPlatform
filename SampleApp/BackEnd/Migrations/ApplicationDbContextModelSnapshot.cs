@@ -206,6 +206,34 @@ namespace BackEnd.Migrations
                     b.ToTable("Enrollments");
                 });
 
+            modelBuilder.Entity("BackEnd.Models.LessonProgress", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CourseLessonId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EnrollmentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseLessonId");
+
+                    b.HasIndex("EnrollmentId", "CourseLessonId")
+                        .IsUnique();
+
+                    b.ToTable("LessonProgresses");
+                });
+
             modelBuilder.Entity("BackEnd.Models.OrganizationSettings", b =>
                 {
                     b.Property<int>("Id")
@@ -543,6 +571,25 @@ namespace BackEnd.Migrations
                     b.Navigation("Student");
 
                     b.Navigation("SupportUser");
+                });
+
+            modelBuilder.Entity("BackEnd.Models.LessonProgress", b =>
+                {
+                    b.HasOne("BackEnd.Models.CourseLesson", "CourseLesson")
+                        .WithMany()
+                        .HasForeignKey("CourseLessonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BackEnd.Models.Enrollment", "Enrollment")
+                        .WithMany()
+                        .HasForeignKey("EnrollmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CourseLesson");
+
+                    b.Navigation("Enrollment");
                 });
 
             modelBuilder.Entity("BackEnd.Models.Payment", b =>
