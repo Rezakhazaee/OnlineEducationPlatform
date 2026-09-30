@@ -60,6 +60,42 @@
 
     <div style="margin-top:24px;">
 
+    @if (EditingFollowUpId.HasValue)
+    {
+        <div class="education-card" style="margin-bottom:24px;">
+            <h3>ویرایش پیگیری</h3>
+
+            <div class="education-form-grid">
+                <div class="education-form-group">
+                    <label>تاریخ پیگیری</label>
+                    <input type="date" @bind="EditFollowUpDate" />
+                </div>
+
+                <div class="education-form-group">
+                    <label>وضعیت</label>
+                    <select @bind="EditStatus">
+                        <option value="Pending">در انتظار</option>
+                        <option value="InProgress">در حال پیگیری</option>
+                        <option value="Completed">تکمیل‌شده</option>
+                        <option value="Cancelled">لغوشده</option>
+                    </select>
+                </div>
+
+                <div class="education-form-group education-form-group-full">
+                    <label>توضیحات</label>
+                    <textarea rows="4" @bind="EditDescription"></textarea>
+                </div>
+            </div>
+
+            <div class="education-form-actions">
+                <button class="education-btn secondary" @onclick="CancelEdit">انصراف</button>
+                <button class="education-btn primary" @onclick="UpdateFollowUp" disabled="@Saving">
+                    @(Saving ? "در حال ذخیره..." : "ذخیره ویرایش")
+                </button>
+            </div>
+        </div>
+    }
+
         @if (Loading)
         {
             <div class="education-empty">
@@ -82,6 +118,7 @@
                             <th>وضعیت</th>
                             <th>توضیحات</th>
                             <th>ثبت‌شده در</th>
+                            <th>عملیات</th>
                         </tr>
                     </thead>
 
@@ -93,6 +130,10 @@
                                 <td>@GetStatusText(item.Status)</td>
                                 <td>@item.Description</td>
                                 <td>@item.CreatedDate.ToString("yyyy/MM/dd HH:mm")</td>
+                                <td>
+                                    <button class="education-btn secondary" @onclick="() => BeginEdit(item)">ویرایش</button>
+                                    <button class="education-btn primary" @onclick="() => DeleteFollowUp(item.Id)">حذف</button>
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -117,6 +158,11 @@
 
     private DateTime FollowUpDate { get; set; } = DateTime.Today;
     private string NewStatus { get; set; } = "Pending";
+    private int? EditingFollowUpId { get; set; }
+    private DateTime EditFollowUpDate { get; set; }
+    private string EditStatus { get; set; } = "Pending";
+    private string? EditDescription { get; set; }
+
     private string? NewDescription { get; set; }
 
     protected override async Task OnParametersSetAsync()
@@ -204,6 +250,95 @@
             Saving = false;
         }
     }
+
+    private void BeginEdit(FollowUpDto item)
+    {
+        EditingFollowUpId = item.Id;
+        EditFollowUpDate = item.FollowUpDate;
+        EditStatus = item.Status;
+        EditDescription = item.Description;
+        ErrorMessage = null;
+        SuccessMessage = null;
+    }
+
+    private void CancelEdit()
+    {
+        EditingFollowUpId = null;
+        EditDescription = null;
+        EditStatus = "Pending";
+        EditFollowUpDate = DateTime.Today;
+    }
+
+    private async Task UpdateFollowUp()
+    {
+        if (!EditingFollowUpId.HasValue)
+            return;
+
+        Saving = true;
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var response = await client.PutAsJsonAsync(
+                $"api/StudentFollowUps/{EditingFollowUpId.Value}",
+                new
+                {
+                    followUpDate = EditFollowUpDate,
+                    status = EditStatus,
+                    description = EditDescription
+                });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            EditingFollowUpId = null;
+            SuccessMessage = "پیگیری با موفقیت ویرایش شد.";
+            await LoadFollowUps();
+        }
+        catch
+        {
+            ErrorMessage = "ویرایش پیگیری با خطا مواجه شد.";
+        }
+        finally
+        {
+            Saving = false;
+        }
+    }
+
+    private async Task DeleteFollowUp(int id)
+    {
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+            var response = await client.DeleteAsync($"api/StudentFollowUps/{id}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            if (EditingFollowUpId == id)
+                EditingFollowUpId = null;
+
+            SuccessMessage = "پیگیری با موفقیت حذف شد.";
+            await LoadFollowUps();
+        }
+        catch
+        {
+            ErrorMessage = "حذف پیگیری با خطا مواجه شد.";
+        }
+    }
+
 
     private string GetStatusText(string? status)
     {
