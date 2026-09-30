@@ -1,0 +1,114 @@
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+
+<section class="admin-content-card" style="margin-top:24px;">
+
+    <div class="admin-card-header">
+        <div>
+            <span>گزارش تفکیکی</span>
+            <h2>وضعیت مالی دوره‌ها</h2>
+        </div>
+
+        <span>
+            @Reports.Count دوره
+        </span>
+    </div>
+
+    @if (Loading)
+    {
+        <div class="admin-empty-state">
+            در حال دریافت گزارش دوره‌ها...
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="admin-error">
+            @ErrorMessage
+        </div>
+    }
+    else if (Reports.Count == 0)
+    {
+        <div class="admin-empty-state">
+            هنوز داده‌ای برای گزارش دوره‌ها وجود ندارد.
+        </div>
+    }
+    else
+    {
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>دوره</th>
+                        <th>ثبت‌نام</th>
+                        <th>مبلغ کل</th>
+                        <th>پرداخت‌شده</th>
+                        <th>مانده</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var item in Reports)
+                    {
+                        <tr>
+                            <td>@item.CourseTitle</td>
+                            <td>@item.EnrollmentCount</td>
+                            <td>@item.ExpectedAmount.ToString("N0") تومان</td>
+                            <td>@item.TotalPaid.ToString("N0") تومان</td>
+                            <td>@item.RemainingAmount.ToString("N0") تومان</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@code {
+    private List<CourseReportDto> Reports { get; set; } = new();
+
+    private bool Loading { get; set; } = true;
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || Auth.Role != "Admin")
+        {
+            ErrorMessage = "دسترسی غیرمجاز.";
+            Loading = false;
+            return;
+        }
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Reports =
+                await client.GetFromJsonAsync<List<CourseReportDto>>(
+                    "api/CourseReports")
+                ?? new();
+        }
+        catch
+        {
+            ErrorMessage =
+                "دریافت گزارش دوره‌ها با خطا مواجه شد.";
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    private class CourseReportDto
+    {
+        public int CourseId { get; set; }
+        public string CourseTitle { get; set; } = "";
+        public int EnrollmentCount { get; set; }
+        public decimal ExpectedAmount { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal RemainingAmount { get; set; }
+    }
+}
