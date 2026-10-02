@@ -253,6 +253,132 @@ public class ManagementReportsController : ControllerBase
         });
     }
 
+    [HttpGet("instructors")]
+    public async Task<IActionResult> GetInstructors()
+    {
+        var enrollments = await _context.Enrollments
+            .AsNoTracking()
+            .Include(e => e.Course)
+            .Include(e => e.Instructor)
+            .Where(e =>
+                e.Course != null &&
+                e.Instructor != null)
+            .ToListAsync();
+
+        var enrollmentIds = enrollments
+            .Select(e => e.Id)
+            .ToList();
+
+        var courseIds = enrollments
+            .Select(e => e.CourseId)
+            .Distinct()
+            .ToList();
+
+        var lessonCounts = await _context.CourseLessons
+            .AsNoTracking()
+            .Where(l =>
+                l.IsActive &&
+                l.CourseModule != null &&
+                l.CourseModule.IsActive &&
+                courseIds.Contains(l.CourseModule.CourseId))
+            .GroupBy(l => l.CourseModule!.CourseId)
+            .Select(g => new
+            {
+                CourseId = g.Key,
+                Count = g.Count()
+            })
+            .ToDictionaryAsync(
+                x => x.CourseId,
+                x => x.Count);
+
+        var completedCounts = await _context.LessonProgresses
+            .AsNoTracking()
+            .Where(p =>
+                p.IsCompleted &&
+                enrollmentIds.Contains(p.EnrollmentId))
+            .GroupBy(p => p.EnrollmentId)
+            .Select(g => new
+            {
+                EnrollmentId = g.Key,
+                Count = g.Count()
+            })
+            .ToDictionaryAsync(
+                x => x.EnrollmentId,
+                x => x.Count);
+
+        var reports = enrollments
+            .GroupBy(e => new
+            {
+                InstructorId = e.InstructorId!.Value,
+                InstructorName = e.Instructor!.FullName
+            })
+            .Select(g =>
+            {
+                var rows = g.ToList();
+
+                var studentCount = rows
+                    .Select(e => e.StudentId)
+                    .Distinct()
+                    .Count();
+
+                var totalLessons = 0;
+                var totalCompletedLessons = 0;
+
+                foreach (var enrollment in rows)
+                {
+                    lessonCounts.TryGetValue(
+                        enrollment.CourseId,
+                        out var lessons);
+
+                    completedCounts.TryGetValue(
+                        enrollment.Id,
+                        out var completed);
+
+                    totalLessons += lessons;
+                    totalCompletedLessons += completed;
+                }
+
+                var averageProgress = rows.Count == 0
+                    ? 0
+                    : Math.Round(
+                        rows.Sum(e =>
+                        {
+                            lessonCounts.TryGetValue(
+                                e.CourseId,
+                                out var lessons);
+
+                            completedCounts.TryGetValue(
+                                e.Id,
+                                out var completed);
+
+                            return lessons <= 0
+                                ? 0
+                                : completed * 100m / lessons;
+                        }) / rows.Count,
+                        2);
+
+                return new
+                {
+                    instructorId = g.Key.InstructorId,
+                    instructorName = g.Key.InstructorName.Trim(),
+                    courseCount = rows
+                        .Select(e => e.CourseId)
+                        .Distinct()
+                        .Count(),
+                    studentCount,
+                    enrollmentCount = rows.Count,
+                    totalLessons,
+                    completedLessons = totalCompletedLessons,
+                    averageProgress
+                };
+            })
+            .OrderByDescending(x => x.enrollmentCount)
+            .ThenBy(x => x.instructorName)
+            .ToList();
+
+        return Ok(reports);
+    }
+
     [HttpGet("students")]
     public async Task<IActionResult> GetStudents(
         [FromQuery] DateTime? from,
@@ -390,6 +516,131 @@ public class ManagementReportsController : ControllerBase
         .ToList();
 
         return Ok(result);
+    }
+
+    [HttpGet("learning-progress")]
+    public async Task<IActionResult> GetLearningProgress()
+    {
+        var enrollments = await _context.Enrollments
+            .AsNoTracking()
+            .Include(e => e.Student)
+            .Include(e => e.Course)
+            .Where(e => e.Course != null)
+            .ToListAsync();
+
+        var enrollmentIds = enrollments
+            .Select(e => e.Id)
+            .ToList();
+
+        var courseIds = enrollments
+            .Select(e => e.CourseId)
+            .Distinct()
+            .ToList();
+
+        var lessonCounts = await _context.CourseLessons
+            .AsNoTracking()
+            .Where(l =>
+                l.IsActive &&
+                l.CourseModule != null &&
+                l.CourseModule.IsActive &&
+                courseIds.Contains(l.CourseModule.CourseId))
+            .GroupBy(l => l.CourseModule!.CourseId)
+            .Select(g => new
+            {
+                CourseId = g.Key,
+                Count = g.Count()
+            })
+            .ToDictionaryAsync(x => x.CourseId, x => x.Count);
+
+        var completedCounts = await _context.LessonProgresses
+            .AsNoTracking()
+            .Where(p =>
+                p.IsCompleted &&
+                enrollmentIds.Contains(p.EnrollmentId))
+            .GroupBy(p => p.EnrollmentId)
+            .Select(g => new
+            {
+                EnrollmentId = g.Key,
+                Count = g.Count()
+            })
+            .ToDictionaryAsync(x => x.EnrollmentId, x => x.Count);
+
+        var students = enrollments
+            .Select(e =>
+            {
+                lessonCounts.TryGetValue(e.CourseId, out var totalLessons);
+                completedCounts.TryGetValue(e.Id, out var completedLessons);
+
+                var progressPercent = totalLessons <= 0
+                    ? 0
+                    : Math.Round(
+                        completedLessons * 100m / totalLessons,
+                        2);
+
+                var activityStatus = progressPercent == 0
+                    ? "NoActivity"
+                    : progressPercent >= 75
+                        ? "HighProgress"
+                        : "InProgress";
+
+                return new
+                {
+                    enrollmentId = e.Id,
+                    studentId = e.StudentId,
+                    studentName = e.Student == null ? "" : $"{e.Student.FirstName} {e.Student.LastName}".Trim(),
+                    courseId = e.CourseId,
+                    courseTitle = e.Course?.Title ?? "",
+                    totalLessons,
+                    completedLessons,
+                    progressPercent,
+                    activityStatus,
+                    enrollmentStatus = e.Status
+                };
+            })
+            .OrderByDescending(x => x.progressPercent)
+            .ThenBy(x => x.studentName)
+            .ToList();
+
+        var activeStudents = enrollments
+            .Where(e => e.Status == "Active")
+            .Select(e => e.StudentId)
+            .Distinct()
+            .Count();
+
+        var totalCompletedLessons = students
+            .Sum(x => x.completedLessons);
+
+        var averageProgress = students.Count == 0
+            ? 0
+            : Math.Round(
+                students.Sum(x => x.progressPercent) / students.Count,
+                2);
+
+        var inactiveStudents = students
+            .Where(x => x.activityStatus == "NoActivity")
+            .Select(x => x.studentId)
+            .Distinct()
+            .Count();
+
+        var highProgressStudents = students
+            .Where(x => x.activityStatus == "HighProgress")
+            .Select(x => x.studentId)
+            .Distinct()
+            .Count();
+
+        return Ok(new
+        {
+            summary = new
+            {
+                activeStudents,
+                totalCompletedLessons,
+                averageProgress,
+                inactiveStudents,
+                highProgressStudents
+            },
+
+            students
+        });
     }
 
     [HttpGet("trend")]

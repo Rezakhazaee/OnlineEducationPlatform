@@ -384,6 +384,180 @@
         </section>
     }
 </div>
+<!-- گزارش عملکرد مدرس -->
+<section class="report-section instructor-performance-section">
+    <div class="section-title">
+        <div>
+            <h2>گزارش عملکرد مدرس</h2>
+            <span>نمایش دوره‌ها، دانشجویان، ثبت‌نام‌ها و میانگین پیشرفت دانشجویان</span>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="reports-table instructor-performance-table">
+            <thead>
+                <tr>
+                    <th>مدرس</th>
+                    <th>دوره‌ها</th>
+                    <th>دانشجویان</th>
+                    <th>ثبت‌نام‌ها</th>
+                    <th>درس‌های تکمیل‌شده</th>
+                    <th>میانگین پیشرفت</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (InstructorReports.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6" class="empty-report">
+                            گزارشی برای مدرس‌ها وجود ندارد.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var instructor in InstructorReports)
+                    {
+                        <tr>
+                            <td>
+                                <div class="instructor-name">
+                                    <strong>@instructor.InstructorName</strong>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="instructor-stat-badge">
+                                    @instructor.CourseCount دوره
+                                </span>
+                            </td>
+
+                            <td>
+                                <strong>@instructor.StudentCount</strong>
+                                <span class="capacity-muted">دانشجو</span>
+                            </td>
+
+                            <td>
+                                <strong>@instructor.EnrollmentCount</strong>
+                                <span class="capacity-muted">ثبت‌نام</span>
+                            </td>
+
+                            <td>
+                                <span class="lesson-progress-text">
+                                    @instructor.CompletedLessons از @instructor.TotalLessons
+                                </span>
+                            </td>
+
+                            <td>
+                                <div class="instructor-progress">
+                                    <div class="instructor-progress-header">
+                                        <strong>@instructor.AverageProgress.ToString("0.##")٪</strong>
+                                    </div>
+                                    <div class="instructor-progress-track">
+                                        <div class="instructor-progress-fill"
+                                             style="width:@CourseWidth(instructor.AverageProgress)%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+    <section class="report-section learning-progress-section">
+        <div class="section-title">
+            <div>
+                <h2>گزارش پیشرفت آموزشی</h2>
+                <span>وضعیت فعالیت و پیشرفت دانشجویان در دوره‌ها</span>
+            </div>
+        </div>
+
+        @if (LearningProgress != null)
+        {
+            <div class="learning-summary-grid">
+                <div class="learning-summary-card active">
+                    <span>دانشجویان فعال</span>
+                    <strong>@LearningProgress.Summary.ActiveStudents</strong>
+                    <small>دانشجوی دارای ثبت‌نام فعال</small>
+                </div>
+
+                <div class="learning-summary-card completed">
+                    <span>درس‌های تکمیل‌شده</span>
+                    <strong>@LearningProgress.Summary.TotalCompletedLessons</strong>
+                    <small>مجموع درس‌های تکمیل‌شده</small>
+                </div>
+
+                <div class="learning-summary-card average">
+                    <span>میانگین پیشرفت</span>
+                    <strong>@LearningProgress.Summary.AverageProgress.ToString("0.##")٪</strong>
+                    <small>میانگین پیشرفت دانشجویان</small>
+                </div>
+
+                <div class="learning-summary-card inactive">
+                    <span>بدون فعالیت</span>
+                    <strong>@LearningProgress.Summary.InactiveStudents</strong>
+                    <small>بدون تکمیل هیچ درس</small>
+                </div>
+
+                <div class="learning-summary-card high">
+                    <span>پیشرفت بالا</span>
+                    <strong>@LearningProgress.Summary.HighProgressStudents</strong>
+                    <small>پیشرفت ۷۵٪ یا بیشتر</small>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="reports-table learning-progress-table">
+                    <thead>
+                        <tr>
+                            <th>دانشجو</th>
+                            <th>دوره</th>
+                            <th>درس‌های تکمیل‌شده</th>
+                            <th>وضعیت فعالیت</th>
+                            <th>پیشرفت</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var student in LearningProgress.Students)
+                        {
+                            <tr>
+                                <td class="learning-student-name">
+                                    <strong>@student.StudentName</strong>
+                                </td>
+                                <td class="learning-course-name">
+                                    @student.CourseTitle
+                                </td>
+                                <td>
+                                    <span class="lesson-progress-text">
+                                        @student.CompletedLessons از @student.TotalLessons
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="activity-badge @ActivityStatusClass(student.ActivityStatus)">
+                                        @ActivityStatusLabel(student.ActivityStatus)
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="learning-progress">
+                                        <div class="learning-progress-header">
+                                            <strong>@student.ProgressPercent.ToString("0.##")٪</strong>
+                                        </div>
+                                        <div class="learning-progress-track">
+                                            <div class="learning-progress-fill" style="width:@student.ProgressPercent%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+
 </main>
 </div>
 <style>
@@ -989,12 +1163,184 @@
         background: #fafcfd;
     }
 
+    .instructor-performance-table td {
+        vertical-align: middle;
+    }
+
+    .instructor-name {
+        min-width: 150px;
+    }
+
+    .instructor-name strong {
+        color: #263d4a;
+        font-size: 14px;
+    }
+
+    .instructor-stat-badge {
+        display: inline-block;
+        background: #eef5f7;
+        color: #568fa8;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .lesson-progress-text {
+        color: #687780;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .instructor-progress {
+        min-width: 150px;
+    }
+
+    .instructor-progress-header {
+        margin-bottom: 6px;
+        color: #263d4a;
+        font-size: 13px;
+    }
+
+    .instructor-progress-track {
+        width: 100%;
+        height: 8px;
+        background: #edf1f3;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .instructor-progress-fill {
+        height: 100%;
+        background: #568fa8;
+        border-radius: 999px;
+        transition: width 0.3s ease;
+    }
+
+    .empty-report {
+        text-align: center;
+        padding: 30px !important;
+        color: #8a979e;
+    }
+
+.activity-badge { display: inline-block; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+.activity-badge.no-activity { background: #fff1f1; color: #c65b5b; }
+.activity-badge.in-progress { background: #fff7e8; color: #b77a22; }
+.activity-badge.high-progress { background: #eaf6ef; color: #3d8a5a; }
+
+.learning-summary-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 22px; }
+.learning-summary-card { padding: 18px; border: 1px solid #e6ecef; border-radius: 12px; background: #fff; }
+.learning-summary-card span { display: block; color: #687780; font-size: 12px; margin-bottom: 8px; }
+.learning-summary-card strong { display: block; color: #263d4a; font-size: 24px; line-height: 1.2; }
+.learning-summary-card small { display: block; color: #8a979e; font-size: 10px; margin-top: 7px; }
+.learning-summary-card.active { border-top: 3px solid #568fa8; }
+.learning-summary-card.completed { border-top: 3px solid #5c9b78; }
+.learning-summary-card.average { border-top: 3px solid #8b76b5; }
+.learning-summary-card.inactive { border-top: 3px solid #c66b6b; }
+.learning-summary-card.high { border-top: 3px solid #d19a45; }
+
+.learning-progress-table { width: 100%; table-layout: fixed; }
+.learning-progress-table td { vertical-align: middle; }
+.learning-student-name { width: 18%; }
+.learning-student-name strong { color: #263d4a; font-size: 13px; }
+.learning-course-name { width: 25%; color: #568fa8; font-weight: 600; }
+.learning-progress { min-width: 150px; }
+.learning-progress-header { margin-bottom: 6px; color: #263d4a; font-size: 12px; }
+.learning-progress-track { width: 100%; height: 8px; background: #edf1f3; border-radius: 999px; overflow: hidden; }
+.learning-progress-fill { height: 100%; background: #568fa8; border-radius: 999px; transition: width .3s ease; }
+
+.instructor-performance-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.instructor-performance-table th,
+.instructor-performance-table td {
+    vertical-align: middle;
+}
+
+.instructor-performance-table th:nth-child(1) { width: 22%; }
+.instructor-performance-table th:nth-child(2) { width: 13%; }
+.instructor-performance-table th:nth-child(3) { width: 13%; }
+.instructor-performance-table th:nth-child(4) { width: 13%; }
+.instructor-performance-table th:nth-child(5) { width: 19%; }
+.instructor-performance-table th:nth-child(6) { width: 20%; }
+
+.instructor-name strong {
+    color: #263d4a;
+    font-size: 14px;
+}
+
+.instructor-stat-badge {
+    display: inline-block;
+    background: #eef5f7;
+    color: #568fa8;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.instructor-performance-table td:nth-child(2) .instructor-stat-badge {
+    background: #eef5f7;
+    color: #568fa8;
+}
+
+.instructor-performance-table td:nth-child(3) .instructor-stat-badge {
+    background: #edf7f1;
+    color: #4d8b68;
+}
+
+.instructor-performance-table td:nth-child(4) .instructor-stat-badge {
+    background: #fff6e8;
+    color: #b27a2d;
+}
+
+.lesson-progress-text {
+    color: #687780;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.instructor-progress {
+    min-width: 0;
+    width: 100%;
+}
+
+.instructor-progress-header {
+    margin-bottom: 6px;
+    color: #263d4a;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.instructor-progress-track {
+    width: 100%;
+    height: 8px;
+    background: #edf1f3;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.instructor-progress-fill {
+    height: 100%;
+    background: #568fa8;
+    border-radius: 999px;
+    transition: width .3s ease;
+}
+
+.instructor-performance-table tbody tr:hover {
+    background: #fafcfd;
+}
+
 </style>
 
 @code {
 
     private DashboardReport? Report;
     private bool Loading = true;
+    private List<InstructorReport> InstructorReports { get; set; } = new();
+    private LearningProgressReport? LearningProgress { get; set; }
     private string? Error;
 
     private double CollectionWidth =>
@@ -1012,8 +1358,16 @@
 
         try
         {
-            Report = await Auth.CreateAuthenticatedClient().GetFromJsonAsync<DashboardReport>(
+            var client = Auth.CreateAuthenticatedClient();
+
+            Report = await client.GetFromJsonAsync<DashboardReport>(
                 "api/Reports/dashboard");
+
+            InstructorReports = await client.GetFromJsonAsync<List<InstructorReport>>(
+                "api/ManagementReports/instructors") ?? new();
+
+            LearningProgress = await client.GetFromJsonAsync<LearningProgressReport>(
+                "api/ManagementReports/learning-progress");
         }
         catch (Exception ex)
         {
@@ -1023,6 +1377,28 @@
         {
             Loading = false;
         }
+    }
+
+    private static string ActivityStatusLabel(string status)
+    {
+        return status switch
+        {
+            "NoActivity" => "بدون فعالیت",
+            "HighProgress" => "پیشرفت بالا",
+            "InProgress" => "در حال پیشرفت",
+            _ => "-"
+        };
+    }
+
+    private static string ActivityStatusClass(string status)
+    {
+        return status switch
+        {
+            "NoActivity" => "no-activity",
+            "HighProgress" => "high-progress",
+            "InProgress" => "in-progress",
+            _ => ""
+        };
     }
 
     private static string Money(decimal amount)
@@ -1043,6 +1419,47 @@
             "InPerson" => "حضوری",
             _ => deliveryType ?? "-"
         };
+    }
+
+    public class LearningProgressReport
+    {
+        public LearningProgressSummary Summary { get; set; } = new();
+        public List<LearningProgressStudent> Students { get; set; } = new();
+    }
+
+    public class LearningProgressSummary
+    {
+        public int ActiveStudents { get; set; }
+        public int TotalCompletedLessons { get; set; }
+        public decimal AverageProgress { get; set; }
+        public int InactiveStudents { get; set; }
+        public int HighProgressStudents { get; set; }
+    }
+
+    public class LearningProgressStudent
+    {
+        public int EnrollmentId { get; set; }
+        public int StudentId { get; set; }
+        public string StudentName { get; set; } = "";
+        public int CourseId { get; set; }
+        public string CourseTitle { get; set; } = "";
+        public int TotalLessons { get; set; }
+        public int CompletedLessons { get; set; }
+        public decimal ProgressPercent { get; set; }
+        public string ActivityStatus { get; set; } = "";
+        public string EnrollmentStatus { get; set; } = "";
+    }
+
+    public class InstructorReport
+    {
+        public int InstructorId { get; set; }
+        public string InstructorName { get; set; } = "";
+        public int CourseCount { get; set; }
+        public int StudentCount { get; set; }
+        public int EnrollmentCount { get; set; }
+        public int TotalLessons { get; set; }
+        public int CompletedLessons { get; set; }
+        public decimal AverageProgress { get; set; }
     }
 
     public class DashboardReport
