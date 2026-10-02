@@ -1,0 +1,1254 @@
+using Microsoft.AspNetCore.Authorization;
+using BackEnd.Data;
+using BackEnd.DTOs;
+using BackEnd.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+
+namespace BackEnd.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class EnrollmentsController : ControllerBase
+{
+    private readonly ApplicationDbContext _context;
+
+    public EnrollmentsController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+
+    // دریافت ثبت نام‌های دانشجوی وارد شده
+    [Authorize(Roles = "Student")]
+    [HttpGet("my")]
+    public async Task<ActionResult<List<EnrollmentDetailDto>>> GetMyEnrollments()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (student == null)
+        {
+            return BadRequest(new
+            {
+                message = "برای این کاربر پروفایل دانشجویی وجود ندارد"
+            });
+        }
+
+        var enrollments = await _context.Enrollments
+            .Where(e => e.StudentId == student.Id)
+            .Select(e => new EnrollmentDetailDto
+            {
+                Id = e.Id,
+
+                StudentId = e.StudentId,
+                StudentName = e.Student != null
+                    ? e.Student.FirstName + " " + e.Student.LastName
+                    : string.Empty,
+
+                CourseId = e.CourseId,
+                CourseTitle = e.Course != null
+                    ? e.Course.Title
+                    : string.Empty,
+
+                SupportUserId = e.SupportUserId,
+                SupportUserName = e.SupportUser != null
+                    ? e.SupportUser.FullName
+                    : null,
+
+                InstructorId = e.InstructorId,
+                InstructorName = e.Instructor != null
+                    ? e.Instructor.FullName
+                    : null,
+
+                StartDate = e.StartDate,
+                Status = e.Status,
+
+                Description = e.Description
+            })
+            .ToListAsync();
+
+        return Ok(enrollments);
+    }
+
+    // Student - گزارش مالی ثبت نام خودش
+[Authorize(Roles = "Student")]
+[HttpGet("my/{id}/financial")]
+public async Task<ActionResult<EnrollmentFinancialDto>> GetMyFinancial(int id)
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (!int.TryParse(userIdClaim, out var userId))
+    {
+        return Unauthorized(new
+        {
+            message = "شناسه کاربر معتبر نیست"
+        });
+    }
+
+    var student = await _context.Students
+        .FirstOrDefaultAsync(s => s.UserId == userId);
+
+    if (student == null)
+    {
+        return NotFound(new
+        {
+            message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
+        });
+    }
+
+    var enrollment = await _context.Enrollments
+        .Include(e => e.Student)
+        .Include(e => e.Course)
+        .Include(e => e.CoursePartnerOrganization)
+        .FirstOrDefaultAsync(e =>
+            e.Id == id &&
+            e.StudentId == student.Id);
+
+    if (enrollment == null)
+    {
+        return NotFound(new
+        {
+            message = "ثبت نام مورد نظر پیدا نشد"
+        });
+    }
+
+    if (enrollment.Course == null)
+    {
+        return BadRequest(new
+        {
+            message = "دوره مربوط به این ثبت نام وجود ندارد"
+        });
+    }
+
+    var totalPaid = await _context.Payments
+        .Where(p =>
+            p.EnrollmentId == id &&
+            p.Status == "Paid")
+        .SumAsync(p => (decimal?)p.Amount) ?? 0;
+
+    var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
+    var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
+
+    string paymentStatus;
+
+    if (totalPaid <= 0)
+    {
+        paymentStatus = "Unpaid";
+    }
+    else if (totalPaid < coursePrice)
+    {
+        paymentStatus = "PartiallyPaid";
+    }
+    else if (totalPaid == coursePrice)
+    {
+        paymentStatus = "Paid";
+    }
+    else
+    {
+        paymentStatus = "Overpaid";
+    }
+
+    var result = new EnrollmentFinancialDto
+    {
+        EnrollmentId = enrollment.Id,
+        StudentName = enrollment.Student != null
+            ? enrollment.Student.FirstName + " " + enrollment.Student.LastName
+            : string.Empty,
+        CourseTitle = enrollment.Course.Title,
+        CoursePrice = coursePrice,
+        TotalPaid = totalPaid,
+        RemainingAmount = remainingAmount,
+        PaymentStatus = paymentStatus
+    };
+
+    return Ok(result);
+}
+
+  // Student - جزئیات مالی ثبت نام خودش
+[Authorize(Roles = "Student")]
+[HttpGet("my/{id}/financial-details")]
+public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetMyFinancialDetails(int id)
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (!int.TryParse(userIdClaim, out var userId))
+    {
+        return Unauthorized(new
+        {
+            message = "شناسه کاربر معتبر نیست"
+        });
+    }
+
+    var student = await _context.Students
+        .FirstOrDefaultAsync(s => s.UserId == userId);
+
+    if (student == null)
+    {
+        return NotFound(new
+        {
+            message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
+        });
+    }
+
+    var enrollment = await _context.Enrollments
+        .Include(e => e.Student)
+        .Include(e => e.CoursePartnerOrganization)
+        .Include(e => e.Course)
+        .FirstOrDefaultAsync(e =>
+            e.Id == id &&
+            e.StudentId == student.Id);
+
+    if (enrollment == null)
+    {
+        return NotFound(new
+        {
+            message = "ثبت نام مورد نظر پیدا نشد"
+        });
+    }
+
+    if (enrollment.Course == null)
+    {
+        return BadRequest(new
+        {
+            message = "دوره مربوط به این ثبت نام وجود ندارد"
+        });
+    }
+
+    var payments = await _context.Payments
+        .Where(p => p.EnrollmentId == id)
+        .OrderBy(p => p.PaymentDate)
+        .Select(p => new PaymentItemDto
+        {
+            Id = p.Id,
+            Amount = p.Amount,
+            PaymentDate = p.PaymentDate,
+            PaymentType = p.PaymentType,
+            Description = p.Description,
+            Status = p.Status
+        })
+        .ToListAsync();
+
+    var totalPaid = payments
+        .Where(p => p.Status == "Paid")
+        .Sum(p => p.Amount);
+
+    var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
+
+    var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
+
+    string paymentStatus;
+
+    if (totalPaid <= 0)
+    {
+        paymentStatus = "Unpaid";
+    }
+    else if (totalPaid < coursePrice)
+    {
+        paymentStatus = "PartiallyPaid";
+    }
+    else if (totalPaid == coursePrice)
+    {
+        paymentStatus = "Paid";
+    }
+    else
+    {
+        paymentStatus = "Overpaid";
+    }
+
+    var result = new EnrollmentFinancialDetailDto
+    {
+        EnrollmentId = enrollment.Id,
+
+        StudentName = enrollment.Student != null
+            ? enrollment.Student.FirstName + " " + enrollment.Student.LastName
+            : string.Empty,
+
+        CourseTitle = enrollment.Course.Title,
+
+        CoursePrice = coursePrice,
+
+        TotalPaid = totalPaid,
+
+        RemainingAmount = remainingAmount,
+
+        PaymentStatus = paymentStatus,
+
+        Payments = payments
+    };
+
+    return Ok(result);
+}
+
+    // دریافت ثبت نام‌های دانشجویان اختصاص یافته به Support
+[Authorize(Roles = "Support")]
+[HttpGet("support/my")]
+public async Task<ActionResult<List<EnrollmentDetailDto>>> GetMySupportEnrollments()
+{
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (!int.TryParse(userIdClaim, out var supportUserId))
+    {
+        return Unauthorized(new
+        {
+            message = "شناسه کاربر معتبر نیست"
+        });
+    }
+
+    var enrollments = await _context.Enrollments
+        .Where(e =>
+            e.Student != null &&
+            e.Student.SupportUserId == supportUserId)
+        .Select(e => new EnrollmentDetailDto
+        {
+            Id = e.Id,
+
+            StudentId = e.StudentId,
+            StudentName = e.Student != null
+                ? e.Student.FirstName + " " + e.Student.LastName
+                : string.Empty,
+
+            CourseId = e.CourseId,
+            CourseTitle = e.Course != null
+                ? e.Course.Title
+                : string.Empty,
+
+            SupportUserId = e.SupportUserId,
+            SupportUserName = e.SupportUser != null
+                ? e.SupportUser.FullName
+                : null,
+
+            InstructorId = e.InstructorId,
+            InstructorName = e.Instructor != null
+                ? e.Instructor.FullName
+                : null,
+
+            StartDate = e.StartDate,
+            Status = e.Status,
+
+            Description = e.Description
+        })
+        .ToListAsync();
+
+    return Ok(enrollments);
+}
+
+    // دریافت لیست ثبت نام ها با اطلاعات دانشجو، دوره، پشتیبان و استاد
+    
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Student")]
+[HttpGet]
+public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
+{
+    var query = _context.Enrollments
+        .Include(e => e.Student)
+        .Include(e => e.Course)
+        .Include(e => e.SupportUser)
+        .Include(e => e.Instructor)
+        .Include(e => e.CoursePartnerOrganization)
+         .ThenInclude(cpo => cpo!.PartnerOrganization)
+      .AsQueryable();
+
+    // Student → فقط ثبت‌نام‌های خودش
+    if (User.IsInRole("Student"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (student == null)
+        {
+            return NotFound(new
+            {
+                message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
+            });
+        }
+
+        query = query.Where(e => e.StudentId == student.Id);
+    }
+
+    // Support → فقط ثبت‌نام دانشجویان خودش
+    if (User.IsInRole("Support"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        query = query.Where(e =>
+            e.Student != null &&
+            e.Student.SupportUserId == userId);
+    }
+
+    // Marketer → فقط ثبت‌نام دانشجویان اختصاص داده شده به خودش
+    if (User.IsInRole("Marketer"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        query = query.Where(e =>
+            e.Student != null &&
+            e.Student.MarketingUserId == userId);
+    }
+
+    var enrollments = await query
+        .Select(e => new EnrollmentDto
+        {
+            Id = e.Id,
+            StudentId = e.StudentId,
+            StudentName = e.Student != null
+                ? e.Student.FirstName + " " + e.Student.LastName
+                : string.Empty,
+            CourseId = e.CourseId,
+            CourseTitle = e.Course != null
+                ? e.Course.Title
+                : string.Empty,
+            SupportUserId = e.SupportUserId,
+            SupportUserName = e.SupportUser != null
+                ? e.SupportUser.FullName
+                : null,
+            InstructorId = e.InstructorId,
+            InstructorName = e.Instructor != null
+                ? e.Instructor.FullName
+                : null,
+            StartDate = e.StartDate,
+            Status = e.Status,
+            Description = e.Description,
+            CoursePartnerOrganization = e.CoursePartnerOrganization == null
+    ? null
+    : new CoursePartnerOrganizationDto
+    {
+        Id = e.CoursePartnerOrganization.Id,
+        CourseId = e.CoursePartnerOrganization.CourseId,
+        PartnerOrganizationId = e.CoursePartnerOrganization.PartnerOrganizationId,
+        ContractNumber = e.CoursePartnerOrganization.ContractNumber,
+        AgreedPrice = e.CoursePartnerOrganization.AgreedPrice,
+        StartDate = e.CoursePartnerOrganization.StartDate,
+        EndDate = e.CoursePartnerOrganization.EndDate,
+        IsActive = e.CoursePartnerOrganization.IsActive,
+        Description = e.CoursePartnerOrganization.Description,
+        PartnerOrganization =
+            e.CoursePartnerOrganization.PartnerOrganization == null
+                ? null
+                : new PartnerOrganizationDto
+                {
+                    Id = e.CoursePartnerOrganization.PartnerOrganization.Id,
+                    Name = e.CoursePartnerOrganization.PartnerOrganization.Name
+                }
+    }
+        })
+        .ToListAsync();
+
+    return Ok(enrollments);
+}
+
+    // دریافت جزئیات یک ثبت‌نام برای Admin و EducationStaff و Support
+    [Authorize(Roles = "Admin,EducationStaff,Support")]
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<EnrollmentDto>> GetById(int id)
+    {
+        var enrollment = await _context.Enrollments
+            .Include(e => e.Student)
+            .Include(e => e.Course)
+            .Include(e => e.SupportUser)
+            .Include(e => e.Instructor)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (enrollment == null)
+            return NotFound(new { message = "ثبت‌نام مورد نظر پیدا نشد" });
+
+        if (User.IsInRole("Support"))
+        {
+            var supportUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(supportUserIdClaim, out var supportUserId))
+            {
+                return Unauthorized(new { message = "شناسه کاربر معتبر نیست" });
+            }
+
+            if (enrollment.Student == null || enrollment.Student.SupportUserId != supportUserId)
+            {
+                return NotFound(new { message = "ثبت‌نام مورد نظر پیدا نشد" });
+            }
+        }
+
+        return Ok(new EnrollmentDto
+        {
+            Id = enrollment.Id,
+            StudentId = enrollment.StudentId,
+            StudentName = enrollment.Student != null
+                ? enrollment.Student.FirstName + " " + enrollment.Student.LastName
+                : string.Empty,
+            CourseId = enrollment.CourseId,
+            CoursePartnerOrganizationId = enrollment.CoursePartnerOrganizationId,
+            CourseTitle = enrollment.Course != null
+                ? enrollment.Course.Title
+                : string.Empty,
+            SupportUserId = enrollment.SupportUserId,
+            SupportUserName = enrollment.SupportUser?.FullName,
+            InstructorId = enrollment.InstructorId,
+            InstructorName = enrollment.Instructor?.FullName,
+            StartDate = enrollment.StartDate,
+            Status = enrollment.Status,
+            Description = enrollment.Description
+        });
+    }
+
+    // گزارش مالی یک ثبت نام
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Student")]
+[HttpGet("{id}/financial")]
+public async Task<ActionResult<EnrollmentFinancialDto>> GetFinancial(int id)
+{
+    var enrollment = await _context.Enrollments
+        .Include(e => e.CoursePartnerOrganization)
+        .Include(e => e.Student)
+        .Include(e => e.Course)
+        .FirstOrDefaultAsync(e => e.Id == id);
+
+    if (enrollment == null)
+    {
+        return NotFound(new
+        {
+            message = "ثبت نام مورد نظر پیدا نشد"
+        });
+    }
+
+    // Student → فقط اطلاعات مالی ثبت نام خودش
+    if (User.IsInRole("Student"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (student == null)
+        {
+            return NotFound(new
+            {
+                message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
+            });
+        }
+
+        if (enrollment.StudentId != student.Id)
+        {
+            return NotFound(new
+            {
+                message = "ثبت نام مورد نظر پیدا نشد"
+            });
+        }
+    }
+
+    // Support → فقط اطلاعات مالی دانشجویان خودش
+    if (User.IsInRole("Support"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        if (enrollment.Student == null ||
+            enrollment.Student.SupportUserId != userId)
+        {
+            return NotFound(new
+            {
+                message = "ثبت نام مورد نظر پیدا نشد"
+            });
+        }
+    }
+
+    if (User.IsInRole("Marketer"))
+    {
+        var marketerUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(marketerUserIdClaim, out var marketerUserId))
+        {
+            return Unauthorized(new { message = "شناسه کاربر معتبر نیست" });
+        }
+
+        if (enrollment.Student == null ||
+            enrollment.Student.MarketingUserId != marketerUserId)
+        {
+            return NotFound(new { message = "ثبت نام مورد نظر پیدا نشد" });
+        }
+    }
+    if (enrollment.Course == null)
+    {
+        return BadRequest(new
+        {
+            message = "دوره مربوط به این ثبت نام وجود ندارد"
+        });
+    }
+
+    var totalPaid = await _context.Payments
+        .Where(p =>
+            p.EnrollmentId == id &&
+            p.Status == "Paid")
+        .SumAsync(p => (decimal?)p.Amount) ?? 0;
+
+    var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
+    var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
+
+    string paymentStatus;
+
+    if (totalPaid <= 0)
+    {
+        paymentStatus = "Unpaid";
+    }
+    else if (totalPaid < coursePrice)
+    {
+        paymentStatus = "PartiallyPaid";
+    }
+    else if (totalPaid == coursePrice)
+    {
+        paymentStatus = "Paid";
+    }
+    else
+    {
+        paymentStatus = "Overpaid";
+    }
+
+    var result = new EnrollmentFinancialDto
+    {
+        EnrollmentId = enrollment.Id,
+        StudentName = enrollment.Student != null
+            ? enrollment.Student.FirstName + " " + enrollment.Student.LastName
+            : string.Empty,
+        CourseTitle = enrollment.Course.Title,
+        CoursePrice = coursePrice,
+        TotalPaid = totalPaid,
+        RemainingAmount = remainingAmount,
+        PaymentStatus = paymentStatus
+    };
+
+    return Ok(result);
+}
+
+    // جزئیات مالی ثبت نام به همراه لیست پرداخت‌ها
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Student")]
+[HttpGet("{id}/financial-details")]
+public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetails(int id)
+{
+    var enrollment = await _context.Enrollments
+        .Include(e => e.Student)
+        .Include(e => e.Course)
+        .Include(e => e.CoursePartnerOrganization)
+        .FirstOrDefaultAsync(e => e.Id == id);
+
+    if (enrollment == null)
+    {
+        return NotFound(new
+        {
+            message = "ثبت نام مورد نظر پیدا نشد"
+        });
+    }
+
+    // Student → فقط اطلاعات مالی ثبت نام خودش
+    if (User.IsInRole("Student"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        var student = await _context.Students
+            .FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (student == null)
+        {
+            return NotFound(new
+            {
+                message = "پروفایل دانشجویی برای این کاربر پیدا نشد"
+            });
+        }
+
+        if (enrollment.StudentId != student.Id)
+        {
+            return NotFound(new
+            {
+                message = "ثبت نام مورد نظر پیدا نشد"
+            });
+        }
+    }
+
+    // Support → فقط اطلاعات مالی دانشجویان خودش
+    if (User.IsInRole("Support"))
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        if (enrollment.Student == null ||
+            enrollment.Student.SupportUserId != userId)
+        {
+            return NotFound(new
+            {
+                message = "ثبت نام مورد نظر پیدا نشد"
+            });
+        }
+    }
+
+    if (User.IsInRole("Marketer"))
+    {
+        var marketerUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(marketerUserIdClaim, out var marketerUserId))
+        {
+            return Unauthorized(new { message = "شناسه کاربر معتبر نیست" });
+        }
+
+        if (enrollment.Student == null ||
+            enrollment.Student.MarketingUserId != marketerUserId)
+        {
+            return NotFound(new { message = "ثبت نام مورد نظر پیدا نشد" });
+        }
+    }
+    if (enrollment.Course == null)
+    {
+        return BadRequest(new
+        {
+            message = "دوره مربوط به این ثبت نام وجود ندارد"
+        });
+    }
+
+    var payments = await _context.Payments
+        .Where(p => p.EnrollmentId == id)
+        .OrderBy(p => p.PaymentDate)
+        .Select(p => new PaymentItemDto
+        {
+            Id = p.Id,
+            Amount = p.Amount,
+            PaymentDate = p.PaymentDate,
+            PaymentType = p.PaymentType,
+            Description = p.Description,
+            Status = p.Status
+        })
+        .ToListAsync();
+
+    var totalPaid = payments
+        .Where(p => p.Status == "Paid")
+        .Sum(p => p.Amount);
+
+    var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
+    var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
+
+    string paymentStatus;
+
+    if (totalPaid <= 0)
+    {
+        paymentStatus = "Unpaid";
+    }
+    else if (totalPaid < coursePrice)
+    {
+        paymentStatus = "PartiallyPaid";
+    }
+    else if (totalPaid == coursePrice)
+    {
+        paymentStatus = "Paid";
+    }
+    else
+    {
+        paymentStatus = "Overpaid";
+    }
+
+    var result = new EnrollmentFinancialDetailDto
+    {
+        EnrollmentId = enrollment.Id,
+        StudentName = enrollment.Student != null
+            ? enrollment.Student.FirstName + " " + enrollment.Student.LastName
+            : string.Empty,
+        CourseTitle = enrollment.Course.Title,
+        CoursePrice = coursePrice,
+        TotalPaid = totalPaid,
+        RemainingAmount = remainingAmount,
+        PaymentStatus = paymentStatus,
+        Payments = payments
+    };
+
+    return Ok(result);
+}
+
+    // ثبت نام دانشجو در دوره
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Student")]
+    [HttpPost]
+    public async Task<ActionResult<EnrollmentDto>> Create(CreateEnrollmentDto dto)
+    {
+        // بررسی شناسه کاربر از JWT
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "شناسه کاربر معتبر نیست"
+            });
+        }
+
+        // اگر کاربر Student باشد،
+        // StudentId از روی UserId تعیین می‌شود
+        if (User.IsInRole("Student"))
+        {
+            var student = await _context.Students
+                .FirstOrDefaultAsync(s => s.UserId == userId);
+
+            if (student == null)
+            {
+                return BadRequest(new
+                {
+                    message = "برای این کاربر پروفایل دانشجویی وجود ندارد"
+                });
+            }
+
+            dto.StudentId = student.Id;
+        }
+
+
+        // بررسی وجود دانشجو
+        var studentExists = await _context.Students
+            .AnyAsync(s => s.Id == dto.StudentId);
+
+        if (!studentExists)
+        {
+            return BadRequest(new
+            {
+                message = "دانشجوی مورد نظر وجود ندارد"
+            });
+        }
+
+
+        if (User.IsInRole("Marketer"))
+        {
+            var marketerStudent = await _context.Students
+                .FirstOrDefaultAsync(s =>
+                    s.Id == dto.StudentId &&
+                    s.MarketingUserId == userId);
+
+            if (marketerStudent == null)
+            {
+                return Forbid();
+            }
+
+            if (dto.CoursePartnerOrganizationId.HasValue)
+            {
+                return Forbid();
+            }
+        }
+
+
+        // بررسی وجود دوره
+        var courseExists = await _context.Courses
+            .AnyAsync(c => c.Id == dto.CourseId);
+
+        if (!courseExists)
+        {
+            return BadRequest(new
+            {
+                message = "دوره مورد نظر وجود ندارد"
+            });
+        }
+
+
+        // بررسی ثبت نام تکراری دانشجو در دوره
+        var duplicateEnrollment = await _context.Enrollments
+            .AnyAsync(e =>
+                e.StudentId == dto.StudentId &&
+                e.CourseId == dto.CourseId &&
+                e.Status == "Active");
+
+        if (duplicateEnrollment)
+        {
+            return BadRequest(new
+            {
+                message = "این دانشجو قبلاً در این دوره ثبت نام کرده است"
+            });
+        }
+        // بررسی قرارداد سازمانی، در صورت ارسال
+        if (dto.CoursePartnerOrganizationId.HasValue)
+        {
+            var coursePartnerOrganization = await _context.CoursePartnerOrganizations
+                .FirstOrDefaultAsync(x => x.Id == dto.CoursePartnerOrganizationId.Value);
+
+            if (coursePartnerOrganization == null)
+            {
+                return BadRequest(new { message = "ارتباط دوره و سازمان طرف قرارداد پیدا نشد." });
+            }
+
+            if (coursePartnerOrganization.CourseId != dto.CourseId)
+            {
+                return BadRequest(new { message = "سازمان طرف قرارداد مربوط به این دوره نیست." });
+            }
+            if (!coursePartnerOrganization.IsActive)
+            {
+                return BadRequest(new { message = "قرارداد سازمانی این دوره غیرفعال است." });
+            }
+        }
+        if (dto.SupportUserId.HasValue)
+        {
+            var supportExists = await _context.Users
+                .AnyAsync(u => u.Id == dto.SupportUserId.Value);
+
+            if (!supportExists)
+            {
+                return BadRequest(new
+                {
+                    message = "پشتیبان آموزشی مورد نظر وجود ندارد"
+                });
+            }
+        }
+
+
+        // بررسی وجود استاد، در صورت ارسال
+        if (dto.InstructorId.HasValue)
+{
+    var instructorExists = await _context.Users
+        .AnyAsync(u =>
+            u.Id == dto.InstructorId.Value &&
+            u.IsActive &&
+            u.Role == "Instructor");
+
+            if (!instructorExists)
+            {
+                return BadRequest(new
+                {
+                    message = "استاد مورد نظر وجود ندارد"
+                });
+            }
+        }
+
+
+        // ایجاد ثبت نام
+        var enrollment = new Enrollment
+        {
+            StudentId = dto.StudentId,
+            CoursePartnerOrganizationId = dto.CoursePartnerOrganizationId,
+            CourseId = dto.CourseId,
+            SupportUserId = dto.SupportUserId,
+            InstructorId = dto.InstructorId,
+            StartDate = dto.StartDate,
+            Status = dto.Status,
+            Description = dto.Description
+        };
+
+
+        _context.Enrollments.Add(enrollment);
+
+        await _context.SaveChangesAsync();
+
+
+        // آماده سازی نتیجه
+        var result = new EnrollmentDto
+        {
+            Id = enrollment.Id,
+            StudentId = enrollment.StudentId,
+            CourseId = enrollment.CourseId,
+            CoursePartnerOrganizationId = enrollment.CoursePartnerOrganizationId,
+            SupportUserId = enrollment.SupportUserId,
+            InstructorId = enrollment.InstructorId,
+            StartDate = enrollment.StartDate,
+            Status = enrollment.Status,
+            Description = enrollment.Description
+        };
+
+
+        return result;
+        
+    }
+        // ویرایش ثبت نام
+    [Authorize(Roles = "Admin,EducationStaff,Support")]
+    [HttpPut("{id}")]
+    public async Task<ActionResult<EnrollmentDto>> Update(
+        int id,
+        UpdateEnrollmentDto dto)
+    {
+        // پیدا کردن ثبت نام
+        var enrollment = await _context.Enrollments
+            .Include(e => e.Student)
+            .Include(e => e.Course)
+            .Include(e => e.CoursePartnerOrganization)
+                .ThenInclude(cpo => cpo!.PartnerOrganization)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (enrollment == null)
+        {
+            return NotFound(new
+            {
+                message = "ثبت نام مورد نظر پیدا نشد"
+            });
+        }
+
+        if (User.IsInRole("Support"))
+        {
+            var supportUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(supportUserIdClaim, out var supportUserId))
+            {
+                return Unauthorized(new { message = "شناسه کاربر معتبر نیست" });
+            }
+
+            if (enrollment.Student == null || enrollment.Student.SupportUserId != supportUserId)
+            {
+                return NotFound(new { message = "ثبت نام مورد نظر پیدا نشد" });
+            }
+
+            dto.SupportUserId = supportUserId;
+        }
+
+
+        // وضعیت های مجاز ثبت نام
+        var allowedStatuses = new[]
+        {
+            "Active",
+            "Completed",
+            "Cancelled",
+            "Suspended"
+        };
+
+        if (!allowedStatuses.Contains(dto.Status))
+        {
+            return BadRequest(new
+            {
+                message = "وضعیت ثبت نام نامعتبر است"
+            });
+        }
+
+        // بررسی وجود پشتیبان
+        if (dto.SupportUserId.HasValue)
+{
+    var supportExists = await _context.Users
+        .AnyAsync(u =>
+            u.Id == dto.SupportUserId.Value &&
+            u.IsActive &&
+            u.Role == "Support");
+
+            if (!supportExists)
+            {
+                return BadRequest(new
+                {
+                    message = "پشتیبان آموزشی مورد نظر وجود ندارد یا غیرفعال است"
+                });
+            }
+        }
+
+        // بررسی وجود استاد
+        if (dto.InstructorId.HasValue)
+        {
+            var instructorExists = await _context.Users
+                .AnyAsync(u =>
+                    u.Id == dto.InstructorId.Value &&
+                    u.IsActive);
+
+            if (!instructorExists)
+            {
+                return BadRequest(new
+                {
+                    message = "استاد مورد نظر وجود ندارد یا غیرفعال است"
+                });
+            }
+        }
+
+        // بررسی تغییر قرارداد سازمانی
+        if (dto.CoursePartnerOrganizationId !=
+            enrollment.CoursePartnerOrganizationId)
+        {
+            // آیا برای این ثبت نام پرداختی انجام شده؟
+            var hasPaidPayment = await _context.Payments
+                .AnyAsync(p =>
+                    p.EnrollmentId == enrollment.Id &&
+                    p.Status == "Paid");
+
+            if (hasPaidPayment)
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "پس از ثبت پرداخت، تغییر قرارداد سازمانی ثبت نام مجاز نیست."
+                });
+            }
+
+            // اگر قرارداد جدید انتخاب شده، اعتبار آن بررسی شود
+            if (dto.CoursePartnerOrganizationId.HasValue)
+            {
+                var coursePartnerOrganization =
+                    await _context.CoursePartnerOrganizations
+                        .FirstOrDefaultAsync(x =>
+                            x.Id == dto.CoursePartnerOrganizationId.Value);
+
+                if (coursePartnerOrganization == null)
+                {
+                    return BadRequest(new
+                    {
+                        message =
+                            "ارتباط دوره و سازمان طرف قرارداد پیدا نشد."
+                    });
+                }
+
+                if (coursePartnerOrganization.CourseId !=
+                    enrollment.CourseId)
+                {
+                    return BadRequest(new
+                    {
+                        message =
+                            "سازمان طرف قرارداد مربوط به این دوره نیست."
+                    });
+                }
+
+                if (!coursePartnerOrganization.IsActive)
+                {
+                    return BadRequest(new
+                    {
+                        message =
+                            "قرارداد سازمانی این دوره غیرفعال است."
+                    });
+                }
+
+                if (!coursePartnerOrganization.AgreedPrice.HasValue)
+                {
+                    return BadRequest(new
+                    {
+                        message =
+                            "برای قرارداد انتخاب‌شده قیمت توافقی تعیین نشده است."
+                    });
+                }
+            }
+
+            enrollment.CoursePartnerOrganizationId =
+                dto.CoursePartnerOrganizationId;
+        }
+
+        // به روز رسانی اطلاعات ثبت نام
+        if (dto.SupportUserId.HasValue)
+{
+    enrollment.SupportUserId = dto.SupportUserId;
+}
+
+if (dto.InstructorId.HasValue)
+{
+    enrollment.InstructorId = dto.InstructorId;
+}
+        enrollment.StartDate = dto.StartDate;
+        enrollment.Status = dto.Status;
+        enrollment.Description =
+            string.IsNullOrWhiteSpace(dto.Description)
+                ? null
+                : dto.Description.Trim();
+
+        await _context.SaveChangesAsync();
+
+        // ساخت نتیجه
+        var result = new EnrollmentDto
+        {
+            Id = enrollment.Id,
+            StudentId = enrollment.StudentId,
+            StudentName = enrollment.Student != null
+                ? enrollment.Student.FirstName + " " +
+                  enrollment.Student.LastName
+                : string.Empty,
+            CourseId = enrollment.CourseId,
+            CoursePartnerOrganizationId = enrollment.CoursePartnerOrganizationId,
+            CourseTitle = enrollment.Course?.Title,
+            SupportUserId = enrollment.SupportUserId,
+            InstructorId = enrollment.InstructorId,
+            StartDate = enrollment.StartDate,
+            Status = enrollment.Status,
+            Description = enrollment.Description,
+
+            CoursePartnerOrganization =
+                enrollment.CoursePartnerOrganization == null
+                    ? null
+                    : new CoursePartnerOrganizationDto
+                    {
+                        Id = enrollment.CoursePartnerOrganization.Id,
+                        CourseId =
+                            enrollment.CoursePartnerOrganization.CourseId,
+                        PartnerOrganizationId =
+                            enrollment.CoursePartnerOrganization
+                                .PartnerOrganizationId,
+                        ContractNumber =
+                            enrollment.CoursePartnerOrganization
+                                .ContractNumber,
+                        AgreedPrice =
+                            enrollment.CoursePartnerOrganization.AgreedPrice,
+                        StartDate =
+                            enrollment.CoursePartnerOrganization.StartDate,
+                        EndDate =
+                            enrollment.CoursePartnerOrganization.EndDate,
+                        IsActive =
+                            enrollment.CoursePartnerOrganization.IsActive,
+                        Description =
+                            enrollment.CoursePartnerOrganization.Description,
+
+                        PartnerOrganization =
+                            enrollment.CoursePartnerOrganization
+                                .PartnerOrganization == null
+                                ? null
+                                : new PartnerOrganizationDto
+                                {
+                                    Id =
+                                        enrollment
+                                            .CoursePartnerOrganization
+                                            .PartnerOrganization.Id,
+                                    Name =
+                                        enrollment
+                                            .CoursePartnerOrganization
+                                            .PartnerOrganization.Name
+                                }
+                    }
+        };
+
+        return Ok(result);
+    }
+}

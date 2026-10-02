@@ -1,0 +1,148 @@
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+
+<button class="education-btn secondary"
+        @onclick="Toggle"
+        disabled="@Loading">
+    @(Expanded ? "بستن مالی" : "مالی")
+</button>
+
+@if (Expanded)
+{
+    <div class="education-card" style="margin-top:10px;">
+
+        @if (Loading)
+        {
+            <div class="education-empty">
+                در حال دریافت اطلاعات مالی...
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="education-error">
+                @ErrorMessage
+            </div>
+        }
+        else if (Financial != null)
+        {
+            <div class="education-table-wrapper">
+
+                <table class="education-table">
+                    <tbody>
+                        <tr>
+                            <th>دانشجو</th>
+                            <td>@Financial.StudentName</td>
+                        </tr>
+
+                        <tr>
+                            <th>دوره</th>
+                            <td>@Financial.CourseTitle</td>
+                        </tr>
+
+                        <tr>
+                            <th>شهریه</th>
+                            <td>@FormatMoney(Financial.CoursePrice)</td>
+                        </tr>
+
+                        <tr>
+                            <th>پرداخت‌شده</th>
+                            <td>@FormatMoney(Financial.TotalPaid)</td>
+                        </tr>
+
+                        <tr>
+                            <th>مانده</th>
+                            <td>@FormatMoney(Financial.RemainingAmount)</td>
+                        </tr>
+
+                        <tr>
+                            <th>وضعیت پرداخت</th>
+                            <td>@GetPaymentStatusText(Financial.PaymentStatus)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+        }
+
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int EnrollmentId { get; set; }
+
+    private bool Expanded { get; set; }
+    private bool Loading { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    private FinancialDto? Financial { get; set; }
+
+    private async Task Toggle()
+    {
+        if (Expanded)
+        {
+            Expanded = false;
+            return;
+        }
+
+        Expanded = true;
+        Loading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            await Auth.RestoreAsync();
+
+            if (!Auth.IsLoggedIn || Auth.Role != "EducationStaff")
+            {
+                ErrorMessage = "دسترسی غیرمجاز.";
+                return;
+            }
+
+            var client = Auth.CreateAuthenticatedClient();
+
+            Financial =
+                await client.GetFromJsonAsync<FinancialDto>(
+                    $"api/Enrollments/{EnrollmentId}/financial");
+        }
+        catch
+        {
+            ErrorMessage = "دریافت اطلاعات مالی با خطا مواجه شد.";
+            Financial = null;
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    private string FormatMoney(decimal value)
+    {
+        return $"{value:N0} تومان";
+    }
+
+    private string GetPaymentStatusText(string? value)
+    {
+        return value switch
+        {
+            "Paid" => "تسویه‌شده",
+            "PartiallyPaid" => "پرداخت ناقص",
+            "Unpaid" => "پرداخت‌نشده",
+            "Overpaid" => "بیش‌پرداخت",
+            _ => value ?? "نامشخص"
+        };
+    }
+
+    private class FinancialDto
+    {
+        public int EnrollmentId { get; set; }
+        public string StudentName { get; set; } = "";
+        public string CourseTitle { get; set; } = "";
+        public decimal CoursePrice { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal RemainingAmount { get; set; }
+        public string PaymentStatus { get; set; } = "";
+    }
+}

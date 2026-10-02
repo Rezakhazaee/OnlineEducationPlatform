@@ -1,0 +1,88 @@
+@inherits LayoutComponentBase
+@using FrontEnd.Services
+@inject ThemeService ThemeService
+@inject NavigationManager NavigationManager
+@inject AuthService Auth
+
+<PageTitle>سامانه آموزش آنلاین</PageTitle>
+
+<div class="app-shell" style="@ThemeStyle">
+    <header class="app-header">
+        <div class="header-inner">
+            <a href="/" class="brand">
+                <span class="brand-mark">آ</span>
+
+                <span class="brand-text">
+                    <strong>آموزش‌یار</strong>
+                    <small>سامانه آموزش آنلاین</small>
+                </span>
+            </a>
+
+            <nav class="main-nav">
+                <NavLink href="/" Match="NavLinkMatch.All">خانه</NavLink>
+                <NavLink href="/courses">دوره‌ها</NavLink>
+                <NavLink href="/courses">دسته‌بندی‌ها</NavLink>
+                <NavLink href="/about">درباره ما</NavLink>
+            </nav>
+
+            <div class="header-actions">
+                @if (Auth.IsLoggedIn)
+                {
+                    <button type="button" class="register-btn" @onclick="Logout">خروج</button>
+                }
+                else
+                {
+                    <a href="/login" class="login-link">ورود</a>
+                    <a href="/register" class="register-btn">ثبت‌نام</a>
+                }
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        @Body
+    </main>
+
+    <footer class="app-footer">
+        <div>
+            <strong>آموزش‌یار</strong>
+            <span>مسیر ساده‌تر برای یادگیری</span>
+        </div>
+    </footer>
+</div>
+
+@code {
+    private bool IsAdminPage =>
+        NavigationManager.Uri
+            .Contains("/admin", StringComparison.OrdinalIgnoreCase);
+
+    private string ThemeStyle
+    {
+        get
+        {
+            if (IsAdminPage)
+                return string.Empty;
+
+            return
+                $"--theme-primary: {ThemeService.PrimaryColor}; " +
+                $"--theme-primary-light: {ThemeService.PrimaryLight}; " +
+                $"--theme-primary-dark: {ThemeService.PrimaryDark}; " +
+                $"--theme-secondary: {ThemeService.SecondaryColor}; " +
+                $"--theme-text: {ThemeService.SecondaryColor};";
+        }
+    }
+
+    private void Logout()
+    {
+        Auth.Logout();
+        NavigationManager.NavigateTo("/login");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!IsAdminPage)
+        {
+            await ThemeService.LoadThemeAsync();
+        }
+    }
+}

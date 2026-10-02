@@ -1,0 +1,133 @@
+@page "/verify-certificate"
+
+@using System.Net.Http.Json
+
+@inject IHttpClientFactory HttpClientFactory
+
+<PageTitle>استعلام گواهی | آموزش‌یار</PageTitle>
+
+<div class="public-page">
+    <div class="public-page-inner">
+
+        <section class="public-content-card">
+            <div class="public-section-header">
+                <span class="student-eyebrow">آموزش‌یار</span>
+                <h1>استعلام گواهی پایان دوره</h1>
+                <p>
+                    شماره گواهی را وارد کنید تا اعتبار گواهی بررسی شود.
+                </p>
+            </div>
+
+            <div class="public-form">
+                <label for="certificateNumber">شماره گواهی</label>
+
+                <input id="certificateNumber"
+                       @bind="CertificateNumber"
+                       placeholder="مثال: CERT-20260930130803-67653f5a" />
+
+                <button type="button"
+                        @onclick="Verify"
+                        disabled="@IsLoading">
+                    @(IsLoading ? "در حال بررسی..." : "استعلام گواهی")
+                </button>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                <div class="public-error">
+                    @ErrorMessage
+                </div>
+            }
+
+            @if (Certificate != null)
+            {
+                <div class="public-certificate-result">
+
+                    <div class="public-result-row">
+                        <span>وضعیت</span>
+                        <strong>گواهی معتبر است</strong>
+                    </div>
+
+                    <div class="public-result-row">
+                        <span>شماره گواهی</span>
+                        <strong>@Certificate.CertificateNumber</strong>
+                    </div>
+
+                    <div class="public-result-row">
+                        <span>نام دانشجو</span>
+                        <strong>@Certificate.StudentName</strong>
+                    </div>
+
+                    <div class="public-result-row">
+                        <span>دوره</span>
+                        <strong>@Certificate.CourseTitle</strong>
+                    </div>
+
+                    <div class="public-result-row">
+                        <span>تاریخ صدور</span>
+                        <strong>
+                            @Certificate.IssuedAtUtc.ToLocalTime().ToString("yyyy/MM/dd")
+                        </strong>
+                    </div>
+
+                </div>
+            }
+
+        </section>
+
+    </div>
+</div>
+
+@code {
+    private string CertificateNumber { get; set; } = string.Empty;
+    private bool IsLoading { get; set; }
+    private string? ErrorMessage { get; set; }
+    private CertificateResult? Certificate { get; set; }
+
+    private async Task Verify()
+    {
+        ErrorMessage = null;
+        Certificate = null;
+
+        if (string.IsNullOrWhiteSpace(CertificateNumber))
+        {
+            ErrorMessage = "شماره گواهی را وارد کنید.";
+            return;
+        }
+
+        IsLoading = true;
+        var client = HttpClientFactory.CreateClient("Backend");
+
+        try
+        {
+            Certificate =
+                await client.GetFromJsonAsync<CertificateResult>(
+                    $"api/CertificateVerification/{Uri.EscapeDataString(CertificateNumber.Trim())}");
+
+            if (Certificate == null)
+            {
+                ErrorMessage = "گواهی مورد نظر پیدا نشد.";
+            }
+        }
+        catch (HttpRequestException)
+        {
+            ErrorMessage = "گواهی مورد نظر پیدا نشد.";
+        }
+        catch
+        {
+            ErrorMessage = "در استعلام گواهی خطایی رخ داد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private class CertificateResult
+    {
+        public string CertificateNumber { get; set; } = string.Empty;
+        public string StudentName { get; set; } = string.Empty;
+        public string CourseTitle { get; set; } = string.Empty;
+        public DateTime IssuedAtUtc { get; set; }
+    }
+}
