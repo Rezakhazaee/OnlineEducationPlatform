@@ -20,26 +20,7 @@ public class ReportsController : ControllerBase
     [HttpGet("summary")]
     public async Task<IActionResult> GetSummary()
     {
-        var result = new
-        {
-            totalStudents = await _context.Students.CountAsync(),
-            totalCourses = await _context.Courses.CountAsync(),
-            totalEnrollments = await _context.Enrollments.CountAsync(),
-
-            totalPaid = await _context.Payments
-                .Where(p => p.Status == "Paid")
-                .SumAsync(p => (decimal?)p.Amount) ?? 0,
-
-            totalPending = await _context.Payments
-                .Where(p => p.Status == "Pending")
-                .SumAsync(p => (decimal?)p.Amount) ?? 0,
-
-            totalCancelled = await _context.Payments
-                .Where(p => p.Status == "Cancelled")
-                .SumAsync(p => (decimal?)p.Amount) ?? 0
-        };
-
-        return Ok(result);
+        return Ok(await BuildReport());
     }
 
     [HttpGet("dashboard")]
@@ -51,60 +32,57 @@ public class ReportsController : ControllerBase
         [FromQuery] string? deliveryType,
         [FromQuery] string? status)
     {
-        var enrollmentsQuery = _context.Enrollments
+        return Ok(await BuildReport(
+            from,
+            to,
+            courseId,
+            instructorId,
+            deliveryType,
+            status));
+    }
+
+    private async Task<object> BuildReport(
+        DateTime? from = null,
+        DateTime? to = null,
+        int? courseId = null,
+        int? instructorId = null,
+        string? deliveryType = null,
+        string? status = null)
+    {
+        var query = _context.Enrollments
             .AsNoTracking()
             .Include(e => e.Student)
             .Include(e => e.Course)
-                .ThenInclude(c => c!.Instructor)
             .Include(e => e.Instructor)
             .Include(e => e.CoursePartnerOrganization)
+            .Where(e => e.Course != null)
             .AsQueryable();
 
         if (from.HasValue)
-        {
-            var fromDate = from.Value.Date;
-            enrollmentsQuery =
-                enrollmentsQuery.Where(e => e.StartDate >= fromDate);
-        }
+            query = query.Where(e => e.StartDate >= from.Value.Date);
 
         if (to.HasValue)
         {
-            var toDate = to.Value.Date.AddDays(1);
-            enrollmentsQuery =
-                enrollmentsQuery.Where(e => e.StartDate < toDate);
+            var end = to.Value.Date.AddDays(1);
+            query = query.Where(e => e.StartDate < end);
         }
 
         if (courseId.HasValue)
-        {
-            enrollmentsQuery =
-                enrollmentsQuery.Where(e => e.CourseId == courseId.Value);
-        }
+            query = query.Where(e => e.CourseId == courseId.Value);
 
         if (instructorId.HasValue)
-        {
-            enrollmentsQuery =
-                enrollmentsQuery.Where(e =>
-                    e.Course != null &&
-                    e.Course.InstructorId == instructorId.Value);
-        }
+            query = query.Where(e =>
+                e.InstructorId == instructorId.Value ||
+                e.Course!.InstructorId == instructorId.Value);
 
         if (!string.IsNullOrWhiteSpace(deliveryType))
-        {
-            enrollmentsQuery =
-                enrollmentsQuery.Where(e =>
-                    e.Course != null &&
-                    e.Course.DeliveryType == deliveryType);
-        }
+            query = query.Where(e =>
+                e.Course!.DeliveryType == deliveryType);
 
         if (!string.IsNullOrWhiteSpace(status))
-        {
-            enrollmentsQuery =
-                enrollmentsQuery.Where(e => e.Status == status);
-        }
+            query = query.Where(e => e.Status == status);
 
-        var enrollments = await enrollmentsQuery
-            .OrderByDescending(e => e.StartDate)
-            .ToListAsync();
+        var enrollments = await query.ToListAsync();
 
         var enrollmentIds = enrollments
             .Select(e => e.Id)
@@ -152,10 +130,11 @@ public class ReportsController : ControllerBase
                 x => x.EnrollmentId,
                 x => x.CompletedLessons);
 
-        var expectedAmount = enrollments.Sum(e =>
+        decimal Expected(Models.Enrollment e) =>
             e.CoursePartnerOrganization?.AgreedPrice
-            ?? e.Course?.Price
-            ?? 0);
+            ?? e.Course!.Price;
+
+        var totalExpected = enrollments.Sum(Expected);
 
         var totalPaid = payments
             .Where(p => p.Status == "Paid")
@@ -169,333 +148,204 @@ public class ReportsController : ControllerBase
             .Where(p => p.Status == "Cancelled")
             .Sum(p => p.Amount);
 
-        var remainingAmount =
-            Math.Max(expectedAmount - totalPaid, 0);
+        var progressRows = enrollments.Select(e =>
+        {
+            lessonCounts.TryGetValue(
+                e.CourseId,
+                out var totalLessons);
 
-        var collectionPercent =
-            expectedAmount <= 0
-                ? 0
-                : Math.Round(
-                    totalPaid * 100m / expectedAmount,
-                    2);
+            completedCounts.TryGetValue(
+                e.Id,
+                out var completedLessons);
 
-        var totalLessons =
-            enrollments.Sum(e =>
-                lessonCounts.TryGetValue(
-                    e.CourseId,
-                    out var count)
-                    ? count
-                    : 0);
-
-        var completedLessons =
-            enrollments.Sum(e =>
-                completedCounts.TryGetValue(
-                    e.Id,
-                    out var count)
-                    ? count
-                    : 0);
-
-        var progressPercent =
-            totalLessons <= 0
+            var progress = totalLessons == 0
                 ? 0
                 : Math.Round(
                     completedLessons * 100m / totalLessons,
                     2);
 
-        var activeEnrollments =
-            enrollments.Count(e => e.Status == "Active");
+            var state =
+                totalLessons == 0 || completedLessons == 0
+                    ? "NotStarted"
+                    : completedLessons >= totalLessons
+                        ? "Completed"
+                        : "InProgress";
 
-        var cancelledEnrollments =
-            enrollments.Count(e => e.Status == "Cancelled");
-
-        var inProgressEnrollments =
-            enrollments.Count(e =>
+            return new
             {
-                var total =
-                    lessonCounts.TryGetValue(
-                        e.CourseId,
-                        out var totalCount)
-                        ? totalCount
-                        : 0;
-
-                var completed =
-                    completedCounts.TryGetValue(
-                        e.Id,
-                        out var completedCount)
-                        ? completedCount
-                        : 0;
-
-                return total > 0 &&
-                       completed > 0 &&
-                       completed < total;
-            });
-
-        var completedEnrollments =
-            enrollments.Count(e =>
-            {
-                var total =
-                    lessonCounts.TryGetValue(
-                        e.CourseId,
-                        out var totalCount)
-                        ? totalCount
-                        : 0;
-
-                var completed =
-                    completedCounts.TryGetValue(
-                        e.Id,
-                        out var completedCount)
-                        ? completedCount
-                        : 0;
-
-                return total > 0 &&
-                       completed >= total;
-            });
-
-        var notStartedEnrollments =
-            enrollments.Count(e =>
-            {
-                var completed =
-                    completedCounts.TryGetValue(
-                        e.Id,
-                        out var completedCount)
-                        ? completedCount
-                        : 0;
-
-                return completed == 0;
-            });
+                Id = e.Id,
+                Progress = progress,
+                State = state
+            };
+        }).ToList();
 
         var courseReports = enrollments
-            .Where(e => e.Course != null)
             .GroupBy(e => new
             {
                 e.CourseId,
                 CourseTitle = e.Course!.Title,
-                e.Course.DeliveryType,
-                e.Course.InstructorId
+                e.Course.DeliveryType
             })
-            .Select(group =>
+            .Select(g =>
             {
-                var rows = group.ToList();
+                var rows = g.ToList();
+                var expected = rows.Sum(Expected);
 
-                var expected = rows.Sum(e =>
-                    e.CoursePartnerOrganization?.AgreedPrice
-                    ?? e.Course!.Price);
+                var ids = rows
+                    .Select(x => x.Id)
+                    .ToHashSet();
 
-                var paid = rows
-                    .SelectMany(e =>
-                        payments.Where(p =>
-                            p.EnrollmentId == e.Id &&
-                            p.Status == "Paid"))
+                var paid = payments
+                    .Where(p =>
+                        ids.Contains(p.EnrollmentId) &&
+                        p.Status == "Paid")
                     .Sum(p => p.Amount);
 
-                var courseRemaining =
-                    Math.Max(expected - paid, 0);
-
-                var courseCollection =
-                    expected <= 0
-                        ? 0
-                        : Math.Round(
-                            paid * 100m / expected,
-                            2);
-
-                var lessons = rows.Sum(e =>
-                    lessonCounts.TryGetValue(
-                        e.CourseId,
-                        out var count)
-                        ? count
-                        : 0);
-
-                var completed = rows.Sum(e =>
-                    completedCounts.TryGetValue(
-                        e.Id,
-                        out var count)
-                        ? count
-                        : 0);
-
-                var progress =
-                    lessons <= 0
-                        ? 0
-                        : Math.Round(
-                            completed * 100m / lessons,
-                            2);
+                var averageProgress = progressRows
+                    .Where(p => ids.Contains(p.Id))
+                    .Select(p => p.Progress)
+                    .DefaultIfEmpty()
+                    .Average();
 
                 return new
                 {
-                    courseId = group.Key.CourseId,
-                    courseTitle = group.Key.CourseTitle,
-                    deliveryType = group.Key.DeliveryType,
-                    instructorId = group.Key.InstructorId,
+                    courseId = g.Key.CourseId,
+                    courseTitle = g.Key.CourseTitle,
+                    deliveryType = g.Key.DeliveryType,
                     enrollmentCount = rows.Count,
                     expectedAmount = expected,
                     totalPaid = paid,
-                    remainingAmount = courseRemaining,
-                    collectionPercent = courseCollection,
-                    progressPercent = progress
+                    remainingAmount = Math.Max(
+                        expected - paid,
+                        0),
+                    collectionPercent = expected == 0
+                        ? 0
+                        : Math.Round(
+                            paid * 100m / expected,
+                            2),
+                    averageProgressPercent =
+                        Math.Round(averageProgress, 2)
                 };
             })
             .OrderByDescending(x => x.enrollmentCount)
             .ThenBy(x => x.courseTitle)
             .ToList();
 
-        var studentReports = enrollments
-            .Where(e => e.Student != null && e.Course != null)
-            .Select(e =>
-            {
-                var total =
-                    lessonCounts.TryGetValue(
-                        e.CourseId,
-                        out var totalCount)
-                        ? totalCount
-                        : 0;
-
-                var completed =
-                    completedCounts.TryGetValue(
-                        e.Id,
-                        out var completedCount)
-                        ? completedCount
-                        : 0;
-
-                var progress =
-                    total <= 0
-                        ? 0
-                        : Math.Round(
-                            completed * 100m / total,
-                            2);
-
-                var expected =
-                    e.CoursePartnerOrganization?.AgreedPrice
-                    ?? e.Course!.Price;
-
-                var paid = payments
-                    .Where(p =>
-                        p.EnrollmentId == e.Id &&
-                        p.Status == "Paid")
-                    .Sum(p => p.Amount);
-
-                return new
-                {
-                    enrollmentId = e.Id,
-
-                    studentId = e.StudentId,
-
-                    studentName =
-                        $"{e.Student!.FirstName} {e.Student.LastName}".Trim(),
-
-                    courseId = e.CourseId,
-
-                    courseTitle = e.Course!.Title,
-
-                    instructorName =
-                        e.Instructor?.FullName
-                        ?? e.Course.Instructor?.FullName,
-
-                    deliveryType = e.Course.DeliveryType,
-
-                    startDate = e.StartDate,
-
-                    status = e.Status,
-
-                    totalLessons = total,
-
-                    completedLessons = completed,
-
-                    progressPercent = progress,
-
-                    expectedAmount = expected,
-
-                    totalPaid = paid,
-
-                    remainingAmount =
-                        Math.Max(expected - paid, 0)
-                };
-            })
-            .ToList();
-
-        var monthlyReports = enrollments
-            .GroupBy(e => new
-            {
-                e.StartDate.Year,
-                e.StartDate.Month
-            })
-            .Select(g =>
-            {
-                var ids = g.Select(e => e.Id).ToHashSet();
-
-                var monthPaid = payments
-                    .Where(p =>
-                        ids.Contains(p.EnrollmentId) &&
-                        p.Status == "Paid")
-                    .Sum(p => p.Amount);
-
-                return new
-                {
-                    year = g.Key.Year,
-                    month = g.Key.Month,
-                    enrollmentCount = g.Count(),
-                    paidAmount = monthPaid
-                };
-            })
-            .OrderBy(x => x.year)
-            .ThenBy(x => x.month)
-            .ToList();
-
-        return Ok(new
+        return new
         {
-            filters = new
-            {
-                from,
-                to,
-                courseId,
-                instructorId,
-                deliveryType,
-                status
-            },
+            totalStudents = enrollments
+                .Select(e => e.StudentId)
+                .Distinct()
+                .Count(),
 
-            summary = new
-            {
-                totalStudents = enrollments
-                    .Select(e => e.StudentId)
-                    .Distinct()
-                    .Count(),
+            totalCourses = courseReports.Count,
 
-                totalCourses = courseIds.Count,
+            totalEnrollments = enrollments.Count,
 
-                totalEnrollments = enrollments.Count,
+            totalExpected,
 
-                activeEnrollments,
+            totalPaid,
 
-                cancelledEnrollments,
+            totalRemaining =
+                Math.Max(totalExpected - totalPaid, 0),
 
-                expectedAmount,
+            totalPending,
 
-                totalPaid,
+            totalCancelled,
 
-                totalPending,
+            activeEnrollments =
+                enrollments.Count(e => e.Status == "Active"),
 
-                totalCancelled,
+            cancelledEnrollments =
+                enrollments.Count(e => e.Status == "Cancelled"),
 
-                remainingAmount,
+            collectionPercent = totalExpected == 0
+                ? 0
+                : Math.Round(
+                    totalPaid * 100m / totalExpected,
+                    2),
 
-                collectionPercent,
+            averageProgressPercent =
+                progressRows.Count == 0
+                    ? 0
+                    : Math.Round(
+                        progressRows.Average(x => x.Progress),
+                        2),
 
-                totalLessons,
+            completedCount =
+                progressRows.Count(
+                    x => x.State == "Completed"),
 
-                completedLessons,
+            inProgressCount =
+                progressRows.Count(
+                    x => x.State == "InProgress"),
 
-                progressPercent,
-
-                completedEnrollments,
-
-                inProgressEnrollments,
-
-                notStartedEnrollments
-            },
+            notStartedCount =
+                progressRows.Count(
+                    x => x.State == "NotStarted"),
 
             courseReports,
 
-            studentReports,
+            studentReports = enrollments
+                .Select(e =>
+                {
+                    lessonCounts.TryGetValue(
+                        e.CourseId,
+                        out var totalLessons);
 
-            monthlyReports
-        });
+                    completedCounts.TryGetValue(
+                        e.Id,
+                        out var completedLessons);
+
+                    var expected = Expected(e);
+
+                    var paid = payments
+                        .Where(p =>
+                            p.EnrollmentId == e.Id &&
+                            p.Status == "Paid")
+                        .Sum(p => p.Amount);
+
+                    var progress = totalLessons == 0
+                        ? 0
+                        : Math.Round(
+                            completedLessons * 100m / totalLessons,
+                            2);
+
+                    return new
+                    {
+                        enrollmentId = e.Id,
+                        studentId = e.StudentId,
+
+                        studentName =
+                            $"{e.Student?.FirstName} {e.Student?.LastName}"
+                                .Trim(),
+
+                        courseTitle = e.Course!.Title,
+
+                        instructorName =
+                            e.Instructor?.FullName
+                            ?? e.Course.Instructor?.FullName,
+
+                        status = e.Status,
+
+                        expectedAmount = expected,
+
+                        totalPaid = paid,
+
+                        remainingAmount =
+                            Math.Max(expected - paid, 0),
+
+                        progressPercent = progress,
+
+                        totalLessons,
+
+                        completedLessons,
+
+                        startDate = e.StartDate
+                    };
+                })
+                .OrderByDescending(x => x.startDate)
+                .ToList()
+        };
     }
 }
