@@ -30,4 +30,7 @@ public class Enrollment
 
     // توضیحات مربوط به ثبت‌نام دانشجو در دوره
     public string? Description { get; set; }
+
+    // برنامه اقساط این ثبت‌نام
+    public ICollection<Installment> Installments { get; set; } = new List<Installment>();
 }

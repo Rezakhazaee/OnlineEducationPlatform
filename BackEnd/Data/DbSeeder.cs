@@ -198,6 +198,13 @@ public static class DbSeeder
         }
 
         // ==========================================
+        if (course.Capacity != 20)
+        {
+            course.Capacity = 20;
+            await db.SaveChangesAsync();
+        }
+
+
         if (course.DeliveryType != "Online")
         {
             course.DeliveryType = "Online";
@@ -318,6 +325,47 @@ public static class DbSeeder
         }
 
         // ==========================================
+        // ==========================================
+        // 10.1. Installment Schedule
+        // ==========================================
+
+        var installmentExists = await db.Installments
+            .AnyAsync(i => i.EnrollmentId == enrollment.Id);
+
+        if (!installmentExists)
+        {
+            db.Installments.AddRange(
+                new Installment
+                {
+                    EnrollmentId = enrollment.Id,
+                    InstallmentNumber = 1,
+                    Amount = 1000000,
+                    DueDate = new DateTime(2026, 9, 1),
+                    Status = "Paid",
+                    Description = "قسط اول - داده تستی"
+                },
+                new Installment
+                {
+                    EnrollmentId = enrollment.Id,
+                    InstallmentNumber = 2,
+                    Amount = 1000000,
+                    DueDate = new DateTime(2026, 10, 1),
+                    Status = "Pending",
+                    Description = "قسط دوم - داده تستی"
+                },
+                new Installment
+                {
+                    EnrollmentId = enrollment.Id,
+                    InstallmentNumber = 3,
+                    Amount = 2000000,
+                    DueDate = new DateTime(2026, 11, 1),
+                    Status = "Pending",
+                    Description = "قسط سوم - داده تستی"
+                });
+
+            await db.SaveChangesAsync();
+        }
+
         // 11. First Installment - Paid
         // ==========================================
 
@@ -366,6 +414,45 @@ public static class DbSeeder
         }
 
         // ==========================================
+        // ==========================================
+        // 12.1. Link Payments to Installments
+        // ==========================================
+
+        var firstInstallment = await db.Installments
+            .FirstOrDefaultAsync(i =>
+                i.EnrollmentId == enrollment.Id &&
+                i.InstallmentNumber == 1);
+
+        var secondInstallment = await db.Installments
+            .FirstOrDefaultAsync(i =>
+                i.EnrollmentId == enrollment.Id &&
+                i.InstallmentNumber == 2);
+
+        var firstPayment = await db.Payments
+            .FirstOrDefaultAsync(p =>
+                p.EnrollmentId == enrollment.Id &&
+                p.PaymentType == "FirstInstallment");
+
+        var secondPayment = await db.Payments
+            .FirstOrDefaultAsync(p =>
+                p.EnrollmentId == enrollment.Id &&
+                p.PaymentType == "SecondInstallment");
+
+        if (firstPayment != null && firstInstallment != null &&
+            firstPayment.InstallmentId != firstInstallment.Id)
+        {
+            firstPayment.InstallmentId = firstInstallment.Id;
+        }
+
+        if (secondPayment != null && secondInstallment != null &&
+            secondPayment.InstallmentId != secondInstallment.Id)
+        {
+            secondPayment.InstallmentId = secondInstallment.Id;
+        }
+
+        await db.SaveChangesAsync();
+
+
         // 13. Test Course Module & Lessons
         // ==========================================
 

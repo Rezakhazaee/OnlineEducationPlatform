@@ -8,6 +8,11 @@ public class Payment
     // مربوط به کدام ثبت نام است؟
     public int EnrollmentId { get; set; }
 
+    // قسط مربوط به این پرداخت
+    public int? InstallmentId { get; set; }
+
+    public Installment? Installment { get; set; }
+
     public Enrollment? Enrollment { get; set; }
 
 

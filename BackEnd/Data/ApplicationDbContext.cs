@@ -29,6 +29,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Enrollment> Enrollments { get; set; }
 
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<Installment> Installments { get; set; }
     public DbSet<Certificate> Certificates { get; set; }
 
     public DbSet<StudentFollowUp> StudentFollowUps { get; set; }
