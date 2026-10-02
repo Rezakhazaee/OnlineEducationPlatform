@@ -13,7 +13,6 @@
 
         <div class="admin-brand">
             <div class="admin-brand-mark">آ</div>
-
             <div>
                 <strong>آموزش‌یار</strong>
                 <small>پنل مدیریت</small>
@@ -21,37 +20,12 @@
         </div>
 
         <nav class="admin-menu">
-
-            <a href="/admin">
-                <span>⌂</span>
-                داشبورد
-            </a>
-
-            <a href="/admin/courses">
-                <span>▣</span>
-                دوره‌ها
-            </a>
-
-            <a href="/admin/users">
-                <span>♙</span>
-                کاربران
-            </a>
-
-            <a href="/admin/enrollments">
-                <span>✓</span>
-                ثبت‌نام‌ها
-            </a>
-
-            <a href="/admin/payments">
-                <span>₿</span>
-                پرداخت‌ها
-            </a>
-
-            <a href="/admin/reports" class="active">
-                <span>▤</span>
-                گزارش‌ها
-            </a>
-
+            <a href="/admin"><span>⌂</span>داشبورد</a>
+            <a href="/admin/courses"><span>▣</span>دوره‌ها</a>
+            <a href="/admin/users"><span>♙</span>کاربران</a>
+            <a href="/admin/enrollments"><span>✓</span>ثبت‌نام‌ها</a>
+            <a href="/admin/payments"><span>₿</span>پرداخت‌ها</a>
+            <a href="/admin/reports" class="active"><span>▤</span>گزارش‌ها</a>
         </nav>
 
     </aside>
@@ -63,23 +37,16 @@
             <div>
                 <span>مدیریت</span>
                 <h1>گزارش‌ها</h1>
-                <p>خلاصه وضعیت دانشجویان، دوره‌ها، ثبت‌نام‌ها و پرداخت‌ها</p>
+                <p>تحلیل مالی، ثبت‌نام و پیشرفت آموزشی</p>
             </div>
 
             <div class="admin-page-header-actions">
 
                 <button class="admin-primary-btn"
-                        @onclick="LoadReport"
-                        disabled="@IsLoading">
+                        @onclick="LoadDashboard"
+                        disabled="@Loading">
 
-                    @if (IsLoading)
-                    {
-                        <span>در حال بروزرسانی...</span>
-                    }
-                    else
-                    {
-                        <span>به‌روزرسانی گزارش</span>
-                    }
+                    @(Loading ? "در حال دریافت..." : "بروزرسانی گزارش")
 
                 </button>
 
@@ -95,107 +62,501 @@
 
         </div>
 
-        @if (IsLoading)
-        {
-            <section class="admin-content-card">
+        <!-- FILTERS -->
 
-                <div class="admin-empty-state">
-                    در حال دریافت گزارش‌ها...
+        <section class="admin-content-card">
+
+            <div class="admin-card-header">
+                <div>
+                    <span>فیلتر گزارش</span>
+                    <h2>پارامترهای گزارش‌گیری</h2>
+                </div>
+            </div>
+
+            <div style="
+                display:grid;
+                grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+                gap:14px;
+                margin-top:18px;">
+
+                <div>
+                    <label>از تاریخ</label>
+                    <input class="admin-input"
+                           type="date"
+                           @bind="From" />
                 </div>
 
+                <div>
+                    <label>تا تاریخ</label>
+                    <input class="admin-input"
+                           type="date"
+                           @bind="To" />
+                </div>
+
+                <div>
+                    <label>شناسه دوره</label>
+                    <input class="admin-input"
+                           type="number"
+                           min="1"
+                           placeholder="همه دوره‌ها"
+                           @bind="CourseId" />
+                </div>
+
+                <div>
+                    <label>شناسه مدرس</label>
+                    <input class="admin-input"
+                           type="number"
+                           min="1"
+                           placeholder="همه مدرس‌ها"
+                           @bind="InstructorId" />
+                </div>
+
+                <div>
+                    <label>نوع برگزاری</label>
+
+                    <select class="admin-input"
+                            @bind="DeliveryType">
+
+                        <option value="">همه</option>
+                        <option value="Online">آنلاین</option>
+                        <option value="InPerson">حضوری</option>
+
+                    </select>
+                </div>
+
+                <div>
+                    <label>وضعیت ثبت‌نام</label>
+
+                    <select class="admin-input"
+                            @bind="Status">
+
+                        <option value="">همه</option>
+                        <option value="Active">فعال</option>
+                        <option value="Cancelled">لغوشده</option>
+
+                    </select>
+                </div>
+
+            </div>
+
+            <div style="
+                display:flex;
+                justify-content:flex-start;
+                gap:10px;
+                margin-top:18px;">
+
+                <button class="admin-primary-btn"
+                        @onclick="LoadDashboard"
+                        disabled="@Loading">
+
+                    اعمال فیلتر
+
+                </button>
+
+                <button class="admin-secondary-btn"
+                        @onclick="ResetFilters">
+
+                    پاک کردن فیلترها
+
+                </button>
+
+            </div>
+
+        </section>
+
+        @if (Loading)
+        {
+            <section class="admin-content-card" style="margin-top:24px;">
+                <div class="admin-empty-state">
+                    در حال دریافت گزارش...
+                </div>
             </section>
         }
         else if (!string.IsNullOrWhiteSpace(ErrorMessage))
         {
-            <section class="admin-content-card">
-
+            <section class="admin-content-card" style="margin-top:24px;">
                 <div class="admin-error">
                     @ErrorMessage
                 </div>
-
-                <div style="margin-top: 16px; text-align: center;">
-                    <button class="admin-primary-btn"
-                            @onclick="LoadReport">
-                        تلاش مجدد
-                    </button>
-                </div>
-
             </section>
         }
         else
         {
-            <div class="admin-stats-grid">
+            <!-- KPI -->
+
+            <div class="admin-stats-grid" style="margin-top:24px;">
 
                 <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        دانشجویان
-                    </div>
-
+                    <div class="admin-stat-label">دانشجویان</div>
                     <div class="admin-stat-value">
-                        @Report.TotalStudents
+                        @Report.Summary.TotalStudents
                     </div>
                 </div>
 
                 <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        دوره‌ها
-                    </div>
-
+                    <div class="admin-stat-label">دوره‌ها</div>
                     <div class="admin-stat-value">
-                        @Report.TotalCourses
+                        @Report.Summary.TotalCourses
                     </div>
                 </div>
 
                 <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        ثبت‌نام‌ها
-                    </div>
-
+                    <div class="admin-stat-label">ثبت‌نام‌ها</div>
                     <div class="admin-stat-value">
-                        @Report.TotalEnrollments
+                        @Report.Summary.TotalEnrollments
                     </div>
                 </div>
 
                 <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        پرداخت‌شده
-                    </div>
-
+                    <div class="admin-stat-label">مبلغ مورد انتظار</div>
                     <div class="admin-stat-value">
-                        @Report.TotalPaid.ToString("N0")
+                        @Money(Report.Summary.ExpectedAmount)
                         <small>تومان</small>
                     </div>
                 </div>
 
                 <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        در انتظار پرداخت
-                    </div>
-
+                    <div class="admin-stat-label">وصول‌شده</div>
                     <div class="admin-stat-value">
-                        @Report.TotalPending.ToString("N0")
+                        @Money(Report.Summary.TotalPaid)
                         <small>تومان</small>
                     </div>
                 </div>
 
                 <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        لغوشده
-                    </div>
-
+                    <div class="admin-stat-label">مانده</div>
                     <div class="admin-stat-value">
-                        @Report.TotalCancelled.ToString("N0")
+                        @Money(Report.Summary.RemainingAmount)
                         <small>تومان</small>
+                    </div>
+                </div>
+
+                <div class="admin-stat-card">
+                    <div class="admin-stat-label">درصد وصول</div>
+                    <div class="admin-stat-value">
+                        @Report.Summary.CollectionPercent.ToString("0.##")%
+                    </div>
+                </div>
+
+                <div class="admin-stat-card">
+                    <div class="admin-stat-label">پیشرفت آموزشی</div>
+                    <div class="admin-stat-value">
+                        @Report.Summary.ProgressPercent.ToString("0.##")%
                     </div>
                 </div>
 
             </div>
+
+            <!-- STATUS -->
+
+            <div style="
+                display:grid;
+                grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+                gap:24px;
+                margin-top:24px;">
+
+                <section class="admin-content-card">
+
+                    <div class="admin-card-header">
+                        <div>
+                            <span>مالی</span>
+                            <h2>وضعیت وصول</h2>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:22px;">
+
+                        <div style="
+                            display:flex;
+                            justify-content:space-between;
+                            margin-bottom:8px;">
+
+                            <span>وصول‌شده</span>
+                            <strong>
+                                @Report.Summary.CollectionPercent.ToString("0.##")%
+                            </strong>
+
+                        </div>
+
+                        <div style="
+                            height:12px;
+                            background:#e5e7eb;
+                            border-radius:10px;
+                            overflow:hidden;">
+
+                            <div style="
+                                width:@Report.Summary.CollectionPercent%;
+                                height:100%;
+                                background:#568fa8;">
+                            </div>
+
+                        </div>
+
+                        <div style="
+                            display:flex;
+                            justify-content:space-between;
+                            margin-top:18px;">
+
+                            <span>مانده</span>
+                            <strong>
+                                @Report.Summary.RemainingPercent.ToString("0.##")%
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <section class="admin-content-card">
+
+                    <div class="admin-card-header">
+                        <div>
+                            <span>آموزشی</span>
+                            <h2>وضعیت یادگیری</h2>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:20px;">
+
+                        <div style="display:flex;justify-content:space-between;margin:10px 0;">
+                            <span>شروع نشده</span>
+                            <strong>@Report.Progress.NotStarted</strong>
+                        </div>
+
+                        <div style="display:flex;justify-content:space-between;margin:10px 0;">
+                            <span>در حال یادگیری</span>
+                            <strong>@Report.Progress.InProgress</strong>
+                        </div>
+
+                        <div style="display:flex;justify-content:space-between;margin:10px 0;">
+                            <span>تکمیل‌شده</span>
+                            <strong>@Report.Progress.Completed</strong>
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+            <!-- COURSES -->
+
+            <section class="admin-content-card" style="margin-top:24px;">
+
+                <div class="admin-card-header">
+                    <div>
+                        <span>گزارش تفکیکی</span>
+                        <h2>وضعیت مالی دوره‌ها</h2>
+                    </div>
+
+                    <span>@Report.Courses.Count دوره</span>
+                </div>
+
+                <div class="admin-table-wrapper" style="margin-top:18px;">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>دوره</th>
+                                <th>نوع</th>
+                                <th>ثبت‌نام</th>
+                                <th>مبلغ مورد انتظار</th>
+                                <th>وصول‌شده</th>
+                                <th>مانده</th>
+                                <th>وصول</th>
+                                <th>پیشرفت</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var item in Report.Courses)
+                            {
+                                <tr>
+
+                                    <td>@item.CourseTitle</td>
+
+                                    <td>
+                                        @DeliveryText(item.DeliveryType)
+                                    </td>
+
+                                    <td>@item.EnrollmentCount</td>
+
+                                    <td>@Money(item.ExpectedAmount) تومان</td>
+
+                                    <td>@Money(item.TotalPaid) تومان</td>
+
+                                    <td>@Money(item.RemainingAmount) تومان</td>
+
+                                    <td>
+                                        @item.CollectionPercent.ToString("0.##")%
+                                    </td>
+
+                                    <td>
+                                        @item.ProgressPercent.ToString("0.##")%
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+            <!-- DAILY -->
+
+            <section class="admin-content-card" style="margin-top:24px;">
+
+                <div class="admin-card-header">
+                    <div>
+                        <span>روند زمانی</span>
+                        <h2>ثبت‌نام و درآمد روزانه</h2>
+                    </div>
+                </div>
+
+                @if (Report.Daily.Count == 0)
+                {
+                    <div class="admin-empty-state">
+                        داده‌ای برای بازه انتخاب‌شده وجود ندارد.
+                    </div>
+                }
+                else
+                {
+                    var maxValue = Report.Daily.Max(x =>
+                        Math.Max(x.Enrollments, 1));
+
+                    <div style="
+                        display:flex;
+                        align-items:flex-end;
+                        gap:10px;
+                        height:220px;
+                        overflow-x:auto;
+                        padding:20px 10px 10px;">
+
+                        @foreach (var day in Report.Daily)
+                        {
+                            var height =
+                                Math.Max(
+                                    8,
+                                    (double)day.Enrollments /
+                                    maxValue * 150);
+
+                            <div style="
+                                min-width:55px;
+                                text-align:center;">
+
+                                <div style="
+                                    height:@height.ToString("0")px;
+                                    background:#568fa8;
+                                    border-radius:6px 6px 0 0;
+                                    margin:auto;
+                                    width:32px;"
+                                    title="@Money(day.ExpectedAmount) تومان">
+                                </div>
+
+                                <small>
+                                    @day.Date.ToString("MM/dd")
+                                </small>
+
+                                <div style="font-size:11px;">
+                                    @day.Enrollments ثبت‌نام
+                                </div>
+
+                            </div>
+                        }
+
+                    </div>
+                }
+
+            </section>
+
+            <!-- STUDENTS -->
+
+            <section class="admin-content-card" style="margin-top:24px;">
+
+                <div class="admin-card-header">
+                    <div>
+                        <span>جزئیات</span>
+                        <h2>گزارش دانشجویان</h2>
+                    </div>
+
+                    <span>@Report.Students.Count مورد</span>
+                </div>
+
+                <div class="admin-table-wrapper" style="margin-top:18px;">
+
+                    <table class="admin-table">
+
+                        <thead>
+                            <tr>
+                                <th>دانشجو</th>
+                                <th>دوره</th>
+                                <th>مدرس</th>
+                                <th>نوع</th>
+                                <th>شروع</th>
+                                <th>وضعیت</th>
+                                <th>پرداخت</th>
+                                <th>مانده</th>
+                                <th>پیشرفت</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var item in Report.Students)
+                            {
+                                <tr>
+
+                                    <td>@item.StudentName</td>
+
+                                    <td>@item.CourseTitle</td>
+
+                                    <td>
+                                        @(item.InstructorName ?? "-")
+                                    </td>
+
+                                    <td>
+                                        @DeliveryText(item.DeliveryType)
+                                    </td>
+
+                                    <td>
+                                        @item.StartDate.ToString("yyyy/MM/dd")
+                                    </td>
+
+                                    <td>
+                                        @StatusText(item.Status)
+                                    </td>
+
+                                    <td>
+                                        @Money(item.TotalPaid) تومان
+                                    </td>
+
+                                    <td>
+                                        @Money(item.RemainingAmount) تومان
+                                    </td>
+
+                                    <td>
+                                        @item.ProgressPercent.ToString("0.##")%
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
         }
-
-
-        <AdminCourseReports />
-
-        <AdminProgressReport />
 
     </main>
 
@@ -203,68 +564,220 @@
 
 @code {
 
-    private bool IsLoading { get; set; } = true;
+    private bool Loading { get; set; } = true;
 
     private string? ErrorMessage { get; set; }
 
-    private ReportsSummaryDto Report { get; set; } = new();
-
     private DateTime? LastUpdated { get; set; }
+
+    private DateTime? From { get; set; }
+
+    private DateTime? To { get; set; }
+
+    private int? CourseId { get; set; }
+
+    private int? InstructorId { get; set; }
+
+    private string DeliveryType { get; set; } = "";
+
+    private string Status { get; set; } = "";
+
+    private DashboardReport Report { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadReport();
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || Auth.Role != "Admin")
+        {
+            ErrorMessage = "دسترسی غیرمجاز.";
+            Loading = false;
+            return;
+        }
+
+        await LoadDashboard();
     }
 
-    private async Task LoadReport()
+    private async Task LoadDashboard()
     {
-        IsLoading = true;
+        Loading = true;
         ErrorMessage = null;
 
         try
         {
             var client = Auth.CreateAuthenticatedClient();
 
-            var response = await client.GetAsync("api/Reports/summary");
+            var parameters = new List<string>();
 
-            if (!response.IsSuccessStatusCode)
-            {
-                ErrorMessage =
-                    $"دریافت گزارش‌ها با خطای {(int)response.StatusCode} ({response.StatusCode}) مواجه شد.";
+            if (From.HasValue)
+                parameters.Add($"from={From.Value:yyyy-MM-dd}");
 
-                return;
-            }
+            if (To.HasValue)
+                parameters.Add($"to={To.Value:yyyy-MM-dd}");
 
-            var result =
-                await response.Content.ReadFromJsonAsync<ReportsSummaryDto>();
+            if (CourseId.HasValue)
+                parameters.Add($"courseId={CourseId.Value}");
 
-            Report = result ?? new ReportsSummaryDto();
+            if (InstructorId.HasValue)
+                parameters.Add($"instructorId={InstructorId.Value}");
+
+            if (!string.IsNullOrWhiteSpace(DeliveryType))
+                parameters.Add($"deliveryType={Uri.EscapeDataString(DeliveryType)}");
+
+            if (!string.IsNullOrWhiteSpace(Status))
+                parameters.Add($"status={Uri.EscapeDataString(Status)}");
+
+            var url = "api/Reports/dashboard";
+
+            if (parameters.Count > 0)
+                url += "?" + string.Join("&", parameters);
+
+            Report =
+                await client.GetFromJsonAsync<DashboardReport>(url)
+                ?? new DashboardReport();
 
             LastUpdated = DateTime.Now;
         }
         catch (Exception ex)
         {
             ErrorMessage =
-                $"خطا در دریافت گزارش‌ها: {ex.Message}";
+                $"دریافت گزارش با خطا مواجه شد: {ex.Message}";
         }
         finally
         {
-            IsLoading = false;
+            Loading = false;
         }
     }
 
-    public class ReportsSummaryDto
+    private async Task ResetFilters()
+    {
+        From = null;
+        To = null;
+        CourseId = null;
+        InstructorId = null;
+        DeliveryType = "";
+        Status = "";
+
+        await LoadDashboard();
+    }
+
+    private static string Money(decimal value)
+        => value.ToString("N0");
+
+    private static string DeliveryText(string? value)
+        => value switch
+        {
+            "Online" => "آنلاین",
+            "InPerson" => "حضوری",
+            _ => value ?? "-"
+        };
+
+    private static string StatusText(string? value)
+        => value switch
+        {
+            "Active" => "فعال",
+            "Cancelled" => "لغوشده",
+            _ => value ?? "-"
+        };
+
+    private class DashboardReport
+    {
+        public FilterDto Filters { get; set; } = new();
+
+        public SummaryDto Summary { get; set; } = new();
+
+        public ProgressDto Progress { get; set; } = new();
+
+        public List<CourseDto> Courses { get; set; } = new();
+
+        public List<StudentDto> Students { get; set; } = new();
+
+        public List<DailyDto> Daily { get; set; } = new();
+    }
+
+    private class FilterDto
+    {
+        public string? From { get; set; }
+        public string? To { get; set; }
+        public int? CourseId { get; set; }
+        public int? InstructorId { get; set; }
+        public string? DeliveryType { get; set; }
+        public string? Status { get; set; }
+    }
+
+    private class SummaryDto
     {
         public int TotalStudents { get; set; }
-
         public int TotalCourses { get; set; }
-
         public int TotalEnrollments { get; set; }
+        public int ActiveEnrollments { get; set; }
+        public int CancelledEnrollments { get; set; }
 
+        public decimal ExpectedAmount { get; set; }
         public decimal TotalPaid { get; set; }
+        public decimal PendingAmount { get; set; }
+        public decimal CancelledAmount { get; set; }
+        public decimal RemainingAmount { get; set; }
 
-        public decimal TotalPending { get; set; }
+        public decimal CollectionPercent { get; set; }
+        public decimal RemainingPercent { get; set; }
 
-        public decimal TotalCancelled { get; set; }
+        public int TotalLessons { get; set; }
+        public int CompletedLessons { get; set; }
+
+        public decimal ProgressPercent { get; set; }
+    }
+
+    private class ProgressDto
+    {
+        public int NotStarted { get; set; }
+        public int InProgress { get; set; }
+        public int Completed { get; set; }
+    }
+
+    private class CourseDto
+    {
+        public int CourseId { get; set; }
+        public string CourseTitle { get; set; } = "";
+        public string? DeliveryType { get; set; }
+        public int EnrollmentCount { get; set; }
+
+        public decimal ExpectedAmount { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal RemainingAmount { get; set; }
+
+        public decimal CollectionPercent { get; set; }
+        public decimal ProgressPercent { get; set; }
+    }
+
+    private class StudentDto
+    {
+        public int EnrollmentId { get; set; }
+
+        public string StudentName { get; set; } = "";
+        public string CourseTitle { get; set; } = "";
+        public string? InstructorName { get; set; }
+        public string? DeliveryType { get; set; }
+
+        public DateTime StartDate { get; set; }
+        public string? Status { get; set; }
+
+        public decimal ExpectedAmount { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal RemainingAmount { get; set; }
+
+        public int TotalLessons { get; set; }
+        public int CompletedLessons { get; set; }
+
+        public decimal ProgressPercent { get; set; }
+    }
+
+    private class DailyDto
+    {
+        public DateTime Date { get; set; }
+        public int Enrollments { get; set; }
+
+        public decimal ExpectedAmount { get; set; }
+        public decimal TotalPaid { get; set; }
     }
 }
