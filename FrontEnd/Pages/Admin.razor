@@ -232,54 +232,31 @@
 
                 <div class="admin-financial-grid">
 
-                    <div class="admin-financial-card">
-
-                        <small>
-                            پرداخت‌شده
-                        </small>
-
-                        <strong>
-                            @Summary.TotalPaid.ToString("N0")
-                        </strong>
-
-                        <span>
-                            تومان
-                        </span>
-
+                    <div class="admin-financial-card paid">
+                        <span class="financial-icon">✓</span>
+                        <div class="financial-card-content">
+                            <small>پرداخت‌شده</small>
+                            <strong>@Summary.TotalPaid.ToString("N0")</strong>
+                            <span>تومان</span>
+                        </div>
                     </div>
 
-
-                    <div class="admin-financial-card">
-
-                        <small>
-                            در انتظار پرداخت
-                        </small>
-
-                        <strong>
-                            @Summary.TotalPending.ToString("N0")
-                        </strong>
-
-                        <span>
-                            تومان
-                        </span>
-
+                    <div class="admin-financial-card pending">
+                        <span class="financial-icon">◷</span>
+                        <div class="financial-card-content">
+                            <small>در انتظار پرداخت</small>
+                            <strong>@Summary.TotalPending.ToString("N0")</strong>
+                            <span>تومان</span>
+                        </div>
                     </div>
 
-
-                    <div class="admin-financial-card">
-
-                        <small>
-                            لغوشده
-                        </small>
-
-                        <strong>
-                            @Summary.TotalCancelled.ToString("N0")
-                        </strong>
-
-                        <span>
-                            تومان
-                        </span>
-
+                    <div class="admin-financial-card cancelled">
+                        <span class="financial-icon">×</span>
+                        <div class="financial-card-content">
+                            <small>لغوشده</small>
+                            <strong>@Summary.TotalCancelled.ToString("N0")</strong>
+                            <span>تومان</span>
+                        </div>
                     </div>
 
                 </div>
