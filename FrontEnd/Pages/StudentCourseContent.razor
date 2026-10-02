@@ -1,0 +1,441 @@
+@page "/student/course-content/{CourseId:int}"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@layout StudentLayout
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>محتوای دوره | آموزش‌یار</PageTitle>
+
+<div class="student-page">
+
+    @if (IsLoading)
+    {
+        <section class="student-content-card">
+            <div class="student-loading">
+                <div class="student-loading-icon">...</div>
+                <h3>در حال بارگذاری محتوای دوره</h3>
+                <p>لطفاً چند لحظه صبر کنید.</p>
+            </div>
+        </section>
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <section class="student-content-card">
+            <div class="student-error">
+                <strong>خطا</strong>
+                <p>@ErrorMessage</p>
+
+                <a href="/student/courses"
+                   class="student-course-details-btn">
+                    ← بازگشت به دوره‌های من
+                </a>
+            </div>
+        </section>
+    }
+    else if (Content != null && Enrollment != null)
+    {
+        <div class="student-topbar">
+            <div>
+                <span class="student-eyebrow">محتوای آموزشی</span>
+
+                <h1>@Content.CourseTitle</h1>
+
+                <p>
+                    نوع دوره:
+                    @GetDeliveryTypeText(Content.DeliveryType)
+                </p>
+            </div>
+
+            <a href="/student/courses"
+               class="student-outline-btn">
+                ← دوره‌های من
+            </a>
+        </div>
+
+        <section class="student-content-card">
+
+            <div class="student-section-header">
+                <h2>اطلاعات ثبت‌نام</h2>
+                <span>اطلاعات همان ثبت‌نام موجود در «دوره‌های من»</span>
+            </div>
+
+            <div class="student-profile-grid">
+
+                <div class="student-profile-field">
+                    <small>وضعیت ثبت‌نام</small>
+                    <strong class="@GetEnrollmentStatusClass(Enrollment.Status)">
+                        @GetEnrollmentStatusText(Enrollment.Status)
+                    </strong>
+                </div>
+
+                <div class="student-profile-field">
+                    <small>تاریخ شروع</small>
+                    <strong>@Enrollment.StartDate.ToString("yyyy/MM/dd")</strong>
+                </div>
+
+                <div class="student-profile-field">
+                    <small>مدرس</small>
+                    <strong>
+                        @(string.IsNullOrWhiteSpace(Enrollment.InstructorName)
+                            ? "تعیین نشده"
+                            : Enrollment.InstructorName)
+                    </strong>
+                </div>
+
+                <div class="student-profile-field">
+                    <small>پشتیبان</small>
+                    <strong>
+                        @(string.IsNullOrWhiteSpace(Enrollment.SupportUserName)
+                            ? "تعیین نشده"
+                            : Enrollment.SupportUserName)
+                    </strong>
+                </div>
+
+            </div>
+
+        </section>
+
+        @if (Financial != null)
+        {
+            <section class="student-content-card">
+
+                <div class="student-section-header">
+                    <h2>وضعیت مالی دوره</h2>
+                    <span>اطلاعات مالی همان ثبت‌نام</span>
+                </div>
+
+                <div class="student-profile-grid">
+
+                    <div class="student-profile-field">
+                        <small>شهریه دوره</small>
+                        <strong>@FormatMoney(Financial.CoursePrice)</strong>
+                    </div>
+
+                    <div class="student-profile-field">
+                        <small>مبلغ پرداخت‌شده</small>
+                        <strong>@FormatMoney(Financial.TotalPaid)</strong>
+                    </div>
+
+                    <div class="student-profile-field">
+                        <small>مانده</small>
+                        <strong>@FormatMoney(Financial.RemainingAmount)</strong>
+                    </div>
+
+                    <div class="student-profile-field">
+                        <small>وضعیت پرداخت</small>
+                        <strong class="@GetPaymentStatusClass(Financial.PaymentStatus)">
+                            @GetPaymentStatusText(Financial.PaymentStatus)
+                        </strong>
+                    </div>
+
+                </div>
+
+                <div class="student-form-actions">
+                    <a href="/student/payments"
+                       class="student-primary-link">
+                        مشاهده پرداخت‌های من
+                    </a>
+                </div>
+
+            </section>
+        }
+
+        <CourseProgressPanel CourseId="@CourseId" />
+        <StudentCertificatePanel CourseId="@CourseId" />
+
+        @if (Content.Modules.Count == 0)
+        {
+            <section class="student-content-card">
+                <div class="student-empty-state">
+                    <div class="student-empty-icon">▣</div>
+                    <h3>هنوز محتوایی برای این دوره منتشر نشده است.</h3>
+                </div>
+            </section>
+        }
+        else
+        {
+            @foreach (var module in Content.Modules.OrderBy(x => x.SortOrder))
+            {
+                <section class="student-content-card">
+
+                    <div class="student-module-header">
+
+                        <div>
+                            <small>سرفصل @module.SortOrder</small>
+                            <h2>@module.Title</h2>
+                        </div>
+
+                        <span>@module.Lessons.Count درس</span>
+
+                    </div>
+
+                    @if (module.Lessons.Count == 0)
+                    {
+                        <div class="student-empty-state">
+                            <p>درسی در این سرفصل منتشر نشده است.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="student-lessons-list">
+
+                            @foreach (var lesson in module.Lessons.OrderBy(x => x.SortOrder))
+                            {
+                                <article class="student-lesson-row">
+
+                                    <div class="student-lesson-main">
+
+                                        <strong>
+                                            @lesson.SortOrder. @lesson.Title
+                                        </strong>
+
+                                        @if (!string.IsNullOrWhiteSpace(lesson.Description))
+                                        {
+                                            <p>@lesson.Description</p>
+                                        }
+
+                                        <small>
+                                            نوع محتوا:
+                                            @(lesson.ContentType == "Video"
+                                                ? "ویدئو"
+                                                : "متن")
+
+                                            @if (lesson.DurationMinutes > 0)
+                                            {
+                                                <text>
+                                                    | مدت: @lesson.DurationMinutes دقیقه
+                                                </text>
+                                            }
+
+                                            @if (lesson.IsFreePreview)
+                                            {
+                                                <text>| پیش‌نمایش رایگان</text>
+                                            }
+                                        </small>
+
+                                    </div>
+
+                                    <a href="/student/lesson/@CourseId/@lesson.Id"
+                                       class="student-course-details-btn">
+                                        مشاهده درس
+                                    </a>
+
+                                </article>
+                            }
+
+                        </div>
+                    }
+
+                </section>
+            }
+        }
+    }
+
+</div>
+
+@code {
+
+    [Parameter]
+    public int CourseId { get; set; }
+
+    private StudentCourseContentDto? Content { get; set; }
+
+    private StudentEnrollmentInfo? Enrollment { get; set; }
+
+    private StudentFinancialInfo? Financial { get; set; }
+
+    private bool IsLoading { get; set; } = true;
+
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || !Auth.IsStudent)
+        {
+            Navigation.NavigateTo(
+                $"/login?returnUrl=/student/course-content/{CourseId}",
+                false);
+            return;
+        }
+
+        await LoadData();
+
+        StateHasChanged();
+    }
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var enrollments =
+                await client.GetFromJsonAsync<List<StudentEnrollmentInfo>>(
+                    "api/Enrollments/my")
+                ?? new();
+
+            Enrollment = enrollments.FirstOrDefault(x =>
+                x.CourseId == CourseId &&
+                x.Status != "Cancelled");
+
+            if (Enrollment == null)
+            {
+                ErrorMessage = "شما در این دوره ثبت‌نام فعال ندارید.";
+                return;
+            }
+
+            Content =
+                await client.GetFromJsonAsync<StudentCourseContentDto>(
+                    $"api/StudentCourseContent/{CourseId}");
+
+            if (Content == null)
+            {
+                ErrorMessage = "محتوای دوره پیدا نشد.";
+                return;
+            }
+
+            try
+            {
+                Financial =
+                    await client.GetFromJsonAsync<StudentFinancialInfo>(
+                        $"api/Enrollments/{Enrollment.Id}/financial");
+            }
+            catch
+            {
+                Financial = null;
+            }
+        }
+        catch
+        {
+            ErrorMessage = "دریافت اطلاعات دوره با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private string GetDeliveryTypeText(string? value)
+    {
+        return value switch
+        {
+            "Online" => "آنلاین",
+            "InPerson" => "حضوری",
+            "Hybrid" => "ترکیبی",
+            _ => "نامشخص"
+        };
+    }
+
+    private string GetEnrollmentStatusText(string? value)
+    {
+        return value switch
+        {
+            "Active" => "فعال",
+            "Inactive" => "غیرفعال",
+            "Cancelled" => "لغوشده",
+            _ => value ?? "نامشخص"
+        };
+    }
+
+    private string GetEnrollmentStatusClass(string? value)
+    {
+        return value switch
+        {
+            "Active" => "student-enrollment-active",
+            "Inactive" => "student-enrollment-inactive",
+            "Cancelled" => "student-enrollment-cancelled",
+            _ => "student-enrollment-neutral"
+        };
+    }
+
+    private string GetPaymentStatusText(string? value)
+    {
+        return value switch
+        {
+            "Paid" => "تسویه‌شده",
+            "PartiallyPaid" => "پرداخت ناقص",
+            "Unpaid" => "پرداخت‌نشده",
+            "Overpaid" => "بیش‌پرداخت",
+            _ => value ?? "نامشخص"
+        };
+    }
+
+    private string GetPaymentStatusClass(string? value)
+    {
+        return value switch
+        {
+            "Paid" => "student-enrollment-active",
+            "PartiallyPaid" => "student-enrollment-inactive",
+            "Unpaid" => "student-enrollment-cancelled",
+            _ => "student-enrollment-neutral"
+        };
+    }
+
+    private string FormatMoney(decimal value)
+    {
+        return $"{value:N0} تومان";
+    }
+
+    private class StudentEnrollmentInfo
+    {
+        public int Id { get; set; }
+        public int CourseId { get; set; }
+        public string CourseTitle { get; set; } = string.Empty;
+        public string? SupportUserName { get; set; }
+        public string? InstructorName { get; set; }
+        public DateTime StartDate { get; set; }
+        public string Status { get; set; } = string.Empty;
+    }
+
+    private class StudentFinancialInfo
+    {
+        public int EnrollmentId { get; set; }
+        public string StudentName { get; set; } = string.Empty;
+        public string CourseTitle { get; set; } = string.Empty;
+        public decimal CoursePrice { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal RemainingAmount { get; set; }
+        public string PaymentStatus { get; set; } = string.Empty;
+    }
+
+    private class StudentCourseContentDto
+    {
+        public int CourseId { get; set; }
+        public string CourseTitle { get; set; } = string.Empty;
+        public string DeliveryType { get; set; } = "Online";
+        public List<StudentCourseModuleDto> Modules { get; set; } = new();
+    }
+
+    private class StudentCourseModuleDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public int SortOrder { get; set; }
+        public List<StudentCourseLessonDto> Lessons { get; set; } = new();
+    }
+
+    private class StudentCourseLessonDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string ContentType { get; set; } = "Video";
+        public int DurationMinutes { get; set; }
+        public int SortOrder { get; set; }
+        public bool IsFreePreview { get; set; }
+    }
+}

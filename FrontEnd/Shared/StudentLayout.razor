@@ -1,0 +1,91 @@
+@inherits LayoutComponentBase
+@using FrontEnd.Services
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<div class="student-app">
+
+    <aside class="student-sidebar">
+
+        <div class="student-brand">
+            <div class="student-brand-mark">آ</div>
+            <div class="student-brand-text">
+                <strong>آموزش‌یار</strong>
+                <small>پنل دانشجو</small>
+            </div>
+        </div>
+
+        <div class="student-user-card">
+            <div class="student-user-avatar">
+                @(string.IsNullOrWhiteSpace(Auth.FullName)
+                    ? "د"
+                    : Auth.FullName.Substring(0, 1))
+            </div>
+
+            <div class="student-user-info">
+                <strong>@Auth.FullName</strong>
+                <small>دانشجو</small>
+            </div>
+        </div>
+
+        <div style="display:flex !important; flex-direction:column !important; gap:7px !important; width:100% !important; visibility:visible !important; opacity:1 !important;">
+
+            <a href="/student"
+               style="display:flex !important; align-items:center !important; gap:11px !important; width:100% !important; min-height:46px !important; padding:0 14px !important; box-sizing:border-box !important; color:#dbe5e9 !important; background:#314d5b !important; border:1px solid rgba(255,255,255,.12) !important; border-radius:11px !important; cursor:pointer !important; text-decoration:none !important; font-size:12px !important; font-weight:800 !important; visibility:visible !important; opacity:1 !important;">
+                <span style="display:inline-flex !important; width:25px !important; min-width:25px !important; color:#dbe5e9 !important; font-size:16px !important;">⌂</span>
+                <span style="display:block !important; color:#dbe5e9 !important; visibility:visible !important;">داشبورد</span>
+            </a>
+
+            <a href="/student/profile"
+               style="display:flex !important; align-items:center !important; gap:11px !important; width:100% !important; min-height:46px !important; padding:0 14px !important; box-sizing:border-box !important; color:#dbe5e9 !important; background:#314d5b !important; border:1px solid rgba(255,255,255,.12) !important; border-radius:11px !important; cursor:pointer !important; text-decoration:none !important; font-size:12px !important; font-weight:800 !important; visibility:visible !important; opacity:1 !important;">
+                <span style="display:inline-flex !important; width:25px !important; min-width:25px !important; color:#dbe5e9 !important; font-size:16px !important;">♙</span>
+                <span style="display:block !important; color:#dbe5e9 !important; visibility:visible !important;">پروفایل من</span>
+            </a>
+
+            <a href="/student/courses"
+               style="display:flex !important; align-items:center !important; gap:11px !important; width:100% !important; min-height:46px !important; padding:0 14px !important; box-sizing:border-box !important; color:#dbe5e9 !important; background:#314d5b !important; border:1px solid rgba(255,255,255,.12) !important; border-radius:11px !important; cursor:pointer !important; text-decoration:none !important; font-size:12px !important; font-weight:800 !important; visibility:visible !important; opacity:1 !important;">
+                <span style="display:inline-flex !important; width:25px !important; min-width:25px !important; color:#dbe5e9 !important; font-size:16px !important;">▣</span>
+                <span style="display:block !important; color:#dbe5e9 !important; visibility:visible !important;">دوره‌های من</span>
+            </a>
+
+            <a href="/student/payments"
+               style="display:flex !important; align-items:center !important; gap:11px !important; width:100% !important; min-height:46px !important; padding:0 14px !important; box-sizing:border-box !important; color:#dbe5e9 !important; background:#314d5b !important; border:1px solid rgba(255,255,255,.12) !important; border-radius:11px !important; cursor:pointer !important; text-decoration:none !important; font-size:12px !important; font-weight:800 !important; visibility:visible !important; opacity:1 !important;">
+                <span style="display:inline-flex !important; width:25px !important; min-width:25px !important; color:#dbe5e9 !important; font-size:16px !important;">₿</span>
+                <span style="display:block !important; color:#dbe5e9 !important; visibility:visible !important;">پرداخت‌های من</span>
+            </a>
+
+        </div>
+
+        <div class="student-sidebar-bottom">
+
+            <a href="/">
+                <span>←</span>
+                بازگشت به سایت
+            </a>
+
+            <button type="button"
+                    class="student-logout-btn"
+                    @onclick="Logout">
+                <span>↪</span>
+                خروج
+            </button>
+
+        </div>
+
+    </aside>
+
+    <main class="student-main">
+        <div class="student-main-inner">
+            @Body
+        </div>
+    </main>
+
+</div>
+
+@code {
+    private async Task Logout()
+    {
+        await Auth.LogoutAsync();
+        Navigation.NavigateTo("/login", true);
+    }
+}
