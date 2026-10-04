@@ -130,13 +130,6 @@
                     @ErrorMessage
                 </p>
 
-                <button
-                    class="admin-outline-btn"
-                    @onclick="LoadData">
-
-                    تلاش مجدد
-
-                </button>
 
             </div>
         }
@@ -159,6 +152,8 @@
                 </div>
 
 
+                @if (ShowEnrollmentForm || IsEditMode)
+                {
                 <div class="course-form-card">
 
                     <div class="course-form-header">
@@ -456,6 +451,7 @@
 </div>
 
                 </div>
+                }
 
             </section>
 
@@ -472,6 +468,12 @@
                         <h2>
                             فهرست ثبت‌نام‌ها
                         </h2>
+                <button
+                    type="button"
+                    class="admin-primary-btn"
+                    @onclick="OpenCreateEnrollmentForm">
+                    + افزودن ثبت‌نام
+                </button>
                     </div>
 
                     <span class="users-count">
@@ -655,6 +657,7 @@ else
 
     private bool IsSaving { get; set; }
     private bool IsEditMode { get; set; }
+    private bool ShowEnrollmentForm { get; set; }
 
     private int EditingEnrollmentId { get; set; }
 
@@ -763,6 +766,7 @@ else
 
     IsEditMode = true;
     EditingEnrollmentId = enrollment.Id;
+    ShowEnrollmentForm = true;
 
     FormStudentId = enrollment.StudentId.ToString();
     FormCourseId = enrollment.CourseId.ToString();
@@ -795,10 +799,20 @@ else
         await LoadCoursePartnerOrganizations();
     }
     
+    private void OpenCreateEnrollmentForm()
+    {
+        ResetForm();
+        IsEditMode = false;
+        EditingEnrollmentId = 0;
+        ShowEnrollmentForm = false;
+        ShowEnrollmentForm = true;
+    }
+
     private void CancelEdit()
 {
     IsEditMode = false;
     EditingEnrollmentId = 0;
+    ShowEnrollmentForm = false;
 
     ResetForm();
 }
@@ -946,6 +960,7 @@ private async Task SaveEnrollment()
 
         IsEditMode = false;
         EditingEnrollmentId = 0;
+        ShowEnrollmentForm = false;
 
         await LoadData();
     }

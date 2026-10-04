@@ -362,6 +362,25 @@
                                 <tr>
 
                                     <th>
+
+                    <div class="admin-search-bar">
+                        <input
+                            class="admin-input admin-search-input"
+                            placeholder="جستجو در عنوان دوره یا نام مدرس..."
+                            @bind="CourseSearchText"
+                            @bind:event="oninput" />
+
+                        @if (!string.IsNullOrWhiteSpace(CourseSearchText))
+                        {
+                            <button
+                                type="button"
+                                class="admin-secondary-btn"
+                                @onclick="ClearCourseSearch">
+                                پاک کردن
+                            </button>
+                        }
+                    </div>
+
                                         عنوان دوره
                                     </th>
 
@@ -387,7 +406,7 @@
 
                             <tbody>
 
-                                @foreach (var course in Courses)
+                                @foreach (var course in FilteredCourses)
                                 {
                                     <tr>
 
@@ -487,6 +506,20 @@
     private List<InstructorDto> Instructors { get; set; } = new();
 
     private bool IsLoading { get; set; } = true;
+    private string CourseSearchText { get; set; } = string.Empty;
+
+    private IEnumerable<CourseDto> FilteredCourses =>
+        Courses.Where(c =>
+            string.IsNullOrWhiteSpace(CourseSearchText) ||
+            c.Title.Contains(CourseSearchText, StringComparison.OrdinalIgnoreCase) ||
+            (Instructors.FirstOrDefault(i => i.Id == c.InstructorId)?.FullName ?? "")
+                .Contains(CourseSearchText, StringComparison.OrdinalIgnoreCase));
+
+    private void ClearCourseSearch()
+    {
+        CourseSearchText = string.Empty;
+    }
+
 
     private bool ShowForm { get; set; }
 
