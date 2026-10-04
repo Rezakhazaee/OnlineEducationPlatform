@@ -171,6 +171,32 @@ public class ReportsController : ControllerBase
                         ? "Completed"
                         : "InProgress";
 
+        var onlineEnrollments = enrollments.Count(e => e.Course!.DeliveryType == "Online");
+        var inPersonEnrollments = enrollments.Count(e => e.Course!.DeliveryType == "InPerson");
+        var hybridEnrollments = enrollments.Count(e => e.Course!.DeliveryType == "Hybrid");
+
+        var pendingPaymentCount = payments.Count(p => p.Status == "Pending");
+
+        var recentPayments = payments
+            .OrderByDescending(p => p.PaymentDate)
+            .Take(5)
+            .Select(p =>
+            {
+                var enrollment = enrollments.FirstOrDefault(e => e.Id == p.EnrollmentId);
+
+                return new
+                {
+                    paymentId = p.Id,
+                    studentName = $"{enrollment?.Student?.FirstName} {enrollment?.Student?.LastName}".Trim(),
+                    courseTitle = enrollment?.Course?.Title ?? "",
+                    amount = p.Amount,
+                    paymentDate = p.PaymentDate,
+                    paymentType = p.PaymentType,
+                    status = p.Status
+                };
+            })
+            .ToList();
+
             return new
             {
                 Id = e.Id,
@@ -207,6 +233,33 @@ public class ReportsController : ControllerBase
                     .DefaultIfEmpty()
                     .Average();
 
+
+        var onlineEnrollments = enrollments.Count(e => e.Course!.DeliveryType == "Online");
+        var inPersonEnrollments = enrollments.Count(e => e.Course!.DeliveryType == "InPerson");
+        var hybridEnrollments = enrollments.Count(e => e.Course!.DeliveryType == "Hybrid");
+
+        var pendingPaymentCount = payments.Count(p => p.Status == "Pending");
+
+        var recentPayments = payments
+            .OrderByDescending(p => p.PaymentDate)
+            .Take(5)
+            .Select(p =>
+            {
+                var enrollment = enrollments.FirstOrDefault(e => e.Id == p.EnrollmentId);
+
+                return new
+                {
+                    paymentId = p.Id,
+                    studentName = $"{enrollment?.Student?.FirstName} {enrollment?.Student?.LastName}".Trim(),
+                    courseTitle = enrollment?.Course?.Title ?? "",
+                    amount = p.Amount,
+                    paymentDate = p.PaymentDate,
+                    paymentType = p.PaymentType,
+                    status = p.Status
+                };
+            })
+            .ToList();
+
                 return new
                 {
                     courseId = g.Key.CourseId,
@@ -231,6 +284,44 @@ public class ReportsController : ControllerBase
             .ThenBy(x => x.courseTitle)
             .ToList();
 
+        var activeCourseCount = await _context.Courses
+            .AsNoTracking()
+            .CountAsync(c => c.IsActive);
+
+        var today = DateTime.Today;
+        var monthStart = new DateTime(today.Year, today.Month, 1);
+
+        var todayEnrollments = enrollments.Count(e => e.StartDate.Date == today);
+        var monthEnrollments = enrollments.Count(e =>
+            e.StartDate >= monthStart &&
+            e.StartDate < monthStart.AddMonths(1));
+
+        var onlineEnrollments = enrollments.Count(e => e.Course!.DeliveryType == "Online");
+        var inPersonEnrollments = enrollments.Count(e => e.Course!.DeliveryType == "InPerson");
+        var hybridEnrollments = enrollments.Count(e => e.Course!.DeliveryType == "Hybrid");
+
+        var pendingPaymentCount = payments.Count(p => p.Status == "Pending");
+
+        var recentPayments = payments
+            .OrderByDescending(p => p.PaymentDate)
+            .Take(5)
+            .Select(p =>
+            {
+                var enrollment = enrollments.FirstOrDefault(e => e.Id == p.EnrollmentId);
+
+                return new
+                {
+                    paymentId = p.Id,
+                    studentName = $"{enrollment?.Student?.FirstName} {enrollment?.Student?.LastName}".Trim(),
+                    courseTitle = enrollment?.Course?.Title ?? "",
+                    amount = p.Amount,
+                    paymentDate = p.PaymentDate,
+                    paymentType = p.PaymentType,
+                    status = p.Status
+                };
+            })
+            .ToList();
+
         return new
         {
             totalStudents = enrollments
@@ -252,6 +343,16 @@ public class ReportsController : ControllerBase
             totalPending,
 
             totalCancelled,
+
+            activeCourses = activeCourseCount,
+            todayEnrollments,
+            monthEnrollments,
+            onlineEnrollments,
+            inPersonEnrollments,
+            hybridEnrollments,
+            pendingPaymentCount,
+
+            recentPayments,
 
             activeEnrollments =
                 enrollments.Count(e => e.Status == "Active"),
@@ -310,6 +411,33 @@ public class ReportsController : ControllerBase
                         : Math.Round(
                             completedLessons * 100m / totalLessons,
                             2);
+
+
+        var onlineEnrollments = enrollments.Count(e => e.Course!.DeliveryType == "Online");
+        var inPersonEnrollments = enrollments.Count(e => e.Course!.DeliveryType == "InPerson");
+        var hybridEnrollments = enrollments.Count(e => e.Course!.DeliveryType == "Hybrid");
+
+        var pendingPaymentCount = payments.Count(p => p.Status == "Pending");
+
+        var recentPayments = payments
+            .OrderByDescending(p => p.PaymentDate)
+            .Take(5)
+            .Select(p =>
+            {
+                var enrollment = enrollments.FirstOrDefault(e => e.Id == p.EnrollmentId);
+
+                return new
+                {
+                    paymentId = p.Id,
+                    studentName = $"{enrollment?.Student?.FirstName} {enrollment?.Student?.LastName}".Trim(),
+                    courseTitle = enrollment?.Course?.Title ?? "",
+                    amount = p.Amount,
+                    paymentDate = p.PaymentDate,
+                    paymentType = p.PaymentType,
+                    status = p.Status
+                };
+            })
+            .ToList();
 
                     return new
                     {

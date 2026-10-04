@@ -13,6 +13,7 @@
 
         <div class="admin-brand">
             <div class="admin-brand-mark">آ</div>
+
             <div>
                 <strong>آموزش‌یار</strong>
                 <small>پنل مدیریت</small>
@@ -46,560 +47,1396 @@
                 پرداخت‌ها
             </a>
 
+            <a href="/admin/partner-organizations">
+                <span>♧</span>
+                سازمان‌های طرف قرارداد
+            </a>
+
             <a href="/admin/reports" class="active">
                 <span>▤</span>
                 گزارش‌ها
             </a>
+            <a href="/admin/organizations">
+            <span>◈</span>
+            سازمان‌ها و ظاهر  
+            </a>
 
         </nav>
 
-    </aside>
+        <div class="admin-sidebar-bottom">
 
-    <main class="admin-main">
-
-        <div class="admin-page-header">
-
-            <div>
-                <span>مدیریت</span>
-                <h1>گزارش‌های مدیریتی</h1>
-                <p>تحلیل ثبت‌نام، درآمد، پرداخت و وضعیت دوره‌ها</p>
-            </div>
-
-            <div class="admin-page-header-actions">
-
-                <button class="admin-primary-btn"
-                        @onclick="LoadDashboard"
-                        disabled="@Loading">
-
-                    @(Loading ? "در حال دریافت..." : "به‌روزرسانی گزارش")
-
-                </button>
-
-                @if (LastUpdated.HasValue)
-                {
-                    <span class="admin-last-updated">
-                        آخرین بروزرسانی:
-                        @LastUpdated.Value.ToString("HH:mm:ss")
-                    </span>
-                }
-
-            </div>
+            <a href="/">
+                ← بازگشت به سایت
+            </a>
 
         </div>
 
-        <!-- FILTERS -->
+    </aside>
 
-        <section class="admin-content-card">
+<main class="admin-main">
 
-            <div class="admin-card-header">
+<div class="reports-page">
 
+    <div class="reports-header">
+        <div>
+            <h1>گزارش‌ها</h1>
+            <p>نمای کلی وضعیت ثبت‌نام و امور مالی</p>
+        </div>
+
+        <button class="refresh-btn" @onclick="LoadReport">
+            ↻ بروزرسانی
+        </button>
+    </div>
+
+    @if (Loading)
+    {
+        <div class="report-state">در حال دریافت اطلاعات...</div>
+    }
+    else if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <div class="report-error">@Error</div>
+    }
+    else if (Report != null)
+    {
+        <!-- ثبت نام -->
+        <section class="report-section">
+            <div class="section-title">
                 <div>
-                    <span>فیلتر گزارش</span>
-                    <h2>پارامترهای جست‌وجو</h2>
+                    <h2>وضعیت ثبت‌نام</h2>
+                    <span>خلاصه وضعیت ثبت‌نام‌های سامانه</span>
+                </div>
+            </div>
+
+            <div class="stats-grid registration-grid">
+
+                <div class="stat-card">
+                    <div class="stat-icon">◎</div>
+                    <div>
+                        <span>کل ثبت‌نام‌ها</span>
+                        <strong>@Report.Summary.TotalEnrollments</strong>
+                    </div>
+                </div>
+
+                <div class="stat-card active">
+                    <div class="stat-icon">✓</div>
+                    <div>
+                        <span>ثبت‌نام فعال</span>
+                        <strong>@Report.Summary.ActiveEnrollments</strong>
+                    </div>
+                </div>
+
+                <div class="stat-card cancelled">
+                    <div class="stat-icon">×</div>
+                    <div>
+                        <span>لغوشده</span>
+                        <strong>@Report.Summary.CancelledEnrollments</strong>
+                    </div>
+                </div>
+
+                <div class="stat-card students">
+                    <div class="stat-icon">♙</div>
+                    <div>
+                        <span>دانشجویان</span>
+                        <strong>@Report.Summary.TotalStudents</strong>
+                    </div>
+                </div>
+
+                <div class="stat-card courses">
+                    <div class="stat-icon">▣</div>
+                    <div>
+                        <span>دوره‌های دارای ثبت‌نام</span>
+                        <strong>@Report.Summary.TotalCourses</strong>
+                    </div>
                 </div>
 
             </div>
-
-            <div class="admin-form-grid">
-
-                <div class="admin-form-group">
-
-                    <label>از تاریخ</label>
-
-                    <input type="date"
-                           class="admin-input"
-                           @bind="FromDate" />
-
-                </div>
-
-                <div class="admin-form-group">
-
-                    <label>تا تاریخ</label>
-
-                    <input type="date"
-                           class="admin-input"
-                           @bind="ToDate" />
-
-                </div>
-
-                <div class="admin-form-group">
-
-                    <label>دوره</label>
-
-                    <select class="admin-input"
-                            @bind="SelectedCourseId">
-
-                        <option value="">همه دوره‌ها</option>
-
-                        @foreach (var course in Courses)
-                        {
-                            <option value="@course.Id">
-                                @course.Title
-                            </option>
-                        }
-
-                    </select>
-
-                </div>
-
-                <div class="admin-form-group">
-
-                    <label>مدرس</label>
-
-                    <select class="admin-input"
-                            @bind="SelectedInstructorId">
-
-                        <option value="">همه مدرس‌ها</option>
-
-                        @foreach (var instructor in Instructors)
-                        {
-                            <option value="@instructor.Id">
-                                @instructor.Name
-                            </option>
-                        }
-
-                    </select>
-
-                </div>
-
-                <div class="admin-form-group">
-
-                    <label>نوع برگزاری</label>
-
-                    <select class="admin-input"
-                            @bind="SelectedDeliveryType">
-
-                        <option value="">همه</option>
-                        <option value="Online">آنلاین</option>
-                        <option value="InPerson">حضوری</option>
-
-                    </select>
-
-                </div>
-
-                <div class="admin-form-group">
-
-                    <label>وضعیت ثبت‌نام</label>
-
-                    <select class="admin-input"
-                            @bind="SelectedStatus">
-
-                        <option value="">همه</option>
-                        <option value="Active">فعال</option>
-                        <option value="Cancelled">لغوشده</option>
-
-                    </select>
-
-                </div>
-
-            </div>
-
-            <div style="margin-top:18px; display:flex; gap:10px;">
-
-                <button class="admin-primary-btn"
-                        @onclick="LoadDashboard"
-                        disabled="@Loading">
-
-                    اعمال فیلتر
-
-                </button>
-
-                <button class="admin-secondary-btn"
-                        @onclick="ClearFilters">
-
-                    پاک کردن فیلترها
-
-                </button>
-
-            </div>
-
         </section>
 
-        @if (Loading)
-        {
-            <section class="admin-content-card">
+        <section class="registration-breakdown">
+            <div class="breakdown-header">
+                <div>
+                    <span>جزئیات ثبت‌نام</span>
+                    <h3>روند و تفکیک ثبت‌نام‌ها</h3>
+                </div>
+            </div>
 
-                <div class="admin-empty-state">
-                    در حال دریافت گزارش...
+            <div class="registration-breakdown-grid">
+                <div class="breakdown-card today">
+                    <span class="breakdown-label">ثبت‌نام‌های امروز</span>
+                    <strong>@Report.Summary.TodayEnrollments</strong>
+                    <small>ثبت‌نام جدید امروز</small>
                 </div>
 
-            </section>
-        }
-        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
-        {
-            <section class="admin-content-card">
-
-                <div class="admin-error">
-                    @ErrorMessage
+                <div class="breakdown-card month">
+                    <span class="breakdown-label">ثبت‌نام‌های این ماه</span>
+                    <strong>@Report.Summary.MonthEnrollments</strong>
+                    <small>از ابتدای ماه جاری</small>
                 </div>
 
-            </section>
-        }
-        else
-        {
-            <!-- KPI -->
-
-            <div class="admin-stats-grid">
-
-                <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        دانشجویان
-                    </div>
-                    <div class="admin-stat-value">
-                        @Dashboard.Summary.TotalStudents
-                    </div>
+                <div class="breakdown-card online">
+                    <span class="breakdown-label">ثبت‌نام آنلاین</span>
+                    <strong>@Report.Summary.OnlineEnrollments</strong>
+                    <small>دوره‌های آنلاین</small>
                 </div>
 
-                <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        دوره‌ها
-                    </div>
-                    <div class="admin-stat-value">
-                        @Dashboard.Summary.TotalCourses
-                    </div>
+                <div class="breakdown-card inperson">
+                    <span class="breakdown-label">ثبت‌نام حضوری</span>
+                    <strong>@Report.Summary.InPersonEnrollments</strong>
+                    <small>دوره‌های حضوری</small>
+                </div>
+            </div>
+
+            <div class="registration-status-panel">
+                <div class="status-panel-title">
+                    <strong>تفکیک وضعیت ثبت‌نام</strong>
+                    <span>@Report.Summary.TotalEnrollments ثبت‌نام</span>
                 </div>
 
-                <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        ثبت‌نام‌ها
+                <div class="status-bars">
+                    <div class="status-row">
+                        <div class="status-row-label">
+                            <span>فعال</span>
+                            <strong>@Report.Summary.ActiveEnrollments</strong>
+                        </div>
+                        <div class="status-track">
+                            <div class="status-fill active-fill"
+                                 style="width:@RegistrationWidth(Report.Summary.ActiveEnrollments)%"></div>
+                        </div>
                     </div>
-                    <div class="admin-stat-value">
-                        @Dashboard.Summary.TotalEnrollments
+
+                    <div class="status-row">
+                        <div class="status-row-label">
+                            <span>لغوشده</span>
+                            <strong>@Report.Summary.CancelledEnrollments</strong>
+                        </div>
+                        <div class="status-track">
+                            <div class="status-fill cancelled-fill"
+                                 style="width:@RegistrationWidth(Report.Summary.CancelledEnrollments)%"></div>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </section>
 
-                <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        ثبت‌نام فعال
+        <section class="report-section detail-links-section">
+            <div class="section-title">
+                <div>
+                    <h2>گزارش‌های تفصیلی</h2>
+                    <span>برای مشاهده و جستجوی جزئیات هر بخش وارد گزارش مربوطه شوید</span>
+                </div>
+            </div>
+
+            <div class="detail-links-grid">
+                <a href="/admin/reports/enrollments" class="detail-link enrollment-link">
+                    <div class="detail-link-icon">✓</div>
+                    <div class="detail-link-content">
+                        <strong>جزئیات ثبت‌نام‌ها</strong>
+                        <span>جستجو و فیلتر ثبت‌نام‌های انجام‌شده</span>
                     </div>
-                    <div class="admin-stat-value">
-                        @Dashboard.Summary.ActiveEnrollments
+                    <div class="detail-link-arrow">←</div>
+                </a>
+
+                <a href="/admin/reports/financial" class="detail-link financial-link">
+                    <div class="detail-link-icon">₮</div>
+                    <div class="detail-link-content">
+                        <strong>جزئیات وضعیت مالی</strong>
+                        <span>جستجو و فیلتر پرداخت‌های ثبت‌شده</span>
                     </div>
+                    <div class="detail-link-arrow">←</div>
+                </a>
+            </div>
+        </section>
+
+        <!-- مالی -->
+        <section class="report-section financial-section">
+            <div class="section-title">
+                <div>
+                    <h2>وضعیت مالی</h2>
+                    <span>خلاصه مبالغ ثبت‌نام و میزان وصول</span>
                 </div>
 
-                <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        مبلغ مورد انتظار
-                    </div>
-                    <div class="admin-stat-value">
-                        @Money(Dashboard.Summary.ExpectedAmount)
-                        <small>تومان</small>
-                    </div>
+                <div class="collection-badge">
+                    وصول
+                    <strong>@Report.Summary.CollectionPercent.ToString("0.##")%</strong>
+                </div>
+            </div>
+
+            <div class="stats-grid financial-grid">
+
+                <div class="money-card expected">
+                    <span>مبلغ مورد انتظار</span>
+                    <strong>@Money(Report.Summary.ExpectedAmount)</strong>
+                    <small>تومان</small>
                 </div>
 
-                <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        وصول‌شده
-                    </div>
-                    <div class="admin-stat-value">
-                        @Money(Dashboard.Summary.PaidAmount)
-                        <small>تومان</small>
-                    </div>
+                <div class="money-card paid">
+                    <span>پرداخت‌شده</span>
+                    <strong>@Money(Report.Summary.TotalPaid)</strong>
+                    <small>تومان</small>
                 </div>
 
-                <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        مانده
-                    </div>
-                    <div class="admin-stat-value">
-                        @Money(Dashboard.Summary.RemainingAmount)
-                        <small>تومان</small>
-                    </div>
+                <div class="money-card remaining">
+                    <span>مانده</span>
+                    <strong>@Money(Report.Summary.RemainingAmount)</strong>
+                    <small>تومان</small>
                 </div>
 
-                <div class="admin-stat-card">
-                    <div class="admin-stat-label">
-                        درصد وصول
-                    </div>
-                    <div class="admin-stat-value">
-                        @Dashboard.Summary.CollectionPercent.ToString("0.##")%
-                    </div>
+                <div class="money-card percentage">
+                    <span>درصد وصول</span>
+                    <strong>@Report.Summary.CollectionPercent.ToString("0.##")%</strong>
+                    <small>از کل مبلغ</small>
                 </div>
 
             </div>
 
-            <!-- FINANCIAL OVERVIEW -->
-
-            <section class="admin-content-card" style="margin-top:24px;">
-
-                <div class="admin-card-header">
-
-                    <div>
-                        <span>مالی</span>
-                        <h2>وضعیت دریافت شهریه</h2>
-                    </div>
-
-                    <strong>
-                        @Dashboard.Summary.CollectionPercent.ToString("0.##")%
-                    </strong>
-
+            <div class="collection-box">
+                <div class="collection-top">
+                    <span>پیشرفت وصول مطالبات</span>
+                    <strong>@Report.Summary.CollectionPercent.ToString("0.##")%</strong>
                 </div>
 
-                <div style="margin-top:20px;">
-
-                    <div style="
-                        height:18px;
-                        background:#e5e7eb;
-                        border-radius:20px;
-                        overflow:hidden;">
-
-                        <div style="
-                            width:@Dashboard.Summary.CollectionPercent%;
-                            height:100%;
-                            background:#568fa8;
-                            border-radius:20px;">
-                        </div>
-
+                <div class="progress-track">
+                    <div class="progress-value"
+                         style="width:@CollectionWidth%">
                     </div>
-
                 </div>
 
-                <div style="
-                    display:grid;
-                    grid-template-columns:repeat(3,1fr);
-                    gap:16px;
-                    margin-top:20px;">
-
-                    <div>
-                        <small>وصول‌شده</small>
-                        <strong>
-                            @Money(Dashboard.Summary.PaidAmount) تومان
-                        </strong>
-                    </div>
-
-                    <div>
-                        <small>در انتظار</small>
-                        <strong>
-                            @Money(Dashboard.Summary.PendingAmount) تومان
-                        </strong>
-                    </div>
-
-                    <div>
-                        <small>مانده</small>
-                        <strong>
-                            @Money(Dashboard.Summary.RemainingAmount) تومان
-                        </strong>
-                    </div>
-
+                <div class="collection-bottom">
+                    <span>پرداخت‌شده: @Money(Report.Summary.TotalPaid) تومان</span>
+                    <span>مانده: @Money(Report.Summary.RemainingAmount) تومان</span>
                 </div>
+            </div>
+        </section>
 
-            </section>
-
-            <!-- COURSE REPORT -->
-
-            <section class="admin-content-card" style="margin-top:24px;">
-
-                <div class="admin-card-header">
-
-                    <div>
-                        <span>تفکیک دوره‌ها</span>
-                        <h2>عملکرد مالی دوره‌ها</h2>
-                    </div>
-
-                    <span>
-                        @Dashboard.Courses.Count دوره
-                    </span>
-
+        <!-- جدول دوره ها -->
+        <section class="report-section course-section">
+            <div class="section-title">
+                <div>
+                    <h2>وضعیت مالی دوره‌ها</h2>
+                    <span>تفکیک مبلغ و وصول به تفکیک دوره</span>
                 </div>
+            </div>
 
-                @if (Dashboard.Courses.Count == 0)
+            <div class="table-wrapper">
+                <table class="reports-table">
+                    <thead>
+                        <tr>
+                            <th>دوره</th>
+                            <th>نوع برگزاری</th>
+                            <th>ثبت‌نام</th>
+                            <th>مبلغ مورد انتظار</th>
+                            <th>پرداخت‌شده</th>
+                            <th>مانده</th>
+                            <th>وصول</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var course in Report.Courses)
+                        {
+                            <tr>
+                                <td class="course-name">@course.CourseTitle</td>
+                                <td>
+                                    <span class="delivery-badge">
+                                        @DeliveryLabel(course.DeliveryType)
+                                    </span>
+                                </td>
+                                <td>@course.EnrollmentCount</td>
+                                <td>@Money(course.ExpectedAmount) تومان</td>
+                                <td class="paid-text">@Money(course.TotalPaid) تومان</td>
+                                <td class="remaining-text">@Money(course.RemainingAmount) تومان</td>
+                                <td>
+                                    <div class="mini-progress">
+                                        <div style="width:@CourseWidth(course.CollectionPercent)%"></div>
+                                    </div>
+                                    <span class="percent-text">
+                                        @course.CollectionPercent.ToString("0.##")%
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- گزارش عملکرد دوره‌ها -->
+        <section class="report-section performance-section">
+            <div class="section-title">
+                <div>
+                    <h2>گزارش عملکرد دوره‌ها</h2>
+                    <span>نمایش ثبت‌نام، درآمد، وصول، ظرفیت و دانشجویان فعال</span>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="reports-table performance-table">
+                    <thead>
+                        <tr>
+                            <th>دوره</th>
+                            <th>خلاصه عملکرد</th>
+                            <th>درآمد مورد انتظار</th>
+                            <th>وصول‌شده</th>
+                            <th>مانده</th>
+                            <th>ظرفیت</th>
+                            <th>دانشجوی فعال</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var course in Report.Courses)
+                        {
+                            <tr>
+                                <td class="course-name">@course.CourseTitle</td>
+
+                                <td>
+                                    <div class="performance-summary">
+                                        <strong>@course.EnrollmentCount ثبت‌نام</strong>
+                                        <span>@course.CollectionPercent.ToString("0.##")٪ وصول</span>
+                                        <span>@course.ActiveStudentCount دانشجوی فعال</span>
+                                    </div>
+                                </td>
+
+                                <td>@Money(course.ExpectedAmount) تومان</td>
+
+                                <td class="paid-text">
+                                    @Money(course.TotalPaid) تومان
+                                </td>
+
+                                <td class="remaining-text">
+                                    @Money(course.RemainingAmount) تومان
+                                </td>
+
+                                <td>
+                                    <span class="capacity-badge">
+                                        @course.Capacity نفر
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <strong>@course.ActiveStudentCount</strong>
+                                    <span class="capacity-muted">
+                                        از @course.Capacity
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+<!-- گزارش عملکرد مدرس -->
+<section class="report-section instructor-performance-section">
+    <div class="section-title">
+        <div>
+            <h2>گزارش عملکرد مدرس</h2>
+            <span>نمایش دوره‌ها، دانشجویان، ثبت‌نام‌ها و میانگین پیشرفت دانشجویان</span>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="reports-table instructor-performance-table">
+            <thead>
+                <tr>
+                    <th>مدرس</th>
+                    <th>دوره‌ها</th>
+                    <th>دانشجویان</th>
+                    <th>ثبت‌نام‌ها</th>
+                    <th>درس‌های تکمیل‌شده</th>
+                    <th>میانگین پیشرفت</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (InstructorReports.Count == 0)
                 {
-                    <div class="admin-empty-state">
-                        داده‌ای برای این فیلتر وجود ندارد.
-                    </div>
+                    <tr>
+                        <td colspan="6" class="empty-report">
+                            گزارشی برای مدرس‌ها وجود ندارد.
+                        </td>
+                    </tr>
                 }
                 else
                 {
-                    <div class="admin-table-wrapper">
+                    @foreach (var instructor in InstructorReports)
+                    {
+                        <tr>
+                            <td>
+                                <div class="instructor-name">
+                                    <strong>@instructor.InstructorName</strong>
+                                </div>
+                            </td>
 
-                        <table class="admin-table">
+                            <td>
+                                <span class="instructor-stat-badge">
+                                    @instructor.CourseCount دوره
+                                </span>
+                            </td>
 
-                            <thead>
+                            <td>
+                                <strong>@instructor.StudentCount</strong>
+                                <span class="capacity-muted">دانشجو</span>
+                            </td>
 
-                                <tr>
-                                    <th>دوره</th>
-                                    <th>ثبت‌نام</th>
-                                    <th>مبلغ مورد انتظار</th>
-                                    <th>وصول‌شده</th>
-                                    <th>مانده</th>
-                                    <th>درصد وصول</th>
-                                </tr>
+                            <td>
+                                <strong>@instructor.EnrollmentCount</strong>
+                                <span class="capacity-muted">ثبت‌نام</span>
+                            </td>
 
-                            </thead>
+                            <td>
+                                <span class="lesson-progress-text">
+                                    @instructor.CompletedLessons از @instructor.TotalLessons
+                                </span>
+                            </td>
 
-                            <tbody>
-
-                                @foreach (var item in Dashboard.Courses)
-                                {
-                                    <tr>
-
-                                        <td>
-                                            @item.CourseTitle
-                                        </td>
-
-                                        <td>
-                                            @item.EnrollmentCount
-                                        </td>
-
-                                        <td>
-                                            @Money(item.ExpectedAmount) تومان
-                                        </td>
-
-                                        <td>
-                                            @Money(item.PaidAmount) تومان
-                                        </td>
-
-                                        <td>
-                                            @Money(item.RemainingAmount) تومان
-                                        </td>
-
-                                        <td>
-
-                                            <strong>
-                                                @item.CollectionPercent.ToString("0.##")%
-                                            </strong>
-
-                                        </td>
-
-                                    </tr>
-                                }
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
+                            <td>
+                                <div class="instructor-progress">
+                                    <div class="instructor-progress-header">
+                                        <strong>@instructor.AverageProgress.ToString("0.##")٪</strong>
+                                    </div>
+                                    <div class="instructor-progress-track">
+                                        <div class="instructor-progress-fill"
+                                             style="width:@CourseWidth(instructor.AverageProgress)%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
                 }
+            </tbody>
+        </table>
+    </div>
+</section>
 
-            </section>
+    <section class="report-section learning-progress-section">
+        <div class="section-title">
+            <div>
+                <h2>گزارش پیشرفت آموزشی</h2>
+                <span>وضعیت فعالیت و پیشرفت دانشجویان در دوره‌ها</span>
+            </div>
+        </div>
 
-            <!-- PROGRESS -->
+        @if (LearningProgress != null)
+        {
+            <div class="learning-summary-grid">
+                <div class="learning-summary-card active">
+                    <span>دانشجویان فعال</span>
+                    <strong>@LearningProgress.Summary.ActiveStudents</strong>
+                    <small>دانشجوی دارای ثبت‌نام فعال</small>
+                </div>
 
-            <AdminProgressReport />
+                <div class="learning-summary-card completed">
+                    <span>درس‌های تکمیل‌شده</span>
+                    <strong>@LearningProgress.Summary.TotalCompletedLessons</strong>
+                    <small>مجموع درس‌های تکمیل‌شده</small>
+                </div>
+
+                <div class="learning-summary-card average">
+                    <span>میانگین پیشرفت</span>
+                    <strong>@LearningProgress.Summary.AverageProgress.ToString("0.##")٪</strong>
+                    <small>میانگین پیشرفت دانشجویان</small>
+                </div>
+
+                <div class="learning-summary-card inactive">
+                    <span>بدون فعالیت</span>
+                    <strong>@LearningProgress.Summary.InactiveStudents</strong>
+                    <small>بدون تکمیل هیچ درس</small>
+                </div>
+
+                <div class="learning-summary-card high">
+                    <span>پیشرفت بالا</span>
+                    <strong>@LearningProgress.Summary.HighProgressStudents</strong>
+                    <small>پیشرفت ۷۵٪ یا بیشتر</small>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="reports-table learning-progress-table">
+                    <thead>
+                        <tr>
+                            <th>دانشجو</th>
+                            <th>دوره</th>
+                            <th>درس‌های تکمیل‌شده</th>
+                            <th>وضعیت فعالیت</th>
+                            <th>پیشرفت</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var student in LearningProgress.Students)
+                        {
+                            <tr>
+                                <td class="learning-student-name">
+                                    <strong>@student.StudentName</strong>
+                                </td>
+                                <td class="learning-course-name">
+                                    @student.CourseTitle
+                                </td>
+                                <td>
+                                    <span class="lesson-progress-text">
+                                        @student.CompletedLessons از @student.TotalLessons
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="activity-badge @ActivityStatusClass(student.ActivityStatus)">
+                                        @ActivityStatusLabel(student.ActivityStatus)
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="learning-progress">
+                                        <div class="learning-progress-header">
+                                            <strong>@student.ProgressPercent.ToString("0.##")٪</strong>
+                                        </div>
+                                        <div class="learning-progress-track">
+                                            <div class="learning-progress-fill" style="width:@student.ProgressPercent%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
-
-    </main>
+    </section>
 
 </div>
+</main>
+</div>
+<style>
+
+    .reports-page {
+        direction: rtl;
+        padding: 28px;
+        max-width: 1500px;
+        margin: 0 auto;
+        color: #263d4a;
+    }
+
+    .reports-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 26px;
+    }
+
+    .reports-header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 800;
+    }
+
+    .reports-header p {
+        margin: 7px 0 0;
+        color: #71808a;
+        font-size: 14px;
+    }
+
+    .refresh-btn {
+        border: 0;
+        background: #568fa8;
+        color: white;
+        padding: 11px 20px;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 14px;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+    .refresh-btn:hover {
+        transform: translateY(-1px);
+        opacity: .92;
+    }
+
+    .report-section {
+        background: white;
+        border: 1px solid #e8eef1;
+        border-radius: 18px;
+        padding: 22px;
+        margin-bottom: 22px;
+        box-shadow: 0 5px 20px rgba(38, 61, 74, .06);
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .section-title h2 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 800;
+    }
+
+    .section-title span {
+        display: block;
+        margin-top: 5px;
+        color: #7c8b94;
+        font-size: 12px;
+    }
+
+    .stats-grid {
+        display: grid;
+        gap: 14px;
+    }
+
+    .registration-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .financial-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .stat-card {
+        min-height: 105px;
+        border-radius: 14px;
+        padding: 17px;
+        background: #fafcfd;
+        border: 1px solid #edf1f3;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+    }
+
+    .stat-icon {
+        width: 43px;
+        height: 43px;
+        min-width: 43px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e6f0f4;
+        color: #568fa8;
+        font-size: 22px;
+        font-weight: bold;
+    }
+
+    .stat-card span,
+    .money-card span {
+        display: block;
+        color: #75838c;
+        font-size: 12px;
+        margin-bottom: 7px;
+    }
+
+    .stat-card strong {
+        display: block;
+        font-size: 24px;
+        line-height: 1;
+    }
+
+    .stat-card.active .stat-icon {
+        background: #e7f5ed;
+        color: #27925d;
+    }
+
+    .stat-card.cancelled .stat-icon {
+        background: #f9eaea;
+        color: #c45a5a;
+    }
+
+    .stat-card.students .stat-icon {
+        background: #eeeafb;
+        color: #765fc4;
+    }
+
+    .stat-card.courses .stat-icon {
+        background: #fff2df;
+        color: #c88327;
+    }
+
+    .money-card {
+        padding: 18px;
+        border-radius: 14px;
+        border: 1px solid #edf1f3;
+        background: #fafcfd;
+    }
+
+    .money-card strong {
+        display: inline-block;
+        font-size: 22px;
+        font-weight: 800;
+    }
+
+    .money-card small {
+        color: #84919a;
+        margin-right: 5px;
+        font-size: 11px;
+    }
+
+    .money-card.paid {
+        background: #f2faf6;
+    }
+
+    .money-card.remaining {
+        background: #fff8ed;
+    }
+
+    .money-card.percentage {
+        background: #f3f7fb;
+    }
+
+    .collection-badge {
+        background: #edf6f9;
+        color: #568fa8;
+        border-radius: 10px;
+        padding: 8px 13px;
+        font-size: 12px;
+    }
+
+    .collection-badge strong {
+        margin-right: 6px;
+        font-size: 15px;
+    }
+
+    .collection-box {
+        margin-top: 18px;
+        padding: 18px;
+        border-radius: 14px;
+        background: #f8fafb;
+        border: 1px solid #edf1f3;
+    }
+
+    .collection-top,
+    .collection-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+    }
+
+    .collection-top strong {
+        font-size: 15px;
+    }
+
+    .progress-track {
+        height: 12px;
+        background: #e7edef;
+        border-radius: 20px;
+        overflow: hidden;
+        margin: 13px 0 10px;
+    }
+
+    .progress-value {
+        height: 100%;
+        background: #568fa8;
+        border-radius: 20px;
+        transition: width .4s ease;
+    }
+
+    .collection-bottom {
+        color: #7d8a92;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .reports-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        min-width: 850px;
+    }
+
+    .reports-table th {
+        background: #f7f9fa;
+        color: #687780;
+        font-weight: 700;
+        padding: 13px 12px;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .reports-table td {
+        padding: 15px 12px;
+        border-bottom: 1px solid #edf1f3;
+        white-space: nowrap;
+    }
+
+    .reports-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .course-name {
+        font-weight: 700;
+        color: #263d4a;
+    }
+
+    .delivery-badge {
+        background: #eef5f7;
+        color: #568fa8;
+        padding: 5px 9px;
+        border-radius: 7px;
+        font-size: 11px;
+    }
+
+    .paid-text {
+        color: #26905c;
+        font-weight: 700;
+    }
+
+    .remaining-text {
+        color: #bd7b27;
+        font-weight: 700;
+    }
+
+    .mini-progress {
+        display: inline-block;
+        width: 90px;
+        height: 7px;
+        background: #e8edef;
+        border-radius: 10px;
+        overflow: hidden;
+        vertical-align: middle;
+        margin-left: 7px;
+    }
+
+    .mini-progress div {
+        height: 100%;
+        background: #568fa8;
+        border-radius: 10px;
+    }
+
+    .percent-text {
+        font-size: 11px;
+        color: #66757e;
+    }
+
+    .report-state,
+    .report-error {
+        padding: 30px;
+        text-align: center;
+        background: white;
+        border-radius: 16px;
+    }
+
+    .report-error {
+        color: #b84d4d;
+    }
+
+    @@media (max-width: 1100px) {
+        .registration-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .financial-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 700px) {
+        .reports-page {
+            padding: 16px;
+        }
+
+        .reports-header {
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .registration-grid,
+        .financial-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .section-title {
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .collection-bottom {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+    }
+
+    .detail-links-section {
+        margin-top: 24px;
+    }
+
+    .detail-links-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 18px;
+    }
+
+    .detail-link {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+        padding: 18px;
+        border: 1px solid #e3eaee;
+        border-radius: 12px;
+        text-decoration: none;
+        background: #fff;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+    .detail-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(38,61,74,.08);
+    }
+
+    .detail-link-icon {
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 20px;
+        font-weight: 700;
+    }
+
+    .enrollment-link .detail-link-icon {
+        background: #eaf4f8;
+        color: #568fa8;
+    }
+
+    .financial-link .detail-link-icon {
+        background: #eef5ed;
+        color: #4f7b59;
+    }
+
+    .detail-link-content {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .detail-link-content strong {
+        color: #263d4a;
+        font-size: 15px;
+    }
+
+    .detail-link-content span {
+        color: #7a8992;
+        font-size: 12px;
+        line-height: 1.7;
+    }
+
+    .detail-link-arrow {
+        color: #8a9aa3;
+        font-size: 18px;
+        direction: ltr;
+    }
+
+    @@media (max-width: 800px) {
+        .detail-links-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .registration-breakdown {
+        margin-top: 20px;
+        padding: 22px;
+        border: 1px solid #e5ecef;
+        border-radius: 14px;
+        background: #fff;
+    }
+
+    .breakdown-header h3 {
+        margin: 5px 0 0;
+        color: #263d4a;
+        font-size: 18px;
+    }
+
+    .breakdown-header span {
+        color: #7b8b94;
+        font-size: 12px;
+    }
+
+    .registration-breakdown-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .breakdown-card {
+        padding: 17px;
+        border-radius: 12px;
+        border: 1px solid #e7edef;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .breakdown-card strong {
+        font-size: 25px;
+        color: #263d4a;
+    }
+
+    .breakdown-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: #52646d;
+    }
+
+    .breakdown-card small {
+        color: #8a989f;
+        font-size: 11px;
+    }
+
+    .registration-status-panel {
+        margin-top: 18px;
+        padding-top: 18px;
+        border-top: 1px solid #edf1f3;
+    }
+
+    .status-panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .status-panel-title strong {
+        color: #263d4a;
+        font-size: 14px;
+    }
+
+    .status-panel-title span {
+        color: #84929a;
+        font-size: 12px;
+    }
+
+    .status-row {
+        margin-bottom: 14px;
+    }
+
+    .status-row-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 7px;
+        color: #52646d;
+        font-size: 12px;
+    }
+
+    .status-track {
+        height: 9px;
+        overflow: hidden;
+        border-radius: 20px;
+        background: #edf1f3;
+    }
+
+    .status-fill {
+        height: 100%;
+        border-radius: 20px;
+        min-width: 0;
+    }
+
+    .active-fill {
+        background: #568fa8;
+    }
+
+    .cancelled-fill {
+        background: #b97878;
+    }
+
+    @@media (max-width: 900px) {
+        .registration-breakdown-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 560px) {
+        .registration-breakdown-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .status-panel-title {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
+
+    .performance-table td {
+        vertical-align: middle;
+    }
+
+    .performance-summary {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 130px;
+    }
+
+    .performance-summary strong {
+        color: #263d4a;
+        font-size: 13px;
+    }
+
+    .performance-summary span {
+        color: #687780;
+        font-size: 11px;
+    }
+
+    .capacity-badge {
+        display: inline-block;
+        background: #eef5f7;
+        color: #568fa8;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .capacity-muted {
+        display: block;
+        margin-top: 4px;
+        color: #8a979e;
+        font-size: 10px;
+    }
+
+    .performance-table tbody tr:hover {
+        background: #fafcfd;
+    }
+
+    .instructor-performance-table td {
+        vertical-align: middle;
+    }
+
+    .instructor-name {
+        min-width: 150px;
+    }
+
+    .instructor-name strong {
+        color: #263d4a;
+        font-size: 14px;
+    }
+
+    .instructor-stat-badge {
+        display: inline-block;
+        background: #eef5f7;
+        color: #568fa8;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .lesson-progress-text {
+        color: #687780;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .instructor-progress {
+        min-width: 150px;
+    }
+
+    .instructor-progress-header {
+        margin-bottom: 6px;
+        color: #263d4a;
+        font-size: 13px;
+    }
+
+    .instructor-progress-track {
+        width: 100%;
+        height: 8px;
+        background: #edf1f3;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .instructor-progress-fill {
+        height: 100%;
+        background: #568fa8;
+        border-radius: 999px;
+        transition: width 0.3s ease;
+    }
+
+    .empty-report {
+        text-align: center;
+        padding: 30px !important;
+        color: #8a979e;
+    }
+
+.activity-badge { display: inline-block; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+.activity-badge.no-activity { background: #fff1f1; color: #c65b5b; }
+.activity-badge.in-progress { background: #fff7e8; color: #b77a22; }
+.activity-badge.high-progress { background: #eaf6ef; color: #3d8a5a; }
+
+.learning-summary-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 22px; }
+.learning-summary-card { padding: 18px; border: 1px solid #e6ecef; border-radius: 12px; background: #fff; }
+.learning-summary-card span { display: block; color: #687780; font-size: 12px; margin-bottom: 8px; }
+.learning-summary-card strong { display: block; color: #263d4a; font-size: 24px; line-height: 1.2; }
+.learning-summary-card small { display: block; color: #8a979e; font-size: 10px; margin-top: 7px; }
+.learning-summary-card.active { border-top: 3px solid #568fa8; }
+.learning-summary-card.completed { border-top: 3px solid #5c9b78; }
+.learning-summary-card.average { border-top: 3px solid #8b76b5; }
+.learning-summary-card.inactive { border-top: 3px solid #c66b6b; }
+.learning-summary-card.high { border-top: 3px solid #d19a45; }
+
+.learning-progress-table { width: 100%; table-layout: fixed; }
+.learning-progress-table td { vertical-align: middle; }
+.learning-student-name { width: 18%; }
+.learning-student-name strong { color: #263d4a; font-size: 13px; }
+.learning-course-name { width: 25%; color: #568fa8; font-weight: 600; }
+.learning-progress { min-width: 150px; }
+.learning-progress-header { margin-bottom: 6px; color: #263d4a; font-size: 12px; }
+.learning-progress-track { width: 100%; height: 8px; background: #edf1f3; border-radius: 999px; overflow: hidden; }
+.learning-progress-fill { height: 100%; background: #568fa8; border-radius: 999px; transition: width .3s ease; }
+
+.instructor-performance-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.instructor-performance-table th,
+.instructor-performance-table td {
+    vertical-align: middle;
+}
+
+.instructor-performance-table th:nth-child(1) { width: 22%; }
+.instructor-performance-table th:nth-child(2) { width: 13%; }
+.instructor-performance-table th:nth-child(3) { width: 13%; }
+.instructor-performance-table th:nth-child(4) { width: 13%; }
+.instructor-performance-table th:nth-child(5) { width: 19%; }
+.instructor-performance-table th:nth-child(6) { width: 20%; }
+
+.instructor-name strong {
+    color: #263d4a;
+    font-size: 14px;
+}
+
+.instructor-stat-badge {
+    display: inline-block;
+    background: #eef5f7;
+    color: #568fa8;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.instructor-performance-table td:nth-child(2) .instructor-stat-badge {
+    background: #eef5f7;
+    color: #568fa8;
+}
+
+.instructor-performance-table td:nth-child(3) .instructor-stat-badge {
+    background: #edf7f1;
+    color: #4d8b68;
+}
+
+.instructor-performance-table td:nth-child(4) .instructor-stat-badge {
+    background: #fff6e8;
+    color: #b27a2d;
+}
+
+.lesson-progress-text {
+    color: #687780;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.instructor-progress {
+    min-width: 0;
+    width: 100%;
+}
+
+.instructor-progress-header {
+    margin-bottom: 6px;
+    color: #263d4a;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.instructor-progress-track {
+    width: 100%;
+    height: 8px;
+    background: #edf1f3;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.instructor-progress-fill {
+    height: 100%;
+    background: #568fa8;
+    border-radius: 999px;
+    transition: width .3s ease;
+}
+
+.instructor-performance-table tbody tr:hover {
+    background: #fafcfd;
+}
+
+</style>
 
 @code {
 
-    private bool Loading { get; set; } = true;
+    private DashboardReport? Report;
+    private bool Loading = true;
+    private List<InstructorReport> InstructorReports { get; set; } = new();
+    private LearningProgressReport? LearningProgress { get; set; }
+    private string? Error;
 
-    private string? ErrorMessage { get; set; }
-
-    private DateTime? LastUpdated { get; set; }
-
-    private DashboardDto Dashboard { get; set; } = new();
-
-    private string FromDate { get; set; } = "";
-
-    private string ToDate { get; set; } = "";
-
-    private string SelectedCourseId { get; set; } = "";
-
-    private string SelectedInstructorId { get; set; } = "";
-
-    private string SelectedDeliveryType { get; set; } = "";
-
-    private string SelectedStatus { get; set; } = "";
-
-    private List<CourseOption> Courses { get; set; } = new();
-
-    private List<InstructorOption> Instructors { get; set; } = new();
+    private double CollectionWidth =>
+        Math.Clamp((double)(Report?.Summary.CollectionPercent ?? 0), 0, 100);
 
     protected override async Task OnInitializedAsync()
     {
-        await Auth.RestoreAsync();
-
-        if (!Auth.IsLoggedIn || Auth.Role != "Admin")
-        {
-            ErrorMessage = "دسترسی غیرمجاز.";
-            Loading = false;
-            return;
-        }
-
-        await LoadOptions();
-        await LoadDashboard();
+        await LoadReport();
     }
 
-    private async Task LoadOptions()
-    {
-        try
-        {
-            var client = Auth.CreateAuthenticatedClient();
-
-            Courses =
-                await client.GetFromJsonAsync<List<CourseOption>>(
-                    "api/Courses")
-                ?? new();
-
-            Instructors =
-                await client.GetFromJsonAsync<List<InstructorOption>>(
-                    "api/Instructors")
-                ?? new();
-        }
-        catch
-        {
-            // اگر endpointهای انتخاب مدرس/دوره در نسخه فعلی
-            // ساختار متفاوت داشته باشند، گزارش اصلی همچنان قابل استفاده است.
-        }
-    }
-
-    private async Task LoadDashboard()
+    private async Task LoadReport()
     {
         Loading = true;
-        ErrorMessage = null;
+        Error = null;
 
         try
         {
-            var parameters = new List<string>();
-
-            if (!string.IsNullOrWhiteSpace(FromDate))
-                parameters.Add($"from={Uri.EscapeDataString(FromDate)}");
-
-            if (!string.IsNullOrWhiteSpace(ToDate))
-                parameters.Add($"to={Uri.EscapeDataString(ToDate)}");
-
-            if (!string.IsNullOrWhiteSpace(SelectedCourseId))
-                parameters.Add($"courseId={SelectedCourseId}");
-
-            if (!string.IsNullOrWhiteSpace(SelectedInstructorId))
-                parameters.Add($"instructorId={SelectedInstructorId}");
-
-            if (!string.IsNullOrWhiteSpace(SelectedDeliveryType))
-                parameters.Add($"deliveryType={SelectedDeliveryType}");
-
-            if (!string.IsNullOrWhiteSpace(SelectedStatus))
-                parameters.Add($"status={SelectedStatus}");
-
-            var url = "api/Reports/dashboard";
-
-            if (parameters.Count > 0)
-                url += "?" + string.Join("&", parameters);
-
             var client = Auth.CreateAuthenticatedClient();
 
-            var response =
-                await client.GetAsync(url);
+            var json = await client.GetStringAsync("api/Reports/dashboard");
+            using var document = System.Text.Json.JsonDocument.Parse(json);
+            var root = document.RootElement;
 
-            if (!response.IsSuccessStatusCode)
+            Report = new DashboardReport
             {
-                ErrorMessage =
-                    $"دریافت گزارش با خطای {(int)response.StatusCode} ({response.StatusCode}) مواجه شد.";
-                return;
-            }
+                Summary = new DashboardSummary
+                {
+                    TotalStudents = root.GetProperty("totalStudents").GetInt32(),
+                    TotalCourses = root.GetProperty("totalCourses").GetInt32(),
+                    TotalEnrollments = root.GetProperty("totalEnrollments").GetInt32(),
+                    ActiveEnrollments = root.GetProperty("activeEnrollments").GetInt32(),
+                    CancelledEnrollments = root.GetProperty("cancelledEnrollments").GetInt32(),
+                    TodayEnrollments = root.GetProperty("todayEnrollments").GetInt32(),
+                    MonthEnrollments = root.GetProperty("monthEnrollments").GetInt32(),
+                    OnlineEnrollments = root.GetProperty("onlineEnrollments").GetInt32(),
+                    InPersonEnrollments = root.GetProperty("inPersonEnrollments").GetInt32(),
+                    ExpectedAmount = root.GetProperty("totalExpected").GetDecimal(),
+                    TotalPaid = root.GetProperty("totalPaid").GetDecimal(),
+                    RemainingAmount = root.GetProperty("totalRemaining").GetDecimal(),
+                    CollectionPercent = root.GetProperty("collectionPercent").GetDecimal()
+                },
+                Courses = System.Text.Json.JsonSerializer.Deserialize<List<CourseReport>>(root.GetProperty("courseReports").GetRawText(), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new()
+            };
 
-            Dashboard =
-                await response.Content.ReadFromJsonAsync<DashboardDto>()
-                ?? new();
+            InstructorReports = await client.GetFromJsonAsync<List<InstructorReport>>(
+                "api/ManagementReports/instructors") ?? new();
 
-            LastUpdated = DateTime.Now;
+            LearningProgress = await client.GetFromJsonAsync<LearningProgressReport>(
+                "api/ManagementReports/learning-progress");
         }
         catch (Exception ex)
         {
-            ErrorMessage =
-                $"خطا در دریافت گزارش: {ex.Message}";
+            Error = "خطا در دریافت گزارش‌ها: " + ex.Message;
         }
         finally
         {
@@ -607,100 +1444,135 @@
         }
     }
 
-    private async Task ClearFilters()
+    private static string ActivityStatusLabel(string status)
     {
-        FromDate = "";
-        ToDate = "";
-        SelectedCourseId = "";
-        SelectedInstructorId = "";
-        SelectedDeliveryType = "";
-        SelectedStatus = "";
-
-        await LoadDashboard();
+        return status switch
+        {
+            "NoActivity" => "بدون فعالیت",
+            "HighProgress" => "پیشرفت بالا",
+            "InProgress" => "در حال پیشرفت",
+            _ => "-"
+        };
     }
 
-    private static string Money(decimal value)
+    private static string ActivityStatusClass(string status)
     {
-        return value.ToString("N0");
+        return status switch
+        {
+            "NoActivity" => "no-activity",
+            "HighProgress" => "high-progress",
+            "InProgress" => "in-progress",
+            _ => ""
+        };
     }
 
-    private class DashboardDto
+    private static string Money(decimal amount)
     {
-        public FilterDto Filters { get; set; } = new();
-
-        public SummaryDto Summary { get; set; } = new();
-
-        public List<CourseReportDto> Courses { get; set; } = new();
+        return amount.ToString("#,##0");
     }
 
-    private class FilterDto
+    private static double CourseWidth(decimal percent)
     {
-        public DateTime? From { get; set; }
-
-        public DateTime? To { get; set; }
-
-        public int? CourseId { get; set; }
-
-        public int? InstructorId { get; set; }
-
-        public string? DeliveryType { get; set; }
-
-        public string? Status { get; set; }
+        return Math.Clamp((double)percent, 0, 100);
     }
 
-    private class SummaryDto
+    private static string DeliveryLabel(string? deliveryType)
+    {
+        return deliveryType switch
+        {
+            "Online" => "آنلاین",
+            "InPerson" => "حضوری",
+            _ => deliveryType ?? "-"
+        };
+    }
+
+    public class LearningProgressReport
+    {
+        public LearningProgressSummary Summary { get; set; } = new();
+        public List<LearningProgressStudent> Students { get; set; } = new();
+    }
+
+    public class LearningProgressSummary
+    {
+        public int ActiveStudents { get; set; }
+        public int TotalCompletedLessons { get; set; }
+        public decimal AverageProgress { get; set; }
+        public int InactiveStudents { get; set; }
+        public int HighProgressStudents { get; set; }
+    }
+
+    public class LearningProgressStudent
+    {
+        public int EnrollmentId { get; set; }
+        public int StudentId { get; set; }
+        public string StudentName { get; set; } = "";
+        public int CourseId { get; set; }
+        public string CourseTitle { get; set; } = "";
+        public int TotalLessons { get; set; }
+        public int CompletedLessons { get; set; }
+        public decimal ProgressPercent { get; set; }
+        public string ActivityStatus { get; set; } = "";
+        public string EnrollmentStatus { get; set; } = "";
+    }
+
+    public class InstructorReport
+    {
+        public int InstructorId { get; set; }
+        public string InstructorName { get; set; } = "";
+        public int CourseCount { get; set; }
+        public int StudentCount { get; set; }
+        public int EnrollmentCount { get; set; }
+        public int TotalLessons { get; set; }
+        public int CompletedLessons { get; set; }
+        public decimal AverageProgress { get; set; }
+    }
+
+    public class DashboardReport
+    {
+        public DashboardSummary Summary { get; set; } = new();
+        public List<CourseReport> Courses { get; set; } = new();
+    }
+
+    public class DashboardSummary
     {
         public int TotalStudents { get; set; }
-
         public int TotalCourses { get; set; }
-
         public int TotalEnrollments { get; set; }
-
         public int ActiveEnrollments { get; set; }
-
         public int CancelledEnrollments { get; set; }
+        public int TodayEnrollments { get; set; }
+        public int MonthEnrollments { get; set; }
+        public int OnlineEnrollments { get; set; }
+        public int InPersonEnrollments { get; set; }
 
         public decimal ExpectedAmount { get; set; }
-
-        public decimal PaidAmount { get; set; }
-
-        public decimal PendingAmount { get; set; }
-
-        public decimal CancelledPaymentAmount { get; set; }
-
+        public decimal TotalPaid { get; set; }
         public decimal RemainingAmount { get; set; }
-
         public decimal CollectionPercent { get; set; }
     }
 
-    private class CourseReportDto
+    public class CourseReport
     {
         public int CourseId { get; set; }
-
         public string CourseTitle { get; set; } = "";
-
+        public string? DeliveryType { get; set; }
         public int EnrollmentCount { get; set; }
+        public int Capacity { get; set; }
+        public int ActiveStudentCount { get; set; }
 
         public decimal ExpectedAmount { get; set; }
-
-        public decimal PaidAmount { get; set; }
-
+        public decimal TotalPaid { get; set; }
         public decimal RemainingAmount { get; set; }
-
         public decimal CollectionPercent { get; set; }
     }
-
-    private class CourseOption
+    private decimal RegistrationWidth(int value)
     {
-        public int Id { get; set; }
+        if (Report.Summary.TotalEnrollments == 0)
+            return 0;
 
-        public string Title { get; set; } = "";
+        return Math.Round(
+            value * 100m / Report.Summary.TotalEnrollments,
+            2);
     }
 
-    private class InstructorOption
-    {
-        public int Id { get; set; }
-
-        public string Name { get; set; } = "";
-    }
 }
