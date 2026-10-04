@@ -2670,2500 +2670,6 @@ textarea {
     }
 
 }
-/* =========================================
-   Enrollment Financial Details
-   ========================================= */
-
-.admin-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.admin-actions .admin-secondary-btn {
-    margin: 0;
-    white-space: nowrap;
-}
-
-/* Modal */
-
-.admin-modal-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    background: rgba(15, 35, 45, 0.55);
-    backdrop-filter: blur(3px);
-}
-
-.admin-modal {
-    width: min(920px, 100%);
-    max-height: calc(100vh - 48px);
-    overflow: hidden;
-    background: #ffffff;
-    border: 1px solid #dce7ec;
-    border-radius: 18px;
-    box-shadow: 0 20px 60px rgba(25, 55, 70, 0.20);
-    direction: rtl;
-    display: flex;
-    flex-direction: column;
-}
-
-.admin-modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 18px 22px;
-    border-bottom: 1px solid #e6eef2;
-    background: #f8fbfc;
-}
-
-.admin-modal-header h3 {
-    margin: 0;
-    color: var(--theme-text, #263d4a);
-    font-size: 19px;
-    font-weight: 700;
-}
-
-.admin-modal-close {
-    width: 36px;
-    height: 36px;
-    border: 0;
-    border-radius: 10px;
-    background: #eef4f6;
-    color: #607581;
-    font-size: 24px;
-    line-height: 1;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: 0.2s ease;
-}
-
-.admin-modal-close:hover {
-    background: #e2ecef;
-    color: #263d4a;
-}
-
-.admin-modal-body {
-    padding: 22px;
-    overflow-y: auto;
-}
-
-.admin-modal-footer {
-    display: flex;
-    justify-content: flex-start;
-    padding: 16px 22px;
-    border-top: 1px solid #e6eef2;
-    background: #fbfdfe;
-}
-
-/* Financial summary */
-
-.financial-summary {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-    margin-bottom: 24px;
-}
-
-.financial-summary-item {
-    min-width: 0;
-    padding: 16px;
-    border: 1px solid #e1ebef;
-    border-radius: 14px;
-    background: #f8fbfc;
-}
-
-.financial-summary-item span:first-child {
-    display: block;
-    margin-bottom: 8px;
-    color: #7b8b95;
-    font-size: 13px;
-}
-
-.financial-summary-item strong {
-    display: block;
-    color: var(--theme-text, #263d4a);
-    font-size: 16px;
-    line-height: 1.6;
-    overflow-wrap: anywhere;
-}
-
-/* Payment history */
-
-.financial-payments {
-    margin-top: 4px;
-}
-
-.financial-payments h4 {
-    margin: 0 0 14px;
-    color: var(--theme-text, #263d4a);
-    font-size: 16px;
-    font-weight: 700;
-}
-
-.financial-payments .courses-table-wrapper {
-    width: 100%;
-    overflow-x: auto;
-    border: 1px solid #e1ebef;
-    border-radius: 14px;
-}
-
-.financial-payments .courses-table {
-    width: 100%;
-    min-width: 680px;
-    margin: 0;
-}
-
-.financial-payments .courses-table th {
-    background: #f4f8fa;
-    color: #607581;
-    font-size: 13px;
-    white-space: nowrap;
-}
-
-.financial-payments .courses-table td {
-    vertical-align: middle;
-}
-
-.financial-payments .price-unit {
-    margin-right: 4px;
-    font-size: 11px;
-}
-
-/* Error inside modal */
-
-.admin-modal .admin-error {
-    padding: 14px 16px;
-    border: 1px solid #e8caca;
-    border-radius: 12px;
-    background: #fff7f7;
-    color: #a33a3a;
-}
-
-/* Empty / loading state */
-
-.admin-modal .admin-empty-state {
-    padding: 32px 20px;
-    text-align: center;
-    color: #7b8b95;
-}
-
-/* Responsive */
-
-@media (max-width: 900px) {
-    .financial-summary {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 600px) {
-    .admin-modal-overlay {
-        padding: 12px;
-    }
-
-    .admin-modal {
-        max-height: calc(100vh - 24px);
-        border-radius: 14px;
-    }
-
-    .admin-modal-header {
-        padding: 14px 16px;
-    }
-
-    .admin-modal-body {
-        padding: 16px;
-    }
-
-    .admin-modal-footer {
-        padding: 14px 16px;
-    }
-
-    .financial-summary {
-        grid-template-columns: 1fr;
-    }
-
-    .admin-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .admin-actions .admin-secondary-btn {
-        width: 100%;
-    }
-}
-/* =========================================
-   Enrollment Action Buttons
-   ========================================= */
-
-.admin-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    flex-wrap: nowrap;
-}
-
-.admin-actions .admin-secondary-btn {
-    min-width: 105px;
-    height: 38px;
-    margin: 0;
-    padding: 0 14px;
-
-    border: 1px solid #d5e2e7;
-    border-radius: 10px;
-
-    background: #f7fafb;
-    color: #3d5b68;
-
-    font-size: 13px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    white-space: nowrap;
-
-    transition:
-        background-color 0.2s ease,
-        border-color 0.2s ease,
-        color 0.2s ease,
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.admin-actions .admin-secondary-btn:hover {
-    background: #eef5f7;
-    border-color: var(--theme-primary, #568fa8);
-    color: var(--theme-primary-dark, #477f99);
-
-    transform: translateY(-1px);
-
-    box-shadow: 0 4px 10px rgba(50, 85, 100, 0.10);
-}
-
-.admin-actions .admin-secondary-btn:active {
-    transform: translateY(0);
-    box-shadow: none;
-}
-
-/* دکمه جزئیات مالی */
-
-.admin-actions .admin-secondary-btn:first-child {
-    background: var(--theme-primary, #568fa8);
-    border-color: var(--theme-primary, #568fa8);
-    color: #ffffff;
-}
-
-.admin-actions .admin-secondary-btn:first-child:hover {
-    background: var(--theme-primary-dark, #477f99);
-    border-color: var(--theme-primary-dark, #477f99);
-    color: #ffffff;
-
-    box-shadow: 0 5px 14px rgba(50, 95, 115, 0.18);
-}
-
-/* دکمه ویرایش */
-
-.admin-actions .admin-secondary-btn:last-child {
-    background: #ffffff;
-    border-color: #d5e2e7;
-    color: #526b76;
-}
-
-.admin-actions .admin-secondary-btn:last-child:hover {
-    background: #f3f7f9;
-    border-color: #b9cbd2;
-    color: #344f5b;
-}
-
-@media (max-width: 700px) {
-    .admin-actions {
-        flex-direction: column;
-        align-items: stretch;
-        width: 100%;
-    }
-
-    .admin-actions .admin-secondary-btn {
-        width: 100%;
-        min-width: 0;
-    }
-}
-/* =========================================
-   Payment Enrollment Financial Summary
-   ========================================= */
-
-.payment-enrollment-summary {
-    margin-top: 20px;
-    padding: 18px;
-    border: 1px solid #dce7ec;
-    border-radius: 16px;
-    background: #f8fbfc;
-}
-
-.payment-summary-title {
-    margin-bottom: 16px;
-    color: var(--theme-text, #263d4a);
-    font-size: 16px;
-    font-weight: 700;
-}
-
-.payment-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
-}
-
-.payment-summary-item {
-    min-width: 0;
-    padding: 14px;
-    border: 1px solid #e2ebef;
-    border-radius: 12px;
-    background: #ffffff;
-}
-
-.payment-summary-item > span:first-child {
-    display: block;
-    margin-bottom: 7px;
-    color: #7b8b95;
-    font-size: 12px;
-}
-
-.payment-summary-item > strong {
-    display: block;
-    color: var(--theme-text, #263d4a);
-    font-size: 14px;
-    line-height: 1.7;
-    overflow-wrap: anywhere;
-}
-
-.payment-summary-item .course-status {
-    display: inline-flex;
-    margin-top: 2px;
-}
-
-@media (max-width: 1100px) {
-    .payment-summary-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 600px) {
-    .payment-summary-grid {
-        grid-template-columns: 1fr;
-    }
-}
-/* دکمه بستن پنجره جزئیات مالی */
-
-.admin-modal-footer .admin-secondary-btn {
-    min-width: 110px;
-    height: 40px;
-    padding: 0 20px;
-
-    border: 1px solid #ccdbe1;
-    border-radius: 10px;
-
-    background: #ffffff;
-    color: #526b76;
-
-    font-size: 13px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    transition:
-        background-color 0.2s ease,
-        border-color 0.2s ease,
-        color 0.2s ease,
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.admin-modal-footer .admin-secondary-btn:hover {
-    background: #f2f7f9;
-    border-color: var(--theme-primary, #568fa8);
-    color: var(--theme-primary-dark, #477f99);
-
-    transform: translateY(-1px);
-
-    box-shadow: 0 4px 10px rgba(50, 85, 100, 0.10);
-}
-
-.admin-modal-footer .admin-secondary-btn:active {
-    transform: translateY(0);
-    box-shadow: none;
-}
-/* =========================================
-   Admin Recent Enrollments
-   ========================================= */
-
-.admin-recent-enrollments {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.admin-recent-enrollment {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    align-items: center;
-    gap: 18px;
-
-    padding: 15px 16px;
-
-    border: 1px solid #e1ebef;
-    border-radius: 12px;
-
-    background: #fbfdfe;
-
-    transition:
-        background-color 0.2s ease,
-        border-color 0.2s ease,
-        transform 0.2s ease;
-}
-
-.admin-recent-enrollment:hover {
-    background: #f6fafb;
-    border-color: #ccdfe5;
-    transform: translateY(-1px);
-}
-
-.recent-enrollment-main {
-    min-width: 0;
-}
-
-.recent-enrollment-main strong {
-    display: block;
-    margin-bottom: 4px;
-
-    color: var(--theme-text, #263d4a);
-    font-size: 14px;
-}
-
-.recent-enrollment-main span {
-    display: block;
-
-    color: #7b8b95;
-    font-size: 12px;
-
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.recent-enrollment-financial {
-    min-width: 115px;
-    text-align: center;
-}
-
-.recent-enrollment-financial strong {
-    display: block;
-
-    color: var(--theme-text, #263d4a);
-    font-size: 13px;
-}
-
-.recent-enrollment-financial small {
-    display: block;
-    margin-top: 3px;
-
-    color: #7b8b95;
-    font-size: 11px;
-}
-
-.recent-enrollment-date {
-    min-width: 85px;
-
-    color: #607581;
-    font-size: 12px;
-    text-align: left;
-    direction: ltr;
-}
-
-@media (max-width: 700px) {
-    .admin-recent-enrollment {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
-    .recent-enrollment-financial {
-        text-align: right;
-    }
-
-    .recent-enrollment-date {
-        text-align: right;
-    }
-}
-/* =========================================
-   Course Partner Organization Management
-   ========================================= */
-
-/* ---------- Course row actions ---------- */
-
-.course-row-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    flex-wrap: nowrap;
-}
-
-.course-row-actions button {
-    min-width: 82px;
-    height: 36px;
-    padding: 0 13px;
-    border-radius: 9px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    white-space: nowrap;
-
-    transition:
-        background-color 0.2s ease,
-        border-color 0.2s ease,
-        color 0.2s ease,
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-/* قراردادها */
-
-.course-contract-btn {
-    border: 1px solid var(--theme-primary, #568fa8);
-    background: var(--theme-primary, #568fa8);
-    color: #ffffff;
-}
-
-.course-contract-btn:hover {
-    border-color: var(--theme-primary-dark, #477f99);
-    background: var(--theme-primary-dark, #477f99);
-    color: #ffffff;
-
-    transform: translateY(-1px);
-    box-shadow: 0 5px 12px rgba(50, 95, 115, 0.16);
-}
-
-.course-contract-btn:active {
-    transform: translateY(0);
-    box-shadow: none;
-}
-
-/* ویرایش */
-
-.course-row-actions .course-edit-btn {
-    border: 1px solid #d5e2e7;
-    background: #ffffff;
-    color: #526b76;
-}
-
-.course-row-actions .course-edit-btn:hover {
-    border-color: #b9cbd2;
-    background: #f3f7f9;
-    color: #344f5b;
-
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(50, 85, 100, 0.08);
-}
-
-/* ---------- Contract modal ---------- */
-
-.course-contract-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1100;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: 24px;
-
-    background: rgba(15, 35, 45, 0.56);
-    backdrop-filter: blur(3px);
-}
-
-.course-contract-modal {
-    width: min(1000px, 100%);
-    max-height: calc(100vh - 48px);
-
-    overflow: hidden;
-
-    display: flex;
-    flex-direction: column;
-
-    background: #ffffff;
-    border: 1px solid #dce7ec;
-    border-radius: 18px;
-
-    box-shadow: 0 24px 70px rgba(20, 50, 65, 0.22);
-
-    direction: rtl;
-}
-
-/* ---------- Modal header ---------- */
-
-.course-contract-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 18px;
-
-    padding: 20px 22px;
-
-    background: #f7fafb;
-    border-bottom: 1px solid #e4edf1;
-}
-
-.course-contract-header > div {
-    min-width: 0;
-}
-
-.course-contract-header > div > span {
-    display: block;
-    margin-bottom: 5px;
-
-    color: var(--theme-primary, #568fa8);
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.course-contract-header h2 {
-    margin: 0;
-
-    color: var(--theme-text, #263d4a);
-    font-size: 20px;
-    font-weight: 700;
-}
-
-.course-contract-close {
-    flex: 0 0 auto;
-
-    width: 38px;
-    height: 38px;
-
-    border: 0;
-    border-radius: 10px;
-
-    background: #edf3f5;
-    color: #5f747e;
-
-    font-size: 24px;
-    line-height: 1;
-
-    cursor: pointer;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    transition:
-        background-color 0.2s ease,
-        color 0.2s ease,
-        transform 0.2s ease;
-}
-
-.course-contract-close:hover {
-    background: #e2ebee;
-    color: #304d59;
-    transform: rotate(3deg);
-}
-
-/* ---------- Modal body ---------- */
-
-.course-contract-body {
-    padding: 22px;
-    overflow-y: auto;
-}
-
-/* ---------- Messages ---------- */
-
-.course-contract-body .admin-error,
-.course-contract-body .admin-success {
-    margin-bottom: 16px;
-    border-radius: 11px;
-}
-
-.course-contract-body .admin-success {
-    padding: 13px 15px;
-    border: 1px solid #cfe4d6;
-    background: #f4fbf6;
-    color: #39724c;
-}
-
-/* ---------- Add contract button ---------- */
-
-.course-contract-actions {
-    display: flex;
-    justify-content: flex-start;
-    margin-bottom: 18px;
-}
-
-.course-contract-actions .admin-primary-btn {
-    min-height: 40px;
-    padding: 0 18px;
-    border-radius: 10px;
-}
-
-/* ---------- Contract form ---------- */
-
-.course-contract-form {
-    margin-bottom: 22px;
-    padding: 20px;
-
-    border: 1px solid #dfe9ed;
-    border-radius: 16px;
-
-    background: #fbfdfe;
-}
-
-.course-contract-form-header {
-    margin-bottom: 18px;
-}
-
-.course-contract-form-header span {
-    display: block;
-    margin-bottom: 5px;
-
-    color: var(--theme-primary, #568fa8);
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.course-contract-form-header h3 {
-    margin: 0;
-
-    color: var(--theme-text, #263d4a);
-    font-size: 17px;
-    font-weight: 700;
-}
-
-/* ---------- Contract table ---------- */
-
-.course-contract-body .courses-table-wrapper {
-    width: 100%;
-    overflow-x: auto;
-
-    border: 1px solid #dfe9ed;
-    border-radius: 14px;
-
-    background: #ffffff;
-}
-
-.course-contract-body .courses-table {
-    width: 100%;
-    min-width: 760px;
-    margin: 0;
-}
-
-.course-contract-body .courses-table th {
-    background: #f4f8fa;
-    color: #607581;
-
-    font-size: 12px;
-    font-weight: 700;
-
-    white-space: nowrap;
-}
-
-.course-contract-body .courses-table td {
-    vertical-align: middle;
-}
-
-.course-contract-body .courses-table tbody tr:hover {
-    background: #fbfdfe;
-}
-
-/* ---------- Contract dates ---------- */
-
-.course-contract-body .partner-org-dates {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
-    color: #667b85;
-    font-size: 11px;
-    line-height: 1.6;
-}
-
-/* ---------- Price ---------- */
-
-.course-contract-body .price-unit {
-    margin-right: 4px;
-
-    color: #7b8b95;
-    font-size: 11px;
-}
-
-/* ---------- Row action buttons ---------- */
-
-.course-contract-body .admin-row-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-}
-
-.course-contract-body .admin-action-btn {
-    min-width: 62px;
-    height: 34px;
-    padding: 0 11px;
-
-    border: 1px solid #d5e2e7;
-    border-radius: 8px;
-
-    background: #ffffff;
-    color: #526b76;
-
-    font-size: 12px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition:
-        background-color 0.2s ease,
-        border-color 0.2s ease,
-        color 0.2s ease,
-        transform 0.2s ease;
-}
-
-.course-contract-body .admin-action-btn:hover {
-    background: #f3f7f9;
-    border-color: #b9cbd2;
-    color: #344f5b;
-    transform: translateY(-1px);
-}
-
-.course-contract-body .admin-action-btn.danger {
-    border-color: #ead2d2;
-    color: #9a4a4a;
-    background: #fffafa;
-}
-
-.course-contract-body .admin-action-btn.danger:hover {
-    border-color: #dcaeae;
-    background: #fff3f3;
-    color: #873838;
-}
-
-/* ---------- Modal footer ---------- */
-
-.course-contract-footer {
-    display: flex;
-    justify-content: flex-start;
-
-    padding: 16px 22px;
-
-    border-top: 1px solid #e4edf1;
-    background: #fbfdfe;
-}
-
-.course-contract-footer .admin-outline-btn {
-    min-width: 100px;
-    height: 40px;
-
-    border: 1px solid #ccdbe1;
-    border-radius: 10px;
-
-    background: #ffffff;
-    color: #526b76;
-
-    font-size: 13px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition:
-        background-color 0.2s ease,
-        border-color 0.2s ease,
-        color 0.2s ease,
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.course-contract-footer .admin-outline-btn:hover {
-    background: #f2f7f9;
-    border-color: var(--theme-primary, #568fa8);
-    color: var(--theme-primary-dark, #477f99);
-
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(50, 85, 100, 0.08);
-}
-
-/* ---------- Responsive ---------- */
-
-@media (max-width: 800px) {
-
-    .course-contract-overlay {
-        padding: 12px;
-    }
-
-    .course-contract-modal {
-        max-height: calc(100vh - 24px);
-        border-radius: 14px;
-    }
-
-    .course-contract-header {
-        padding: 16px;
-    }
-
-    .course-contract-body {
-        padding: 16px;
-    }
-
-    .course-contract-footer {
-        padding: 14px 16px;
-    }
-
-    .course-row-actions {
-        flex-direction: column;
-    }
-
-    .course-row-actions button {
-        width: 100%;
-    }
-
-    .course-contract-actions {
-        justify-content: stretch;
-    }
-
-    .course-contract-actions .admin-primary-btn {
-        width: 100%;
-    }
-}
-
-/* ==========================================
-   Admin Students
-   ========================================== */
-
-.students-summary {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
-    margin-bottom: 20px;
-}
-
-.student-summary-card {
-    background: var(--card, #ffffff);
-    border: 1px solid var(--border, #e3e9ee);
-    border-radius: 16px;
-    padding: 20px;
-}
-
-.student-summary-card span {
-    display: block;
-    font-size: 13px;
-    color: var(--secondary-text, #607581);
-    margin-bottom: 8px;
-}
-
-.student-summary-card strong {
-    display: block;
-    font-size: 28px;
-    color: var(--text, #263d4a);
-}
-
-.students-toolbar {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 18px;
-}
-
-.students-search {
-    width: 100%;
-    max-width: 520px;
-}
-
-.students-search label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.students-search input {
-    width: 100%;
-}
-
-.students-table-wrap {
-    width: 100%;
-    overflow-x: auto;
-}
-
-.students-table {
-    width: 100%;
-    min-width: 980px;
-    border-collapse: collapse;
-}
-
-.students-table th,
-.students-table td {
-    padding: 14px 12px;
-    border-bottom: 1px solid var(--border, #e3e9ee);
-    text-align: right;
-    vertical-align: middle;
-}
-
-.students-table th {
-    font-size: 13px;
-    color: var(--secondary-text, #607581);
-    white-space: nowrap;
-}
-
-.students-table td {
-    font-size: 14px;
-}
-
-.student-name-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.student-name-cell strong {
-    color: var(--text, #263d4a);
-}
-
-.student-name-cell small {
-    color: var(--secondary-text, #607581);
-    font-size: 12px;
-}
-
-.student-support-cell {
-    min-width: 180px;
-}
-
-.student-support-cell select {
-    width: 100%;
-}
-
-.student-muted {
-    color: var(--secondary-text, #607581);
-    font-size: 13px;
-}
-
-.students-form-section {
-    margin-top: 20px;
-}
-
-.student-address-field {
-    grid-column: 1 / -1;
-}
-
-.student-form-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 22px;
-}
-
-.student-form-error {
-    margin-bottom: 16px;
-}
-
-@media (max-width: 900px) {
-
-    .students-summary {
-        grid-template-columns: 1fr;
-    }
-
-    .students-toolbar {
-        flex-direction: column;
-    }
-
-    .students-search {
-        max-width: none;
-    }
-
-}
-
-@media (max-width: 700px) {
-
-    .student-form-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-}
-
-cd /workspaces/OnlineEducationPlatform/SampleApp/FrontEnd
-
-cat >> wwwroot/css/site.css <<'EOF'
-
-
-/* ==========================================
-   Admin Students — Modern UI
-   ========================================== */
-
-.students-summary {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
-    margin-bottom: 22px;
-}
-
-.student-summary-card {
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(145deg, #ffffff, #f7fafc);
-    border: 1px solid #e5ebf0;
-    border-radius: 20px;
-    padding: 22px 24px;
-    box-shadow: 0 8px 24px rgba(38, 61, 74, 0.06);
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.student-summary-card::after {
-    content: "";
-    position: absolute;
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    left: -28px;
-    bottom: -42px;
-    background: rgba(86, 143, 168, 0.08);
-}
-
-.student-summary-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 30px rgba(38, 61, 74, 0.09);
-}
-
-.student-summary-card span {
-    position: relative;
-    z-index: 1;
-    display: block;
-    margin-bottom: 8px;
-    color: #6c7d87;
-    font-size: 13px;
-    font-weight: 500;
-}
-
-.student-summary-card strong {
-    position: relative;
-    z-index: 1;
-    display: block;
-    color: #263d4a;
-    font-size: 30px;
-    font-weight: 800;
-    line-height: 1;
-}
-
-
-/* Main content */
-
-.students-toolbar {
-    display: flex;
-    align-items: end;
-    gap: 16px;
-    margin-bottom: 18px;
-    padding: 4px 0 2px;
-}
-
-.students-search {
-    width: min(100%, 540px);
-}
-
-.students-search label {
-    display: block;
-    margin-bottom: 8px;
-    color: #526773;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.students-search input {
-    height: 46px;
-    padding: 0 15px;
-    border: 1px solid #dce5ea;
-    border-radius: 12px;
-    background: #fbfcfd;
-    color: #263d4a;
-    font-size: 14px;
-    outline: none;
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
-}
-
-.students-search input:focus {
-    border-color: #568fa8;
-    background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(86, 143, 168, 0.11);
-}
-
-
-/* Table */
-
-.students-table-wrap {
-    overflow: hidden;
-    width: 100%;
-    border: 1px solid #e5ebf0;
-    border-radius: 16px;
-    background: #ffffff;
-}
-
-.students-table {
-    width: 100%;
-    min-width: 1080px;
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-.students-table thead {
-    background: #f7fafc;
-}
-
-.students-table th {
-    padding: 15px 14px;
-    border-bottom: 1px solid #e4eaef;
-    color: #607581;
-    font-size: 12px;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-.students-table td {
-    padding: 15px 14px;
-    border-bottom: 1px solid #eef2f5;
-    color: #334c59;
-    font-size: 13px;
-    vertical-align: middle;
-}
-
-.students-table tbody tr {
-    transition: background 0.16s ease;
-}
-
-.students-table tbody tr:hover {
-    background: #f9fbfc;
-}
-
-.students-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.student-name-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    min-width: 190px;
-}
-
-.student-name-cell strong {
-    color: #263d4a;
-    font-size: 14px;
-    font-weight: 800;
-}
-
-.student-name-cell small {
-    color: #8a9aa3;
-    font-size: 11px;
-}
-
-.students-table td:nth-child(2),
-.students-table td:nth-child(3) {
-    direction: ltr;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-}
-
-
-/* Selects */
-
-.student-support-cell {
-    min-width: 185px;
-}
-
-.student-support-cell select,
-.students-table select,
-.course-form-grid select,
-.course-form-grid input,
-.course-form-grid textarea {
-    box-sizing: border-box;
-}
-
-.student-support-cell select {
-    width: 100%;
-    min-height: 40px;
-    padding: 0 11px;
-    border: 1px solid #dce5ea;
-    border-radius: 10px;
-    background: #ffffff;
-    color: #344d59;
-    font-size: 12px;
-    outline: none;
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.student-support-cell select:focus {
-    border-color: #568fa8;
-    box-shadow: 0 0 0 4px rgba(86, 143, 168, 0.10);
-}
-
-.student-muted {
-    display: inline-flex;
-    align-items: center;
-    min-height: 34px;
-    padding: 0 10px;
-    border-radius: 999px;
-    background: #f2f5f7;
-    color: #72838d;
-    font-size: 11px;
-}
-
-
-/* Small action button */
-
-.students-table .admin-small-btn {
-    min-height: 38px;
-    padding: 0 13px;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.students-table .admin-small-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.45;
-    transform: none;
-}
-
-
-/* Form */
-
-.students-form-section {
-    margin-top: 22px;
-    overflow: hidden;
-    border: 1px solid #e1e8ed;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(38, 61, 74, 0.06);
-}
-
-.students-form-section .admin-card-header {
-    margin-bottom: 2px;
-}
-
-.students-form-section .admin-card-header h2 {
-    margin-bottom: 4px;
-}
-
-.students-form-section .course-form-grid {
-    padding-top: 4px;
-}
-
-.students-form-section .form-group {
-    margin-bottom: 4px;
-}
-
-.students-form-section .form-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: #526773;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.students-form-section .form-group input,
-.students-form-section .form-group select,
-.students-form-section .form-group textarea {
-    width: 100%;
-    border: 1px solid #dce5ea;
-    border-radius: 11px;
-    background: #fbfcfd;
-    color: #263d4a;
-    font-size: 13px;
-    outline: none;
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
-}
-
-.students-form-section .form-group input,
-.students-form-section .form-group select {
-    min-height: 44px;
-    padding: 0 12px;
-}
-
-.students-form-section .form-group textarea {
-    padding: 11px 12px;
-    resize: vertical;
-}
-
-.students-form-section .form-group input:focus,
-.students-form-section .form-group select:focus,
-.students-form-section .form-group textarea:focus {
-    border-color: #568fa8;
-    background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(86, 143, 168, 0.10);
-}
-
-.student-address-field {
-    grid-column: 1 / -1;
-}
-
-.student-form-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid #edf1f4;
-}
-
-.student-form-actions .admin-primary-btn,
-.student-form-actions .admin-outline-btn {
-    min-height: 44px;
-    border-radius: 11px;
-}
-
-
-/* Error */
-
-.student-form-error {
-    margin-bottom: 18px;
-    border-radius: 12px;
-}
-
-
-/* Empty */
-
-.students-table-wrap + .admin-empty-state {
-    margin-top: 12px;
-}
-
-.students-form-section + .admin-content-card {
-    margin-top: 20px;
-}
-
-
-/* Responsive */
-
-@media (max-width: 1100px) {
-
-    .students-summary {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .student-summary-card:last-child {
-        grid-column: 1 / -1;
-    }
-
-}
-
-@media (max-width: 760px) {
-
-    .students-summary {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-
-    .student-summary-card:last-child {
-        grid-column: auto;
-    }
-
-    .student-summary-card {
-        padding: 18px 20px;
-        border-radius: 16px;
-    }
-
-    .student-summary-card strong {
-        font-size: 26px;
-    }
-
-    .students-toolbar {
-        align-items: stretch;
-    }
-
-    .students-search {
-        width: 100%;
-    }
-
-    .students-table-wrap {
-        border-radius: 12px;
-    }
-
-    .student-form-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .student-form-actions button {
-        width: 100%;
-    }
-
-}
-
-EOF
-
-echo
-echo "=== BUILD FRONTEND ==="
-dotnet build
-
-echo
-echo "=== LAST STUDENT CSS RULES ==="
-grep -nE 'Admin Students|students-summary|student-summary-card|students-table|students-form-section' \
-  wwwroot/css/site.css | tail -40
-
-/* ==========================================
-   Admin Students — Modern UI
-   ========================================== */
-
-.students-summary {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
-    margin-bottom: 22px;
-}
-
-.student-summary-card {
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(145deg, #ffffff, #f7fafc);
-    border: 1px solid #e5ebf0;
-    border-radius: 20px;
-    padding: 22px 24px;
-    box-shadow: 0 8px 24px rgba(38, 61, 74, 0.06);
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.student-summary-card::after {
-    content: "";
-    position: absolute;
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    left: -28px;
-    bottom: -42px;
-    background: rgba(86, 143, 168, 0.08);
-}
-
-.student-summary-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 30px rgba(38, 61, 74, 0.09);
-}
-
-.student-summary-card span {
-    position: relative;
-    z-index: 1;
-    display: block;
-    margin-bottom: 8px;
-    color: #6c7d87;
-    font-size: 13px;
-    font-weight: 500;
-}
-
-.student-summary-card strong {
-    position: relative;
-    z-index: 1;
-    display: block;
-    color: #263d4a;
-    font-size: 30px;
-    font-weight: 800;
-    line-height: 1;
-}
-
-
-/* Main content */
-
-.students-toolbar {
-    display: flex;
-    align-items: end;
-    gap: 16px;
-    margin-bottom: 18px;
-    padding: 4px 0 2px;
-}
-
-.students-search {
-    width: min(100%, 540px);
-}
-
-.students-search label {
-    display: block;
-    margin-bottom: 8px;
-    color: #526773;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.students-search input {
-    height: 46px;
-    padding: 0 15px;
-    border: 1px solid #dce5ea;
-    border-radius: 12px;
-    background: #fbfcfd;
-    color: #263d4a;
-    font-size: 14px;
-    outline: none;
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
-}
-
-.students-search input:focus {
-    border-color: #568fa8;
-    background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(86, 143, 168, 0.11);
-}
-
-
-/* Table */
-
-.students-table-wrap {
-    overflow: hidden;
-    width: 100%;
-    border: 1px solid #e5ebf0;
-    border-radius: 16px;
-    background: #ffffff;
-}
-
-.students-table {
-    width: 100%;
-    min-width: 1080px;
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-.students-table thead {
-    background: #f7fafc;
-}
-
-.students-table th {
-    padding: 15px 14px;
-    border-bottom: 1px solid #e4eaef;
-    color: #607581;
-    font-size: 12px;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-.students-table td {
-    padding: 15px 14px;
-    border-bottom: 1px solid #eef2f5;
-    color: #334c59;
-    font-size: 13px;
-    vertical-align: middle;
-}
-
-.students-table tbody tr {
-    transition: background 0.16s ease;
-}
-
-.students-table tbody tr:hover {
-    background: #f9fbfc;
-}
-
-.students-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.student-name-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    min-width: 190px;
-}
-
-.student-name-cell strong {
-    color: #263d4a;
-    font-size: 14px;
-    font-weight: 800;
-}
-
-.student-name-cell small {
-    color: #8a9aa3;
-    font-size: 11px;
-}
-
-.students-table td:nth-child(2),
-.students-table td:nth-child(3) {
-    direction: ltr;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-}
-
-
-/* Selects */
-
-.student-support-cell {
-    min-width: 185px;
-}
-
-.student-support-cell select,
-.students-table select,
-.course-form-grid select,
-.course-form-grid input,
-.course-form-grid textarea {
-    box-sizing: border-box;
-}
-
-.student-support-cell select {
-    width: 100%;
-    min-height: 40px;
-    padding: 0 11px;
-    border: 1px solid #dce5ea;
-    border-radius: 10px;
-    background: #ffffff;
-    color: #344d59;
-    font-size: 12px;
-    outline: none;
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.student-support-cell select:focus {
-    border-color: #568fa8;
-    box-shadow: 0 0 0 4px rgba(86, 143, 168, 0.10);
-}
-
-.student-muted {
-    display: inline-flex;
-    align-items: center;
-    min-height: 34px;
-    padding: 0 10px;
-    border-radius: 999px;
-    background: #f2f5f7;
-    color: #72838d;
-    font-size: 11px;
-}
-
-
-/* Small action button */
-
-.students-table .admin-small-btn {
-    min-height: 38px;
-    padding: 0 13px;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.students-table .admin-small-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.45;
-    transform: none;
-}
-
-
-/* Form */
-
-.students-form-section {
-    margin-top: 22px;
-    overflow: hidden;
-    border: 1px solid #e1e8ed;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(38, 61, 74, 0.06);
-}
-
-.students-form-section .admin-card-header {
-    margin-bottom: 2px;
-}
-
-.students-form-section .admin-card-header h2 {
-    margin-bottom: 4px;
-}
-
-.students-form-section .course-form-grid {
-    padding-top: 4px;
-}
-
-.students-form-section .form-group {
-    margin-bottom: 4px;
-}
-
-.students-form-section .form-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: #526773;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.students-form-section .form-group input,
-.students-form-section .form-group select,
-.students-form-section .form-group textarea {
-    width: 100%;
-    border: 1px solid #dce5ea;
-    border-radius: 11px;
-    background: #fbfcfd;
-    color: #263d4a;
-    font-size: 13px;
-    outline: none;
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
-}
-
-.students-form-section .form-group input,
-.students-form-section .form-group select {
-    min-height: 44px;
-    padding: 0 12px;
-}
-
-.students-form-section .form-group textarea {
-    padding: 11px 12px;
-    resize: vertical;
-}
-
-.students-form-section .form-group input:focus,
-.students-form-section .form-group select:focus,
-.students-form-section .form-group textarea:focus {
-    border-color: #568fa8;
-    background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(86, 143, 168, 0.10);
-}
-
-.student-address-field {
-    grid-column: 1 / -1;
-}
-
-.student-form-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid #edf1f4;
-}
-
-.student-form-actions .admin-primary-btn,
-.student-form-actions .admin-outline-btn {
-    min-height: 44px;
-    border-radius: 11px;
-}
-
-
-/* Error */
-
-.student-form-error {
-    margin-bottom: 18px;
-    border-radius: 12px;
-}
-
-
-/* Empty */
-
-.students-table-wrap + .admin-empty-state {
-    margin-top: 12px;
-}
-
-.students-form-section + .admin-content-card {
-    margin-top: 20px;
-}
-
-
-/* Responsive */
-
-@media (max-width: 1100px) {
-
-    .students-summary {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .student-summary-card:last-child {
-        grid-column: 1 / -1;
-    }
-
-}
-
-@media (max-width: 760px) {
-
-    .students-summary {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-
-    .student-summary-card:last-child {
-        grid-column: auto;
-    }
-
-    .student-summary-card {
-        padding: 18px 20px;
-        border-radius: 16px;
-    }
-
-    .student-summary-card strong {
-        font-size: 26px;
-    }
-
-    .students-toolbar {
-        align-items: stretch;
-    }
-
-    .students-search {
-        width: 100%;
-    }
-
-    .students-table-wrap {
-        border-radius: 12px;
-    }
-
-    .student-form-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .student-form-actions button {
-        width: 100%;
-    }
-
-}
-
-
-
-/* ==========================================
-   Dashboard Financial Cards — Spacing
-   ========================================== */
-
-.admin-financial-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 22px;
-}
-
-.admin-financial-card {
-    padding: 22px 24px;
-    min-width: 0;
-    border-radius: 16px;
-    box-sizing: border-box;
-}
-
-.admin-financial-card small {
-    display: block;
-    margin-bottom: 10px;
-}
-
-.admin-financial-card strong {
-    display: inline-block;
-    margin-left: 8px;
-    line-height: 1.5;
-}
-
-.admin-financial-card span {
-    display: inline-block;
-    margin-right: 4px;
-    white-space: nowrap;
-}
-
-@media (max-width: 900px) {
-
-    .admin-financial-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-
-}
-
-
-
-/* ==========================================
-   Admin Logout
-   ========================================== */
-
-.admin-logout-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    min-height: 38px;
-    padding: 0 13px;
-    border: 1px solid #e2e8ec;
-    border-radius: 10px;
-    background: #ffffff;
-    color: #607581;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    transition:
-        background 0.2s ease,
-        border-color 0.2s ease,
-        color 0.2s ease,
-        transform 0.2s ease;
-}
-
-.admin-logout-btn:hover {
-    background: #f8fafb;
-    border-color: #cfdbe1;
-    color: #263d4a;
-    transform: translateY(-1px);
-}
-
-.admin-logout-icon {
-    font-size: 17px;
-    line-height: 1;
-}
-
-
-
-/* ==========================================
-   Admin Topbar — User + Logout Group
-   ========================================== */
-
-.admin-topbar {
-    gap: 16px;
-}
-
-.admin-topbar > .admin-logout-btn {
-    margin-right: auto;
-    flex-shrink: 0;
-}
-
-.admin-topbar > .admin-user {
-    flex-shrink: 0;
-}
-
-@media (max-width: 700px) {
-
-    .admin-topbar {
-        flex-wrap: wrap;
-    }
-
-    .admin-topbar > .admin-logout-btn {
-        margin-right: 0;
-        margin-left: auto;
-        order: 3;
-    }
-
-    .admin-topbar > .admin-user {
-        order: 2;
-    }
-
-}
-
-
-
-/* ==========================================
-   Admin Topbar — Final User / Logout Layout
-   ========================================== */
-
-.admin-topbar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    align-items: center;
-    column-gap: 14px;
-}
-
-.admin-topbar > .admin-user {
-    grid-column: 2;
-}
-
-.admin-topbar > .admin-logout-btn {
-    grid-column: 3;
-    width: 108px;
-    min-height: 44px;
-    padding: 0 16px;
-    border-radius: 12px;
-    border: 1px solid #d7e1e6;
-    background: #ffffff;
-    color: #526873;
-    font-size: 13px;
-    font-weight: 800;
-    box-shadow: 0 4px 14px rgba(38, 61, 74, 0.06);
-}
-
-.admin-topbar > .admin-logout-btn:hover {
-    background: #f7fafb;
-    border-color: #c5d4db;
-    color: #263d4a;
-    box-shadow: 0 7px 18px rgba(38, 61, 74, 0.09);
-    transform: translateY(-1px);
-}
-
-.admin-topbar > .admin-logout-btn .admin-logout-icon {
-    font-size: 18px;
-}
-
-@media (max-width: 760px) {
-
-    .admin-topbar {
-        grid-template-columns: 1fr auto;
-        row-gap: 12px;
-    }
-
-    .admin-topbar > .admin-user {
-        grid-column: 1;
-        grid-row: 2;
-    }
-
-    .admin-topbar > .admin-logout-btn {
-        grid-column: 2;
-        grid-row: 2;
-        width: 108px;
-    }
-
-}
-
-
-
-/* ==========================================
-   Admin Topbar — Correct RTL Layout
-   ========================================== */
-
-.admin-topbar {
-    display: flex !important;
-    align-items: center;
-    justify-content: space-between;
-    gap: 18px;
-    flex-wrap: nowrap;
-}
-
-.admin-topbar > div:first-child {
-    order: 1;
-    min-width: 0;
-}
-
-.admin-topbar > .admin-user {
-    order: 2;
-    flex-shrink: 0;
-}
-
-.admin-topbar > .admin-logout-btn {
-    order: 3;
-    flex: 0 0 auto;
-    width: 110px;
-    min-width: 110px;
-    height: 44px;
-    min-height: 44px;
-    margin: 0 !important;
-    padding: 0 16px;
-    box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    border-radius: 12px;
-}
-
-@media (max-width: 760px) {
-
-    .admin-topbar {
-        flex-wrap: wrap;
-        row-gap: 14px;
-    }
-
-    .admin-topbar > div:first-child {
-        flex: 1 1 100%;
-    }
-
-    .admin-topbar > .admin-user {
-        order: 2;
-    }
-
-    .admin-topbar > .admin-logout-btn {
-        order: 3;
-        width: 110px;
-        min-width: 110px;
-    }
-
-}
-
-
-
-/* ==========================================
-   Admin Students — Final Spacing Fixes
-   ========================================== */
-
-/* فاصله عنوان جستجو از کادر */
-.students-search label {
-    display: block !important;
-    margin-bottom: 11px !important;
-    padding-right: 2px;
-    line-height: 1.6;
-}
-
-/* خود کادر جستجو */
-.students-search input {
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* محدود کردن سلول پشتیبان */
-.students-table td:has(.student-support-cell) {
-    overflow: hidden;
-}
-
-.student-support-cell {
-    width: 175px;
-    min-width: 175px;
-    max-width: 175px;
-    overflow: hidden;
-    box-sizing: border-box;
-}
-
-.student-support-cell select {
-    display: block;
-    width: 100%;
-    min-width: 0 !important;
-    max-width: 100%;
-    box-sizing: border-box;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* جلوگیری از بیرون‌زدگی جدول */
-.students-table-wrap {
-    overflow-x: auto;
-    overflow-y: hidden;
-}
-
-.students-table {
-    box-sizing: border-box;
-}
-
-
-/* موبایل */
-@media (max-width: 760px) {
-
-    .student-support-cell {
-        width: 165px;
-        min-width: 165px;
-        max-width: 165px;
-    }
-
-}
-
-
-
-/* ==========================================
-   Admin Students — Search Alignment
-   ========================================== */
-
-.students-toolbar {
-    padding: 0 18px;
-    box-sizing: border-box;
-}
-
-.students-search {
-    width: min(100%, 540px);
-}
-
-.students-search label {
-    margin-bottom: 9px !important;
-    padding: 0;
-    line-height: 1.7;
-}
-
-.students-search input {
-    width: 100%;
-    box-sizing: border-box;
-}
-
-@media (max-width: 760px) {
-
-    .students-toolbar {
-        padding: 0 6px;
-    }
-
-}
-
-
-
-/* ==========================================
-   Student Panel
-   ========================================== */
-
-.student-app {
-    min-height: 100vh;
-    display: flex;
-    direction: rtl;
-    background: #f4f8fa;
-    color: #263d4a;
-}
-
-.student-sidebar {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 255px;
-    display: flex;
-    flex-direction: column;
-    padding: 24px 18px;
-    box-sizing: border-box;
-    background: #ffffff;
-    border-left: 1px solid #e4ebef;
-    box-shadow: -8px 0 25px rgba(38, 61, 74, 0.035);
-    z-index: 20;
-}
-
-.student-brand {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    padding: 4px 5px 22px;
-}
-
-.student-brand-mark {
-    width: 42px;
-    height: 42px;
-    display: grid;
-    place-items: center;
-    border-radius: 12px;
-    background: #568fa8;
-    color: #ffffff;
-    font-size: 21px;
-    font-weight: 800;
-}
-
-.student-brand strong,
-.student-user-card strong {
-    display: block;
-    color: #263d4a;
-    font-size: 14px;
-}
-
-.student-brand small,
-.student-user-card small {
-    display: block;
-    margin-top: 3px;
-    color: #81929b;
-    font-size: 11px;
-}
-
-.student-user-card {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 12px;
-    border: 1px solid #e6edf1;
-    border-radius: 14px;
-    background: #f8fafb;
-}
-
-.student-user-avatar,
-.student-profile-large-avatar {
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: #edf5f8;
-    color: #568fa8;
-    font-weight: 800;
-}
-
-.student-user-avatar {
-    width: 38px;
-    height: 38px;
-    font-size: 15px;
-}
-
-.student-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 24px;
-}
-
-.student-nav a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 45px;
-    padding: 0 13px;
-    border-radius: 11px;
-    color: #607581;
-    text-decoration: none;
-    font-size: 13px;
-    font-weight: 700;
-    transition: all 0.18s ease;
-}
-
-.student-nav a span {
-    width: 22px;
-    text-align: center;
-    font-size: 16px;
-}
-
-.student-nav a:hover {
-    background: #f3f7f9;
-    color: #263d4a;
-}
-
-.student-nav a.active {
-    background: #edf5f8;
-    color: #477f99;
-}
-
-.student-sidebar-bottom {
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-    margin-top: auto;
-}
-
-.student-sidebar-bottom > a {
-    display: block;
-    padding: 10px 12px;
-    color: #70838d;
-    text-decoration: none;
-    font-size: 12px;
-}
-
-.student-logout-btn {
-    width: 100%;
-    min-height: 43px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    border: 1px solid #dfe7eb;
-    border-radius: 11px;
-    background: #ffffff;
-    color: #607581;
-    font-size: 13px;
-    font-weight: 800;
-    cursor: pointer;
-}
-
-.student-logout-btn:hover {
-    background: #f7fafb;
-    color: #263d4a;
-}
-
-.student-main {
-    width: calc(100% - 255px);
-    margin-right: 255px;
-    min-width: 0;
-}
-
-.student-page {
-    max-width: 1350px;
-    margin: 0 auto;
-    padding: 38px 42px 60px;
-}
 
 .student-topbar {
     display: flex;
@@ -5272,16 +2778,6 @@ grep -nE 'Admin Students|students-summary|student-summary-card|students-table|st
     font-size: 10px;
     font-weight: 600;
 }
-
-.student-content-card {
-    margin-bottom: 22px;
-    padding: 26px;
-    border: 1px solid #e3eaee;
-    border-radius: 19px;
-    background: #ffffff;
-    box-shadow: 0 8px 24px rgba(38, 61, 74, 0.045);
-}
-
 .student-section-header {
     display: flex;
     justify-content: space-between;
@@ -5724,15 +3220,6 @@ grep -nE 'Admin Students|students-summary|student-summary-card|students-table|st
         width: 220px;
     }
 
-    .student-main {
-        width: calc(100% - 220px);
-        margin-right: 220px;
-    }
-
-    .student-page {
-        padding: 30px 28px 50px;
-    }
-
     .student-summary-grid {
         grid-template-columns: 1fr;
     }
@@ -5761,11 +3248,6 @@ grep -nE 'Admin Students|students-summary|student-summary-card|students-table|st
         border-left: none;
         border-bottom: 1px solid #e4ebef;
         box-shadow: none;
-    }
-
-    .student-main {
-        width: 100%;
-        margin-right: 0;
     }
 
     .student-nav {
@@ -6775,940 +4257,1883 @@ grep -nE 'Admin Students|students-summary|student-summary-card|students-table|st
 
 @media (max-width: 600px) {
     .student-dashboard-payments .student-dashboard-payment {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
+
 }
-
-
-/* =========================
-   Support Panel
-   ========================= */
-
-.support-page {
-    min-height: 100vh;
-    display: flex;
-    direction: rtl;
-    background: #f3f7fa;
 }
+/* =========================================================
+   Admin Dashboard - Report Style
+========================================================= */
 
-.support-sidebar {
-    width: 250px;
-    min-width: 250px;
-    min-height: 100vh;
-    background: #ffffff;
-    border-left: 1px solid #dfe9ee;
-    padding: 24px 16px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-}
-
-.support-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 4px 8px 26px;
-}
-
-.support-brand-mark {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #568fa8;
-    color: #fff;
-    font-weight: 800;
-    font-size: 20px;
-}
-
-.support-brand strong {
-    display: block;
-    color: #263d4a;
-    font-size: 17px;
-}
-
-.support-brand small {
-    display: block;
-    margin-top: 3px;
-    color: #71838d;
-    font-size: 12px;
-}
-
-.support-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.support-menu a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 46px;
-    padding: 0 13px;
-    border-radius: 12px;
-    color: #526873;
-    text-decoration: none;
-    font-size: 14px;
-}
-
-.support-menu a span {
-    width: 22px;
-    text-align: center;
-}
-
-.support-menu a:hover,
-.support-menu a.active {
-    background: #edf5f8;
-    color: #3e7188;
-}
-
-.support-sidebar-bottom {
-    margin-top: auto;
-    padding-top: 22px;
-}
-
-.support-sidebar-bottom a {
-    color: #71838d;
-    font-size: 13px;
-    text-decoration: none;
-}
-
-.support-main {
-    flex: 1;
-    min-width: 0;
-    padding: 26px 30px 40px;
-    box-sizing: border-box;
-}
-
-.support-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 18px;
     margin-bottom: 24px;
 }
 
-.support-label {
-    display: block;
-    color: #71838d;
-    font-size: 13px;
-    margin-bottom: 6px;
-}
-
-.support-topbar h1 {
-    margin: 0;
-    color: #263d4a;
-    font-size: 28px;
-}
-
-.support-user {
+.admin-stat-card {
+    min-height: 118px;
     display: flex;
     align-items: center;
-    gap: 11px;
+    gap: 16px;
+    padding: 20px 22px;
+    border: 1px solid #e6ecef;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 5px 18px rgba(55, 90, 110, .06);
+    transition: transform .2s ease, box-shadow .2s ease;
 }
 
-.support-avatar {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    display: flex;
+.admin-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 26px rgba(55, 90, 110, .10);
+}
+
+.admin-stat-card .stat-icon {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #dcecf2;
-    color: #3e7188;
+    border-radius: 13px;
+    border: 0;
+    font-size: 19px;
     font-weight: 800;
 }
 
-.support-user strong {
-    display: block;
-    color: #263d4a;
-    font-size: 14px;
+.admin-stat-card:nth-child(1) .stat-icon {
+    background: #eef5f7;
+    color: #568fa8;
 }
 
-.support-user small {
-    display: block;
-    margin-top: 3px;
-    color: #71838d;
+.admin-stat-card:nth-child(2) .stat-icon {
+    background: #edf7f1;
+    color: #4d8b68;
+}
+
+.admin-stat-card:nth-child(3) .stat-icon {
+    background: #f1eef8;
+    color: #75629d;
+}
+
+.admin-stat-card > div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.admin-stat-card small {
+    color: #687780;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.admin-stat-card strong {
+    color: #263d4a;
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+/* مالی */
+
+.admin-financial-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 18px;
+}
+
+.admin-financial-card {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    column-gap: 14px;
+    align-items: center;
+    min-height: 116px;
+    padding: 18px 20px;
+    border: 1px solid #e6ecef;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 5px 18px rgba(55, 90, 110, .06);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.admin-financial-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 26px rgba(55, 90, 110, .10);
+}
+
+.admin-financial-card .financial-icon {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    width: 48px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.admin-financial-card.paid .financial-icon {
+    background: #edf7f1;
+    color: #4d8b68;
+}
+
+.admin-financial-card.pending .financial-icon {
+    background: #fff6e8;
+    color: #b27a2d;
+}
+
+.admin-financial-card.cancelled .financial-icon {
+    background: #fff1f1;
+    color: #c65b5b;
+}
+
+.admin-financial-card small {
+    grid-column: 2;
+    grid-row: 1;
+    color: #687780;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.admin-financial-card strong {
+    grid-column: 2;
+    grid-row: 2;
+    color: #263d4a;
+    font-size: 21px;
+    line-height: 1.2;
+    font-weight: 800;
+}
+
+.admin-financial-card > span:last-child {
+    grid-column: 2;
+    grid-row: 3;
+    color: #8a979e;
     font-size: 11px;
 }
 
-.support-logout-btn {
-    border: 0;
-    background: #f6e9e9;
-    color: #9d4d4d;
-    min-width: 82px;
-    height: 40px;
-    padding: 0 14px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-family: inherit;
-    margin-right: 8px;
+/* سرصفحه مالی هم‌سبک گزارش‌ها */
+
+.admin-content-card {
+    overflow: hidden;
+    border: 1px solid #e6ecef;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 5px 18px rgba(55, 90, 110, .06);
 }
 
-.support-content {
+.admin-card-header {
+    padding: 22px 24px;
+    border-bottom: 1px solid #edf1f3;
+}
+
+.admin-card-header span {
+    color: #568fa8;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-card-header h2 {
+    margin: 5px 0 0;
+    color: #263d4a;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+/* دکمه هم‌سبک گزارش‌ها */
+
+.admin-card-header .admin-primary-btn {
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 16px;
+    background: #568fa8;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background .2s ease, transform .2s ease;
+}
+
+.admin-card-header .admin-primary-btn:hover {
+    background: #477c92;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 900px) {
+    .admin-stats,
+    .admin-financial-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================================================
+   Admin Dashboard - Complete Report Sections
+========================================================= */
+
+.admin-dashboard-section {
+    margin-bottom: 24px;
+}
+
+.admin-section-heading {
     display: flex;
-    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 16px;
+}
+
+.admin-section-heading span {
+    color: #568fa8;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-section-heading h2 {
+    margin: 5px 0 0;
+    color: #263d4a;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.admin-section-link {
+    color: #568fa8;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.admin-section-link:hover {
+    color: #477c92;
+}
+
+
+/* کارت‌های آمار */
+
+.admin-stat-card.dashboard-blue .stat-icon {
+    background: #eef5f7;
+    color: #568fa8;
+}
+
+.admin-stat-card.dashboard-green .stat-icon {
+    background: #edf7f1;
+    color: #4d8b68;
+}
+
+.admin-stat-card.dashboard-purple .stat-icon {
+    background: #f1eef8;
+    color: #75629d;
+}
+
+.dashboard-stat-note {
+    color: #8a979e;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+
+/* کارت‌های گزارش */
+
+.dashboard-report-card {
+    margin-bottom: 24px;
+}
+
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 20px;
 }
 
-.support-welcome-card,
-.support-content-card {
-    background: #fff;
-    border: 1px solid #e1ebef;
-    border-radius: 18px;
-    box-sizing: border-box;
-}
 
-.support-welcome-card {
-    padding: 24px 26px;
-}
+/* وضعیت مالی */
 
-.support-welcome-card span,
-.support-card-header span {
-    display: block;
-    color: #71838d;
-    font-size: 12px;
-    margin-bottom: 6px;
-}
-
-.support-welcome-card h2,
-.support-card-header h2 {
-    margin: 0;
-    color: #263d4a;
-}
-
-.support-welcome-card p {
-    margin: 9px 0 0;
-    color: #71838d;
-    line-height: 1.8;
-    font-size: 13px;
-}
-
-.support-stats {
-    display: grid;
+.dashboard-financial-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 18px;
 }
 
-.support-stat-card {
-    min-width: 0;
-    background: #fff;
-    border: 1px solid #e1ebef;
-    border-radius: 16px;
-    padding: 20px;
-    box-sizing: border-box;
+.admin-financial-card.expected .financial-icon {
+    background: #eef5f7;
+    color: #568fa8;
+}
+
+.admin-financial-card.collection .financial-icon {
+    background: #f1eef8;
+    color: #75629d;
+}
+
+
+/* وضعیت ثبت‌نام */
+
+.dashboard-status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    padding: 20px 24px 24px;
+}
+
+.dashboard-status-card {
     display: flex;
     align-items: center;
-    gap: 13px;
+    gap: 14px;
+    min-height: 102px;
+    padding: 18px;
+    border: 1px solid #e6ecef;
+    border-radius: 15px;
+    background: #ffffff;
+    box-shadow: 0 5px 18px rgba(55, 90, 110, .05);
+    transition: transform .2s ease, box-shadow .2s ease;
 }
 
-.support-stat-icon {
+.dashboard-status-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 26px rgba(55, 90, 110, .09);
+}
+
+.dashboard-status-icon {
     width: 44px;
     height: 44px;
-    flex-shrink: 0;
-    border-radius: 12px;
-    background: #edf5f8;
-    color: #3e7188;
-    display: flex;
+    flex: 0 0 44px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    border-radius: 12px;
+    font-size: 18px;
     font-weight: 800;
 }
 
-.support-stat-card small,
-.support-stat-card strong,
-.support-stat-card > div > span {
-    display: block;
+.dashboard-status-card.active .dashboard-status-icon {
+    background: #edf7f1;
+    color: #4d8b68;
 }
 
-.support-stat-card small {
-    color: #71838d;
+.dashboard-status-card.cancelled .dashboard-status-icon {
+    background: #fff1f1;
+    color: #c65b5b;
+}
+
+.dashboard-status-card.total .dashboard-status-icon {
+    background: #eef5f7;
+    color: #568fa8;
+}
+
+.dashboard-status-card > div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dashboard-status-card small {
+    color: #687780;
     font-size: 12px;
+    font-weight: 600;
 }
 
-.support-stat-card strong {
-    margin-top: 4px;
+.dashboard-status-card strong {
     color: #263d4a;
-    font-size: 21px;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.2;
 }
 
-.support-stat-card > div > span {
-    margin-top: 2px;
-    color: #71838d;
+.dashboard-status-card span:last-child {
+    color: #8a979e;
     font-size: 11px;
 }
 
-.support-card-header {
+
+/* پیشرفت آموزشی */
+
+.dashboard-learning-grid {
+    display: grid;
+    grid-template-columns: 1.5fr repeat(3, 1fr);
+    gap: 18px;
+    padding: 20px 24px 24px;
+}
+
+.dashboard-learning-card {
+    min-height: 145px;
+    padding: 18px;
+    border: 1px solid #e6ecef;
+    border-radius: 15px;
+    background: #ffffff;
+    box-shadow: 0 5px 18px rgba(55, 90, 110, .05);
+}
+
+.dashboard-learning-card .learning-card-top {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 15px;
+    color: #687780;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.learning-icon {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.dashboard-learning-card.average .learning-icon {
+    background: #eef5f7;
+    color: #568fa8;
+}
+
+.dashboard-learning-card.completed .learning-icon {
+    background: #edf7f1;
+    color: #4d8b68;
+}
+
+.dashboard-learning-card.progress .learning-icon {
+    background: #fff6e8;
+    color: #b27a2d;
+}
+
+.dashboard-learning-card.not-started .learning-icon {
+    background: #f1eef8;
+    color: #75629d;
+}
+
+.dashboard-learning-card > strong {
+    display: block;
+    color: #263d4a;
+    font-size: 25px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 8px;
+}
+
+.dashboard-learning-card > small {
+    color: #8a979e;
+    font-size: 11px;
+}
+
+.dashboard-progress-track {
+    width: 100%;
+    height: 8px;
+    margin: 8px 0 7px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #edf1f3;
+}
+
+.dashboard-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: #568fa8;
+    transition: width .3s ease;
+}
+
+
+/* واکنش‌گرا */
+
+@media (max-width: 1100px) {
+    .dashboard-financial-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-learning-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-learning-card.average {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 800px) {
+    .admin-section-heading,
+    .dashboard-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .dashboard-financial-grid,
+    .dashboard-status-grid,
+    .dashboard-learning-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-learning-card.average {
+        grid-column: auto;
+    }
+}
+
+/* =========================================================
+   Admin Dashboard - Final Visual Polish
+========================================================= */
+
+.admin-main {
+    background: #f6f9fa;
+}
+
+/* عنوان بخش‌ها */
+
+.admin-dashboard-section {
+    margin-bottom: 28px;
+}
+
+.admin-section-heading {
+    padding: 0 2px;
+    margin-bottom: 16px;
+}
+
+.admin-section-heading h2 {
+    font-size: 21px;
+    letter-spacing: -.2px;
+}
+
+.admin-section-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 9px 13px;
+    border-radius: 10px;
+    background: #eef5f7;
+    color: #568fa8;
+    transition: .2s ease;
+}
+
+.admin-section-link:hover {
+    background: #e3eff3;
+    color: #477c92;
+}
+
+/* کارت‌های آماری */
+
+.admin-stats {
+    gap: 20px;
+}
+
+.admin-stat-card {
+    position: relative;
+    min-height: 126px;
+    padding: 22px 24px;
+    overflow: hidden;
+}
+
+.admin-stat-card::after {
+    content: "";
+    position: absolute;
+    left: -22px;
+    bottom: -30px;
+    width: 85px;
+    height: 85px;
+    border-radius: 50%;
+    opacity: .08;
+}
+
+.admin-stat-card.dashboard-blue::after {
+    background: #568fa8;
+}
+
+.admin-stat-card.dashboard-green::after {
+    background: #4d8b68;
+}
+
+.admin-stat-card.dashboard-purple::after {
+    background: #75629d;
+}
+
+.admin-stat-card .stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 15px;
+    font-size: 21px;
+}
+
+.admin-stat-card small {
+    font-size: 12px;
+}
+
+.admin-stat-card strong {
+    font-size: 27px;
+}
+
+.dashboard-stat-note {
+    margin-top: 1px;
+}
+
+/* کارت‌های گزارش */
+
+.dashboard-report-card {
+    margin-bottom: 26px;
+}
+
+.dashboard-header {
+    min-height: 78px;
+    padding: 20px 24px;
+    background: linear-gradient(180deg, #ffffff, #fbfcfd);
+}
+
+.dashboard-header > div:first-child {
+    position: relative;
+    padding-right: 13px;
+}
+
+.dashboard-header > div:first-child::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 2px;
+    width: 4px;
+    height: 38px;
+    border-radius: 5px;
+    background: #568fa8;
+}
+
+.dashboard-header span {
+    font-size: 12px;
+}
+
+.dashboard-header h2 {
+    font-size: 19px;
+}
+
+/* دکمه‌های گزارش */
+
+.dashboard-header .admin-primary-btn {
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(86, 143, 168, .16);
+}
+
+/* مالی */
+
+.dashboard-financial-grid {
+    padding: 20px 24px 24px;
+    margin-top: 0;
+    gap: 16px;
+}
+
+.admin-financial-card {
+    position: relative;
+    min-height: 118px;
+    padding: 18px;
+    overflow: hidden;
+}
+
+.admin-financial-card::after {
+    content: "";
+    position: absolute;
+    left: -18px;
+    bottom: -25px;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    opacity: .07;
+}
+
+.admin-financial-card.expected::after {
+    background: #568fa8;
+}
+
+.admin-financial-card.paid::after {
+    background: #4d8b68;
+}
+
+.admin-financial-card.pending::after {
+    background: #b27a2d;
+}
+
+.admin-financial-card.collection::after {
+    background: #75629d;
+}
+
+.admin-financial-card .financial-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    font-size: 20px;
+}
+
+.admin-financial-card strong {
+    font-size: 20px;
+}
+
+/* ثبت نام */
+
+.dashboard-status-grid {
+    padding: 20px 24px 24px;
+    gap: 16px;
+}
+
+.dashboard-status-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 112px;
+    padding: 20px;
+}
+
+.dashboard-status-card::after {
+    content: "";
+    position: absolute;
+    left: -20px;
+    bottom: -25px;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    opacity: .07;
+}
+
+.dashboard-status-card.active::after {
+    background: #4d8b68;
+}
+
+.dashboard-status-card.cancelled::after {
+    background: #c65b5b;
+}
+
+.dashboard-status-card.total::after {
+    background: #568fa8;
+}
+
+.dashboard-status-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 19px;
+}
+
+.dashboard-status-card strong {
+    font-size: 24px;
+}
+
+/* پیشرفت آموزشی */
+
+.dashboard-learning-grid {
+    padding: 20px 24px 24px;
+    gap: 16px;
+}
+
+.dashboard-learning-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 150px;
+    padding: 19px;
+}
+
+.dashboard-learning-card::after {
+    content: "";
+    position: absolute;
+    left: -22px;
+    bottom: -28px;
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    opacity: .06;
+}
+
+.dashboard-learning-card.average::after {
+    background: #568fa8;
+}
+
+.dashboard-learning-card.completed::after {
+    background: #4d8b68;
+}
+
+.dashboard-learning-card.progress::after {
+    background: #b27a2d;
+}
+
+.dashboard-learning-card.not-started::after {
+    background: #75629d;
+}
+
+.dashboard-learning-card .learning-card-top {
+    margin-bottom: 14px;
+}
+
+.dashboard-learning-card > strong {
+    font-size: 26px;
+}
+
+.dashboard-progress-track {
+    height: 9px;
+    margin-top: 10px;
+    background: #edf1f3;
+}
+
+.dashboard-progress-fill {
+    background: linear-gradient(90deg, #568fa8, #6da9bf);
+}
+
+/* فاصله کلی */
+
+.admin-dashboard-section + .dashboard-report-card {
+    margin-top: 0;
+}
+
+/* واکنش‌گرا */
+
+@media (max-width: 1100px) {
+
+    .dashboard-financial-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-learning-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 800px) {
+
+    .admin-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-financial-grid,
+    .dashboard-status-grid,
+    .dashboard-learning-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-learning-card.average {
+        grid-column: auto;
+    }
+
+    .dashboard-header {
+        align-items: flex-start;
+    }
+
+    .dashboard-header .admin-primary-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+}
+
+/* =========================================================
+   ADMIN DASHBOARD - REPORT STYLE FINAL
+   فقط برای داشبورد مدیریت
+========================================================= */
+
+.admin-page .admin-main {
+    background: #f7fafb;
+}
+
+/* عنوان بخش */
+
+.admin-page .admin-dashboard-section {
+    margin-bottom: 28px;
+}
+
+.admin-page .admin-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding: 0 2px;
+}
+
+.admin-page .admin-section-heading span {
+    display: block;
+    color: #568fa8;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.admin-page .admin-section-heading h2 {
+    margin: 0;
+    color: #263d4a;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.admin-page .admin-section-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 14px;
+    border-radius: 10px;
+    background: #eef5f7;
+    color: #568fa8;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.admin-page .admin-section-link:hover {
+    background: #e3eff3;
+    color: #477c92;
+}
+
+/* =========================================================
+   آمار اصلی
+========================================================= */
+
+.admin-page .admin-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 26px;
+}
+
+.admin-page .admin-stat-card {
+    position: relative;
+    min-height: 125px;
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    padding: 21px 22px;
+    border: 1px solid #e6ecef;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 5px 18px rgba(55, 90, 110, .06);
+    overflow: hidden;
+}
+
+.admin-page .admin-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 26px rgba(55, 90, 110, .10);
+}
+
+.admin-page .admin-stat-card .stat-icon {
+    width: 50px;
+    height: 50px;
+    flex: 0 0 50px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.admin-page .admin-stat-card.dashboard-blue .stat-icon {
+    background: #eef5f7;
+    color: #568fa8;
+}
+
+.admin-page .admin-stat-card.dashboard-green .stat-icon {
+    background: #edf7f1;
+    color: #4d8b68;
+}
+
+.admin-page .admin-stat-card.dashboard-purple .stat-icon {
+    background: #f1eef8;
+    color: #75629d;
+}
+
+.admin-page .admin-stat-card > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.admin-page .admin-stat-card small {
+    color: #687780;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.admin-page .admin-stat-card strong {
+    color: #263d4a;
+    font-size: 25px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.admin-page .dashboard-stat-note {
+    color: #8a979e;
+    font-size: 11px;
+}
+
+/* =========================================================
+   کارت‌های گزارش
+========================================================= */
+
+.admin-page .dashboard-report-card {
+    margin-bottom: 24px;
+    border: 1px solid #e6ecef;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 5px 18px rgba(55, 90, 110, .06);
+    overflow: hidden;
+}
+
+.admin-page .dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
     padding: 21px 24px;
+    border-bottom: 1px solid #edf1f3;
+    background: #ffffff;
+}
+
+.admin-page .dashboard-header > div:first-child {
+    position: relative;
+    padding-right: 13px;
+}
+
+.admin-page .dashboard-header > div:first-child::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 1px;
+    width: 4px;
+    height: 38px;
+    border-radius: 5px;
+    background: #568fa8;
+}
+
+.admin-page .dashboard-header span {
+    color: #568fa8;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-page .dashboard-header h2 {
+    margin: 5px 0 0;
+    color: #263d4a;
+    font-size: 19px;
+    font-weight: 800;
+}
+
+.admin-page .dashboard-header .admin-primary-btn {
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    background: #568fa8;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(86, 143, 168, .16);
+}
+
+.admin-page .dashboard-header .admin-primary-btn:hover {
+    background: #477c92;
+}
+
+/* =========================================================
+   مالی
+========================================================= */
+
+.admin-page .dashboard-financial-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    padding: 20px 24px 24px;
+}
+
+.admin-page .admin-financial-card {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    column-gap: 13px;
+    align-items: center;
+    min-height: 112px;
+    padding: 17px 18px;
+    border: 1px solid #e6ecef;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 4px 15px rgba(55, 90, 110, .05);
+}
+
+.admin-page .admin-financial-card .financial-icon {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    width: 46px;
+    height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    font-size: 19px;
+    font-weight: 800;
+}
+
+.admin-page .admin-financial-card.expected .financial-icon {
+    background: #eef5f7;
+    color: #568fa8;
+}
+
+.admin-page .admin-financial-card.paid .financial-icon {
+    background: #edf7f1;
+    color: #4d8b68;
+}
+
+.admin-page .admin-financial-card.pending .financial-icon {
+    background: #fff6e8;
+    color: #b27a2d;
+}
+
+.admin-page .admin-financial-card.collection .financial-icon {
+    background: #f1eef8;
+    color: #75629d;
+}
+
+.admin-page .financial-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.admin-page .admin-financial-card small {
+    grid-column: 2;
+    color: #687780;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.admin-page .admin-financial-card strong {
+    grid-column: 2;
+    color: #263d4a;
+    font-size: 19px;
+    font-weight: 800;
+}
+
+.admin-page .admin-financial-card span:last-child {
+    grid-column: 2;
+    color: #8a979e;
+    font-size: 10px;
+}
+
+/* =========================================================
+   ثبت نام
+========================================================= */
+
+.admin-page .dashboard-status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    padding: 20px 24px 24px;
+}
+
+.admin-page .dashboard-status-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 108px;
+    padding: 18px;
+    border: 1px solid #e6ecef;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 4px 15px rgba(55, 90, 110, .05);
+}
+
+.admin-page .dashboard-status-icon {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 13px;
+    font-size: 19px;
+    font-weight: 800;
+}
+
+.admin-page .dashboard-status-card.active .dashboard-status-icon {
+    background: #edf7f1;
+    color: #4d8b68;
+}
+
+.admin-page .dashboard-status-card.cancelled .dashboard-status-icon {
+    background: #fff1f1;
+    color: #c65b5b;
+}
+
+.admin-page .dashboard-status-card.total .dashboard-status-icon {
+    background: #eef5f7;
+    color: #568fa8;
+}
+
+.admin-page .dashboard-status-card > div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.admin-page .dashboard-status-card small {
+    color: #687780;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.admin-page .dashboard-status-card strong {
+    color: #263d4a;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.admin-page .dashboard-status-card span:last-child {
+    color: #8a979e;
+    font-size: 10px;
+}
+
+/* =========================================================
+   پیشرفت آموزشی
+========================================================= */
+
+.admin-page .dashboard-learning-grid {
+    display: grid;
+    grid-template-columns: 1.35fr repeat(3, 1fr);
+    gap: 16px;
+    padding: 20px 24px 24px;
+}
+
+.admin-page .dashboard-learning-card {
+    min-height: 142px;
+    padding: 18px;
+    border: 1px solid #e6ecef;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 4px 15px rgba(55, 90, 110, .05);
+}
+
+.admin-page .dashboard-learning-card .learning-card-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 13px;
+    color: #687780;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.admin-page .learning-icon {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.admin-page .dashboard-learning-card.average .learning-icon {
+    background: #eef5f7;
+    color: #568fa8;
+}
+
+.admin-page .dashboard-learning-card.completed .learning-icon {
+    background: #edf7f1;
+    color: #4d8b68;
+}
+
+.admin-page .dashboard-learning-card.progress .learning-icon {
+    background: #fff6e8;
+    color: #b27a2d;
+}
+
+.admin-page .dashboard-learning-card.not-started .learning-icon {
+    background: #f1eef8;
+    color: #75629d;
+}
+
+.admin-page .dashboard-learning-card > strong {
+    display: block;
+    margin-bottom: 7px;
+    color: #263d4a;
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.admin-page .dashboard-learning-card > small {
+    color: #8a979e;
+    font-size: 10px;
+}
+
+.admin-page .dashboard-progress-track {
+    width: 100%;
+    height: 8px;
+    margin: 8px 0 7px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #edf1f3;
+}
+
+.admin-page .dashboard-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: #568fa8;
+}
+
+/* =========================================================
+   Responsive
+========================================================= */
+
+@media (max-width: 1100px) {
+
+    .admin-page .dashboard-financial-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-page .dashboard-learning-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 800px) {
+
+    .admin-page .admin-stats,
+    .admin-page .dashboard-financial-grid,
+    .admin-page .dashboard-status-grid,
+    .admin-page .dashboard-learning-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-page .dashboard-header,
+    .admin-page .admin-section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+}
+
+/* =========================================================
+   ADMIN DASHBOARD - REPORT STYLE
+   فقط برای Admin.razor
+========================================================= */
+
+.admin-page .admin-dashboard-block {
+    margin-bottom: 28px;
+}
+
+.admin-page .admin-dashboard-title {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 16px;
+    padding: 0 2px;
+}
+
+.admin-page .admin-dashboard-title span,
+.admin-page .admin-dashboard-panel-header span {
+    display: block;
+    color: #568fa8;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.admin-page .admin-dashboard-title h2,
+.admin-page .admin-dashboard-panel-header h2 {
+    margin: 0;
+    color: #263d4a;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.admin-page .admin-dashboard-title > a,
+.admin-page .admin-dashboard-panel-header > a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 15px;
+    border-radius: 10px;
+    background: #eef5f7;
+    color: #568fa8;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: .2s ease;
+}
+
+.admin-page .admin-dashboard-title > a:hover,
+.admin-page .admin-dashboard-panel-header > a:hover {
+    background: #e1eef2;
+    color: #477c92;
+}
+
+
+/* ---------- Main statistics ---------- */
+
+.admin-page .admin-dashboard-main-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.admin-page .admin-dashboard-main-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 125px;
+    padding: 20px 21px;
+    background: #fff;
+    border: 1px solid #e6ecef;
+    border-radius: 16px;
+    box-shadow: 0 5px 18px rgba(55, 90, 110, .06);
+    overflow: hidden;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.admin-page .admin-dashboard-main-card::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+}
+
+.admin-page .admin-dashboard-main-card.blue::after {
+    background: #568fa8;
+}
+
+.admin-page .admin-dashboard-main-card.green::after {
+    background: #4d8b68;
+}
+
+.admin-page .admin-dashboard-main-card.purple::after {
+    background: #75629d;
+}
+
+.admin-page .admin-dashboard-main-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(55, 90, 110, .10);
+}
+
+.admin-page .admin-dashboard-icon {
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    font-size: 21px;
+    font-weight: 800;
+}
+
+.admin-page .admin-dashboard-main-card.blue .admin-dashboard-icon {
+    background: #eef5f7;
+    color: #568fa8;
+}
+
+.admin-page .admin-dashboard-main-card.green .admin-dashboard-icon {
+    background: #edf7f1;
+    color: #4d8b68;
+}
+
+.admin-page .admin-dashboard-main-card.purple .admin-dashboard-icon {
+    background: #f1eef8;
+    color: #75629d;
+}
+
+.admin-page .admin-dashboard-main-card > div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.admin-page .admin-dashboard-main-card span:not(.admin-dashboard-icon) {
+    color: #687780;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.admin-page .admin-dashboard-main-card strong {
+    color: #263d4a;
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+.admin-page .admin-dashboard-main-card small {
+    color: #8a979e;
+    font-size: 10px;
+}
+
+
+/* ---------- Shared panels ---------- */
+
+.admin-page .admin-dashboard-panel {
+    margin-bottom: 24px;
+    background: #fff;
+    border: 1px solid #e6ecef;
+    border-radius: 16px;
+    box-shadow: 0 5px 18px rgba(55, 90, 110, .06);
+    overflow: hidden;
+}
+
+.admin-page .admin-dashboard-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 20px 24px;
+    border-bottom: 1px solid #edf1f3;
+    background: #fff;
+}
+
+.admin-page .admin-dashboard-panel-header > div:first-child {
+    position: relative;
+    padding-right: 13px;
+}
+
+.admin-page .admin-dashboard-panel-header > div:first-child::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 1px;
+    width: 4px;
+    height: 38px;
+    border-radius: 5px;
+    background: #568fa8;
+}
+
+.admin-page .admin-dashboard-panel-header h2 {
+    font-size: 18px;
+}
+
+
+/* ---------- Financial ---------- */
+
+.admin-page .admin-dashboard-financial-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 15px;
+    padding: 20px 24px;
+}
+
+.admin-page .admin-dashboard-money-card {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-height: 108px;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid #e7edef;
+    border-radius: 14px;
+    box-shadow: 0 3px 12px rgba(55, 90, 110, .045);
+}
+
+.admin-page .admin-dashboard-money-card .money-icon {
+    width: 45px;
+    height: 45px;
+    flex: 0 0 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.admin-page .admin-dashboard-money-card.expected .money-icon {
+    background: #eef5f7;
+    color: #568fa8;
+}
+
+.admin-page .admin-dashboard-money-card.paid .money-icon {
+    background: #edf7f1;
+    color: #4d8b68;
+}
+
+.admin-page .admin-dashboard-money-card.remaining .money-icon {
+    background: #fff6e8;
+    color: #b27a2d;
+}
+
+.admin-page .admin-dashboard-money-card.collection .money-icon {
+    background: #f1eef8;
+    color: #75629d;
+}
+
+.admin-page .admin-dashboard-money-card > div:last-child {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.admin-page .admin-dashboard-money-card span {
+    color: #687780;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.admin-page .admin-dashboard-money-card strong {
+    color: #263d4a;
+    font-size: 18px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.admin-page .admin-dashboard-money-card small {
+    color: #8a979e;
+    font-size: 10px;
+}
+
+.admin-page .admin-dashboard-collection {
+    margin: 0 24px 24px;
+    padding: 18px 20px;
+    background: #f9fbfc;
+    border: 1px solid #e8eef0;
+    border-radius: 13px;
+}
+
+.admin-page .collection-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 15px;
-    border-bottom: 1px solid #edf2f4;
+    margin-bottom: 11px;
 }
 
-.support-card-header h2 {
-    font-size: 19px;
-}
-
-.support-outline-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 38px;
-    padding: 0 14px;
-    border: 1px solid #cfdde3;
-    border-radius: 10px;
-    background: #fff;
-    color: #3e7188;
-    text-decoration: none;
-    font-size: 12px;
-}
-
-.support-students-list,
-.support-enrollments-list,
-.support-payments-list {
-    padding: 8px 24px 16px;
-}
-
-.support-student-row,
-.support-enrollment-row,
-.support-payment-row {
-    border-bottom: 1px solid #edf2f4;
-}
-
-.support-student-row:last-child,
-.support-enrollment-row:last-child,
-.support-payment-row:last-child {
-    border-bottom: 0;
-}
-
-.support-student-row {
-    display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(150px, 1fr) minmax(130px, 1fr);
-    align-items: center;
-    gap: 20px;
-    padding: 16px 0;
-}
-
-.support-student-main {
-    min-width: 0;
+.admin-page .collection-header > div {
     display: flex;
-    align-items: center;
-    gap: 11px;
+    flex-direction: column;
+    gap: 3px;
 }
 
-.support-student-avatar {
-    width: 42px;
-    height: 42px;
-    flex-shrink: 0;
-    border-radius: 50%;
-    background: #edf5f8;
-    color: #3e7188;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.admin-page .collection-header span {
+    color: #263d4a;
     font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-page .collection-header small {
+    color: #8a979e;
+    font-size: 10px;
+}
+
+.admin-page .collection-header strong {
+    color: #568fa8;
+    font-size: 18px;
     font-weight: 800;
 }
 
-.support-student-main strong,
-.support-student-main small,
-.support-student-contact small,
-.support-student-contact strong,
-.support-student-date small,
-.support-student-date strong {
-    display: block;
+.admin-page .collection-track {
+    width: 100%;
+    height: 9px;
+    background: #e7edef;
+    border-radius: 999px;
+    overflow: hidden;
 }
 
-.support-student-main strong {
-    color: #263d4a;
-    font-size: 14px;
+.admin-page .collection-fill {
+    height: 100%;
+    background: #568fa8;
+    border-radius: 999px;
+    transition: width .3s ease;
 }
 
-.support-student-main small,
-.support-student-contact small,
-.support-student-date small {
-    margin-top: 4px;
-    color: #71838d;
-    font-size: 11px;
+.admin-page .collection-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 8px;
+    color: #8a979e;
+    font-size: 10px;
 }
 
-.support-student-contact strong,
-.support-student-date strong {
-    margin-top: 4px;
-    color: #405864;
-    font-size: 12px;
-}
 
-.support-enrollment-row {
+/* ---------- Enrollment ---------- */
+
+.admin-page .admin-dashboard-status-grid {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(120px, 1fr) minmax(140px, 1fr);
-    gap: 18px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 15px;
+    padding: 20px 24px 24px;
+}
+
+.admin-page .admin-dashboard-status-card {
+    display: flex;
     align-items: center;
-    padding: 17px 0;
-}
-
-.support-enrollment-main {
-    min-width: 0;
-}
-
-.support-enrollment-main strong,
-.support-enrollment-main span,
-.support-enrollment-status small,
-.support-enrollment-money small,
-.support-enrollment-money strong {
-    display: block;
-}
-
-.support-enrollment-main strong {
-    color: #263d4a;
-    font-size: 14px;
-}
-
-.support-enrollment-main span {
-    margin-top: 4px;
-    color: #71838d;
-    font-size: 11px;
-}
-
-.support-enrollment-status small,
-.support-enrollment-money small {
-    color: #71838d;
-    font-size: 11px;
-}
-
-.support-enrollment-money {
-    text-align: left;
-}
-
-.support-enrollment-money strong {
-    margin-top: 4px;
-    color: #263d4a;
-    font-size: 13px;
-}
-
-.support-payments-list .support-payment-row {
-    display: grid;
-    grid-template-columns:
-        minmax(0, 2fr)
-        minmax(125px, 1fr)
-        minmax(110px, 1fr)
-        minmax(125px, 1fr)
-        minmax(145px, 1fr);
-    gap: 16px;
-    align-items: center;
-    padding: 18px 0;
-    box-sizing: border-box;
-}
-
-.support-payment-item {
-    min-width: 0;
-}
-
-.support-payment-item small,
-.support-payment-item strong {
-    display: block;
-}
-
-.support-payment-item small {
-    color: #71838d;
-    font-size: 11px;
-    margin-bottom: 5px;
-}
-
-.support-payment-item strong {
-    color: #263d4a;
-    font-size: 12px;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-.support-payment-amount {
-    min-width: 0;
-}
-
-.support-loading,
-.support-error,
-.support-empty-state {
+    gap: 14px;
+    min-height: 105px;
+    padding: 17px;
+    border: 1px solid #e7edef;
+    border-radius: 14px;
     background: #fff;
-    border: 1px solid #e1ebef;
-    border-radius: 18px;
-    padding: 38px 24px;
-    text-align: center;
+    box-shadow: 0 3px 12px rgba(55, 90, 110, .045);
 }
 
-.support-loading-icon {
-    font-size: 30px;
+.admin-page .admin-dashboard-status-card .status-icon {
+    width: 45px;
+    height: 45px;
+    flex: 0 0 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.admin-page .admin-dashboard-status-card.active .status-icon {
+    background: #edf7f1;
+    color: #4d8b68;
+}
+
+.admin-page .admin-dashboard-status-card.cancelled .status-icon {
+    background: #fff1f1;
+    color: #c65b5b;
+}
+
+.admin-page .admin-dashboard-status-card.total .status-icon {
+    background: #eef5f7;
     color: #568fa8;
 }
 
-.support-loading h3,
-.support-empty-state h3,
-.support-error strong {
+.admin-page .admin-dashboard-status-card > div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.admin-page .admin-dashboard-status-card span {
+    color: #687780;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.admin-page .admin-dashboard-status-card strong {
     color: #263d4a;
+    font-size: 23px;
+    font-weight: 800;
 }
 
-.support-loading p,
-.support-empty-state p,
-.support-error p {
-    color: #71838d;
-    font-size: 13px;
+.admin-page .admin-dashboard-status-card small {
+    color: #8a979e;
+    font-size: 10px;
 }
 
-.support-error {
-    border-color: #ead6d6;
+
+/* ---------- Learning ---------- */
+
+.admin-page .admin-dashboard-learning-grid {
+    display: grid;
+    grid-template-columns: 1.35fr repeat(3, 1fr);
+    gap: 15px;
+    padding: 20px 24px 24px;
 }
 
-.support-error strong {
-    color: #9d4d4d;
+.admin-page .admin-dashboard-learning-card {
+    min-height: 142px;
+    padding: 17px;
+    border: 1px solid #e7edef;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(55, 90, 110, .045);
 }
 
-.status-active,
-.status-completed,
-.status-suspended,
-.status-cancelled,
-.payment-paid,
-.payment-pending,
-.payment-cancelled,
-.payment-default {
-    display: inline-flex;
+.admin-page .learning-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 13px;
+    color: #687780;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.admin-page .learning-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 28px;
-    padding: 0 9px;
-    border-radius: 8px;
-    font-size: 11px;
-    white-space: nowrap;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 800;
 }
 
-.status-active {
-    background: #e8f5ec;
-    color: #327449;
+.admin-page .admin-dashboard-learning-card.average .learning-icon {
+    background: #eef5f7;
+    color: #568fa8;
 }
 
-.status-completed {
-    background: #e7f0f7;
-    color: #456b83;
+.admin-page .admin-dashboard-learning-card.completed .learning-icon {
+    background: #edf7f1;
+    color: #4d8b68;
 }
 
-.status-suspended,
-.status-cancelled,
-.payment-cancelled {
-    background: #f6e9e9;
-    color: #9d4d4d;
+.admin-page .admin-dashboard-learning-card.progress .learning-icon {
+    background: #fff6e8;
+    color: #b27a2d;
 }
 
-.payment-paid {
-    background: #e8f5ec;
-    color: #327449;
+.admin-page .admin-dashboard-learning-card.not-started .learning-icon {
+    background: #f1eef8;
+    color: #75629d;
 }
 
-.payment-pending {
-    background: #f8f0df;
-    color: #956f2d;
-}
-
-.payment-default,
-.status-default {
-    background: #edf2f4;
-    color: #607581;
-}
-
-@media (max-width: 1150px) {
-
-    .support-stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .support-payments-list .support-payment-row {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-}
-
-@media (max-width: 850px) {
-
-    .support-page {
-        display: block;
-    }
-
-    .support-sidebar {
-        width: 100%;
-        min-width: 0;
-        min-height: auto;
-        border-left: 0;
-        border-bottom: 1px solid #dfe9ee;
-    }
-
-    .support-menu {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .support-sidebar-bottom {
-        margin-top: 12px;
-    }
-
-    .support-main {
-        padding: 20px 16px 30px;
-    }
-
-    .support-student-row,
-    .support-enrollment-row {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
-    .support-enrollment-money {
-        text-align: right;
-    }
-
-}
-
-@media (max-width: 600px) {
-
-    .support-stats {
-        grid-template-columns: 1fr;
-    }
-
-    .support-topbar {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .support-user {
-        width: 100%;
-        justify-content: flex-start;
-        flex-wrap: wrap;
-    }
-
-    .support-menu {
-        grid-template-columns: 1fr;
-    }
-
-    .support-card-header {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .support-payments-list .support-payment-row {
-        grid-template-columns: 1fr;
-    }
-
-}
-
-
-/* =========================
-   Support Follow-ups
-   ========================= */
-
-.support-followup-form {
-    padding: 24px;
-    border-bottom: 1px solid #edf2f4;
-}
-
-.support-followup-form-header h3 {
-    margin: 0;
-    color: #263d4a;
-    font-size: 17px;
-}
-
-.support-followup-form-header p {
-    margin: 7px 0 20px;
-    color: #71838d;
-    font-size: 12px;
-}
-
-.support-form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-}
-
-.support-form-group {
-    min-width: 0;
-}
-
-.support-form-group label {
+.admin-page .admin-dashboard-learning-card > strong {
     display: block;
     margin-bottom: 7px;
-    color: #526873;
-    font-size: 12px;
+    color: #263d4a;
+    font-size: 24px;
+    font-weight: 800;
 }
 
-.support-form-input {
+.admin-page .admin-dashboard-learning-card > small {
+    color: #8a979e;
+    font-size: 10px;
+}
+
+.admin-page .learning-track {
     width: 100%;
-    min-height: 44px;
-    padding: 0 12px;
-    box-sizing: border-box;
-    border: 1px solid #d6e2e7;
-    border-radius: 10px;
-    background: #fff;
-    color: #263d4a;
-    font-family: inherit;
-    font-size: 13px;
+    height: 8px;
+    margin: 8px 0 7px;
+    background: #edf1f3;
+    border-radius: 999px;
+    overflow: hidden;
 }
 
-.support-form-textarea {
-    min-height: 100px;
-    padding: 12px;
-    resize: vertical;
-}
-
-.support-form-wide {
-    grid-column: 1 / -1;
-}
-
-.support-form-actions {
-    margin-top: 18px;
-}
-
-.support-primary-btn {
-    min-height: 42px;
-    padding: 0 18px;
-    border: 0;
-    border-radius: 10px;
+.admin-page .learning-fill {
+    height: 100%;
     background: #568fa8;
-    color: #fff;
-    cursor: pointer;
-    font-family: inherit;
+    border-radius: 999px;
 }
 
-.support-primary-btn:disabled {
-    opacity: .6;
-    cursor: default;
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1100px) {
+
+    .admin-page .admin-dashboard-financial-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-page .admin-dashboard-learning-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
-.support-success-message,
-.support-error-message {
-    margin-bottom: 16px;
-    padding: 11px 13px;
-    border-radius: 10px;
-    font-size: 12px;
-}
+@media (max-width: 800px) {
 
-.support-success-message {
-    background: #e8f5ec;
-    color: #327449;
-}
-
-.support-error-message {
-    background: #f6e9e9;
-    color: #9d4d4d;
-}
-
-.support-followups-list {
-    padding: 8px 24px 16px;
-}
-
-.support-followup-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1.5fr) minmax(130px, .7fr) minmax(0, 2fr);
-    gap: 18px;
-    align-items: center;
-    padding: 17px 0;
-    border-bottom: 1px solid #edf2f4;
-}
-
-.support-followup-row:last-child {
-    border-bottom: 0;
-}
-
-.support-followup-main,
-.support-followup-status,
-.support-followup-description {
-    min-width: 0;
-}
-
-.support-followup-main strong,
-.support-followup-main small,
-.support-followup-status small,
-.support-followup-description small,
-.support-followup-description strong {
-    display: block;
-}
-
-.support-followup-main strong {
-    color: #263d4a;
-    font-size: 14px;
-}
-
-.support-followup-main small,
-.support-followup-status small,
-.support-followup-description small {
-    margin-top: 5px;
-    color: #71838d;
-    font-size: 11px;
-}
-
-.support-followup-description strong {
-    margin-top: 5px;
-    color: #405864;
-    font-size: 12px;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-@media (max-width: 850px) {
-
-    .support-form-grid {
+    .admin-page .admin-dashboard-main-grid,
+    .admin-page .admin-dashboard-financial-grid,
+    .admin-page .admin-dashboard-status-grid,
+    .admin-page .admin-dashboard-learning-grid {
         grid-template-columns: 1fr;
     }
 
-    .support-form-wide {
-        grid-column: auto;
+    .admin-page .admin-dashboard-title,
+    .admin-page .admin-dashboard-panel-header {
+        align-items: flex-start;
+        flex-direction: column;
     }
 
-    .support-followup-row {
-        grid-template-columns: 1fr;
-        gap: 10px;
+    .admin-page .collection-footer {
+        flex-direction: column;
+        gap: 4px;
     }
-
-}
-
-
-/* =========================
-   Support Payment Operations
-   ========================= */
-
-.support-payment-summary {
-    margin-top: 20px;
-    padding: 16px;
-    border: 1px solid #e1ebef;
-    border-radius: 13px;
-    background: #f8fbfc;
-}
-
-.support-payment-summary > span {
-    display: block;
-    color: #71838d;
-    font-size: 11px;
-    margin-bottom: 5px;
-}
-
-.support-payment-summary > strong {
-    display: block;
-    color: #263d4a;
-    font-size: 14px;
-}
-
-.support-payment-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-    margin-top: 15px;
-}
-
-.support-payment-summary-grid small,
-.support-payment-summary-grid strong {
-    display: block;
-}
-
-.support-payment-summary-grid small {
-    color: #71838d;
-    font-size: 10px;
-}
-
-.support-payment-summary-grid strong {
-    margin-top: 4px;
-    color: #405864;
-    font-size: 12px;
-}
-
-.support-payment-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-    margin-top: 10px;
-}
-
-.support-payment-action-btn {
-    min-height: 32px;
-    padding: 0 9px;
-    border: 0;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 10px;
-    cursor: pointer;
-}
-
-.support-payment-action-btn.approve {
-    background: #e8f5ec;
-    color: #327449;
-}
-
-.support-payment-action-btn.cancel {
-    background: #f6e9e9;
-    color: #9d4d4d;
-}
-
-.support-payment-action-btn:disabled {
-    opacity: .55;
-    cursor: default;
-}
-
-@media (max-width: 850px) {
-
-    .support-payment-summary-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
-}
-
-
-/* =========================
-   Instructor Course Actions
-   ========================= */
-
-.instructor-course-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-    margin-top: 7px;
-}
-
-.instructor-course-actions .support-outline-btn,
-.instructor-course-actions .support-payment-action-btn {
-    min-height: 34px;
-}
-
-
-/* Instructor course status button */
-.instructor-status-btn {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    width: auto !important;
-    min-width: 105px !important;
-    min-height: 34px !important;
-    padding: 0 12px !important;
-    border: 0 !important;
-    border-radius: 8px !important;
-    font-family: inherit !important;
-    font-size: 10px !important;
-    cursor: pointer !important;
-    box-sizing: border-box !important;
-}
-
-.instructor-status-btn.is-active {
-    background: #f6e9e9 !important;
-    color: #9d4d4d !important;
-}
-
-.instructor-status-btn.is-inactive {
-    background: #e8f5ec !important;
-    color: #327449 !important;
-}
-
-.instructor-status-btn:hover {
-    filter: brightness(0.97);
 }
 

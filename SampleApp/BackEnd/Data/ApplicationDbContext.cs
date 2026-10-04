@@ -18,31 +18,62 @@ public class ApplicationDbContext : DbContext
 
 
 
-    
     public DbSet<CourseModule> CourseModules { get; set; }
-
     public DbSet<CourseLesson> CourseLessons { get; set; }
+    public DbSet<LessonProgress> LessonProgresses { get; set; }
 
-    public DbSet<EnrollmentLessonProgress> EnrollmentLessonProgresses { get; set; }
-public DbSet<OrganizationSettings> OrganizationSettings { get; set; }
+    public DbSet<OrganizationSettings> OrganizationSettings { get; set; }
     public DbSet<PartnerOrganization> PartnerOrganizations { get; set; }
     public DbSet<CoursePartnerOrganization> CoursePartnerOrganizations { get; set; }
 
     public DbSet<Enrollment> Enrollments { get; set; }
 
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<Certificate> Certificates { get; set; }
 
     public DbSet<StudentFollowUp> StudentFollowUps { get; set; }
 
 
+    protected void ConfigureCertificates(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Certificate>()
+            .HasOne(c => c.Enrollment)
+            .WithMany()
+            .HasForeignKey(c => c.EnrollmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Certificate>()
+            .HasIndex(c => c.EnrollmentId)
+            .IsUnique();
+
+        modelBuilder.Entity<Certificate>()
+            .HasIndex(c => c.CertificateNumber)
+            .IsUnique();
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.Entity<OrganizationSettings>()
-           .Property(x => x.PackageLevel)
-           .HasDefaultValue(1);
+        ConfigureCertificates(modelBuilder);
 
-        // =========================
+
+
+
+        modelBuilder.Entity<LessonProgress>()
+            .HasOne(p => p.Enrollment)
+            .WithMany()
+            .HasForeignKey(p => p.EnrollmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LessonProgress>()
+            .HasOne(p => p.CourseLesson)
+            .WithMany()
+            .HasForeignKey(p => p.CourseLessonId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LessonProgress>()
+            .HasIndex(p => new { p.EnrollmentId, p.CourseLessonId })
+            .IsUnique();// =========================
         // Enrollment -> CoursePartnerOrganization
         // =========================
 

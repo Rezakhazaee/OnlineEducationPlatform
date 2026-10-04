@@ -1,0 +1,371 @@
+@page "/marketer/enrollments/new"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>ثبت‌نام جدید | آموزش‌یار</PageTitle>
+
+<style>
+    .education-form-card {
+        background: #fff;
+        border: 1px solid #e5e9ed;
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 4px 18px rgba(0,0,0,.05);
+    }
+
+    .education-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0,1fr));
+        gap: 22px;
+    }
+
+    .education-form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .education-form-group-full {
+        grid-column: 1 / -1;
+    }
+
+    .education-form-group label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #263d4a;
+    }
+
+    .education-form-group input,
+    .education-form-group select,
+    .education-form-group textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px 14px;
+        border: 1px solid #d9e1e6;
+        border-radius: 10px;
+        background: #fff;
+        color: #263d4a;
+        font-family: inherit;
+        font-size: 14px;
+    }
+
+    .education-form-group input:focus,
+    .education-form-group select:focus,
+    .education-form-group textarea:focus {
+        outline: none;
+        border-color: #568fa8;
+        box-shadow: 0 0 0 3px rgba(86,143,168,.14);
+    }
+
+    .education-form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 28px;
+        padding-top: 22px;
+        border-top: 1px solid #edf0f2;
+    }
+
+    .education-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 120px;
+        padding: 11px 20px;
+        border: 0;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .education-btn.primary {
+        background: #568fa8;
+        color: #fff;
+    }
+
+    .education-btn.secondary {
+        background: #eef2f5;
+        color: #263d4a;
+    }
+
+    .education-alert {
+        margin-top: 20px;
+        padding: 13px 16px;
+        border-radius: 10px;
+        font-size: 14px;
+    }
+
+    .education-alert.error {
+        background: #fff0f0;
+        color: #a33b3b;
+        border: 1px solid #f2cccc;
+    }
+
+    @@media (max-width:700px) {
+        .education-form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .education-form-group-full {
+            grid-column: auto;
+        }
+
+        .education-form-actions {
+            flex-direction: column;
+        }
+
+        .education-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="education-page">
+
+    <main class="education-main">
+
+        <div class="education-page-header">
+            <div>
+                <h1>ثبت‌نام جدید</h1>
+                <p>دانشجو را در یک دوره ثبت‌نام کنید.</p>
+            </div>
+        </div>
+
+        @if (IsLoading)
+        {
+            <div class="education-card">
+                در حال دریافت اطلاعات...
+            </div>
+        }
+        else
+        {
+            <div class="education-card education-form-card">
+
+                <div class="education-form-grid">
+
+                    <div class="education-form-group">
+                        <label>دانشجو</label>
+                        <select @bind="Model.StudentId">
+                            <option value="0">انتخاب دانشجو</option>
+                            @foreach (var student in Students)
+                            {
+                                <option value="@student.Id">
+                                    @student.FirstName @student.LastName
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="education-form-group">
+                        <label>دوره</label>
+                        <select @bind="Model.CourseId">
+                            <option value="0">انتخاب دوره</option>
+                            @foreach (var course in Courses)
+                            {
+                                <option value="@course.Id">
+                                    @course.Title
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="education-form-group">
+                        <label>تاریخ شروع</label>
+                        <input type="date"
+                               value="@StartDateText"
+                               @onchange="HandleStartDateChange" />
+                    </div>
+
+                    <div class="education-form-group">
+                        <label>وضعیت</label>
+                        <select @bind="Model.Status">
+                            <option value="Active">فعال</option>
+                            <option value="Inactive">غیرفعال</option>
+                        </select>
+                    </div>
+
+                    <div class="education-form-group education-form-group-full">
+                        <label>توضیحات</label>
+                        <textarea rows="4" @bind="Model.Description"></textarea>
+                    </div>
+
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                {
+                    <div class="education-alert error">
+                        @ErrorMessage
+                    </div>
+                }
+
+                <div class="education-form-actions">
+
+                    <button class="education-btn secondary"
+                            @onclick="GoBack">
+                        انصراف
+                    </button>
+
+                    <button class="education-btn primary"
+                            @onclick="Save"
+                            disabled="@IsSaving">
+                        @(IsSaving ? "در حال ثبت..." : "ثبت‌نام دانشجو")
+                    </button>
+
+                </div>
+
+            </div>
+        }
+
+    </main>
+
+</div>
+
+@code {
+
+    private bool IsLoading = true;
+    private bool IsSaving;
+
+    private string? ErrorMessage;
+
+    private string StartDateText = DateTime.Today.ToString("yyyy-MM-dd");
+
+    private List<StudentItem> Students = new();
+    private List<CourseItem> Courses = new();
+
+    private EnrollmentModel Model = new()
+    {
+        Status = "Active"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Auth.RestoreAsync();
+
+        if (Auth.Role != "Marketer")
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var studentsTask =
+                client.GetFromJsonAsync<List<StudentItem>>("api/Students");
+
+            var coursesTask =
+                client.GetFromJsonAsync<List<CourseItem>>("api/PublicCourses");
+
+            Students = await studentsTask ?? new();
+            Courses = await coursesTask ?? new();
+        }
+        catch
+        {
+            ErrorMessage = "دریافت اطلاعات دانشجویان و دوره‌ها ناموفق بود.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void HandleStartDateChange(ChangeEventArgs e)
+    {
+        StartDateText = e.Value?.ToString() ?? "";
+    }
+
+    private async Task Save()
+    {
+        ErrorMessage = null;
+
+        if (Model.StudentId <= 0)
+        {
+            ErrorMessage = "دانشجو را انتخاب کنید.";
+            return;
+        }
+
+        if (Model.CourseId <= 0)
+        {
+            ErrorMessage = "دوره را انتخاب کنید.";
+            return;
+        }
+
+        if (!DateTime.TryParse(StartDateText, out var startDate))
+        {
+            ErrorMessage = "تاریخ شروع معتبر نیست.";
+            return;
+        }
+
+        Model.StartDate = startDate;
+
+        IsSaving = true;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var response = await client.PostAsJsonAsync(
+                "api/Enrollments",
+                Model
+            );
+
+            if (response.IsSuccessStatusCode)
+            {
+                Navigation.NavigateTo("/marketer?tab=enrollments");
+                return;
+            }
+
+            ErrorMessage = await response.Content.ReadAsStringAsync();
+        }
+        catch
+        {
+            ErrorMessage = "ثبت‌نام با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/marketer?tab=enrollments");
+    }
+
+    public class StudentItem
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
+    }
+
+    public class CourseItem
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+    }
+
+    public class EnrollmentModel
+    {
+        public int StudentId { get; set; }
+        public int CourseId { get; set; }
+        public int? CoursePartnerOrganizationId { get; set; }
+        public int? SupportUserId { get; set; }
+        public int? InstructorId { get; set; }
+        public DateTime StartDate { get; set; }
+        public string Status { get; set; } = "Active";
+        public string? Description { get; set; }
+    }
+}

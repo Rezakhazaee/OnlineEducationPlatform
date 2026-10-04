@@ -1,0 +1,186 @@
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+
+<section class="admin-content-card" style="margin-top:24px;">
+
+    <div class="admin-card-header">
+        <div>
+            <span>گزارش آموزشی</span>
+            <h2>پیشرفت دانشجویان</h2>
+        </div>
+
+        <span>
+            @Reports.Count ثبت‌نام
+        </span>
+    </div>
+
+    @if (Loading)
+    {
+        <div class="admin-empty-state">
+            در حال دریافت گزارش پیشرفت...
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="admin-error">
+            @ErrorMessage
+        </div>
+    }
+    else if (Reports.Count == 0)
+    {
+        <div class="admin-empty-state">
+            هنوز داده‌ای برای گزارش پیشرفت وجود ندارد.
+        </div>
+    }
+    else
+    {
+        <div class="admin-table-wrapper">
+
+            <table class="admin-table">
+
+                <thead>
+                    <tr>
+                        <th>دانشجو</th>
+                        <th>دوره</th>
+                        <th>مدرس</th>
+                        <th>درس‌ها</th>
+                        <th>تکمیل‌شده</th>
+                        <th>پیشرفت</th>
+                        <th>وضعیت</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var item in Reports)
+                    {
+                        <tr>
+
+                            <td>
+                                @item.StudentName
+                            </td>
+
+                            <td>
+                                @item.CourseTitle
+                            </td>
+
+                            <td>
+                                @(string.IsNullOrWhiteSpace(item.InstructorName)
+                                    ? "-"
+                                    : item.InstructorName)
+                            </td>
+
+                            <td>
+                                @item.TotalLessons
+                            </td>
+
+                            <td>
+                                @item.CompletedLessons
+                            </td>
+
+                            <td style="min-width:180px;">
+
+                                <div style="display:flex; align-items:center; gap:10px;">
+
+                                    <div style="
+                                        flex:1;
+                                        height:8px;
+                                        background:#e5e7eb;
+                                        border-radius:10px;
+                                        overflow:hidden;">
+
+                                        <div style="
+                                            width:@item.ProgressPercent%;
+                                            height:100%;
+                                            background:#568fa8;
+                                            border-radius:10px;">
+                                        </div>
+
+                                    </div>
+
+                                    <strong>
+                                        @item.ProgressPercent.ToString("0")%
+                                    </strong>
+
+                                </div>
+
+                            </td>
+
+                            <td>
+                                @item.Status
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+    }
+
+</section>
+
+@code {
+
+    private List<ProgressReportDto> Reports { get; set; } = new();
+
+    private bool Loading { get; set; } = true;
+
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || Auth.Role != "Admin")
+        {
+            ErrorMessage = "دسترسی غیرمجاز.";
+            Loading = false;
+            return;
+        }
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            Reports =
+                await client.GetFromJsonAsync<List<ProgressReportDto>>(
+                    "api/AdminProgress")
+                ?? new();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage =
+                $"دریافت گزارش پیشرفت با خطا مواجه شد: {ex.Message}";
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    private class ProgressReportDto
+    {
+        public int EnrollmentId { get; set; }
+
+        public string StudentName { get; set; } = "";
+
+        public string CourseTitle { get; set; } = "";
+
+        public string? InstructorName { get; set; }
+
+        public int TotalLessons { get; set; }
+
+        public int CompletedLessons { get; set; }
+
+        public decimal ProgressPercent { get; set; }
+
+        public DateTime StartDate { get; set; }
+
+        public string? Status { get; set; }
+    }
+}

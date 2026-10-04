@@ -1,0 +1,273 @@
+@page "/education/students/{StudentId:int}/edit"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>ویرایش دانشجو | آموزش‌یار</PageTitle>
+
+<style>
+.education-form-card { background:#fff; border:1px solid #e5e9ed; border-radius:16px; padding:32px; box-shadow:0 4px 18px rgba(0,0,0,.05); }
+.education-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; }
+.education-form-group { display:flex; flex-direction:column; gap:8px; }
+.education-form-group-full { grid-column:1/-1; }
+.education-form-group label { font-size:14px; font-weight:600; color:#263d4a; }
+.education-form-group input,.education-form-group textarea { width:100%; box-sizing:border-box; padding:12px 14px; border:1px solid #d9e1e6; border-radius:10px; background:#fdfefe; color:#263d4a; font-family:inherit; font-size:14px; transition:.2s; }
+.education-form-group input:focus,.education-form-group textarea:focus { outline:none; border-color:#568fa8; box-shadow:0 0 0 3px rgba(86,143,168,.14); }
+.education-form-group textarea { resize:vertical; min-height:110px; }
+.education-form-actions { display:flex; gap:12px; margin-top:28px; padding-top:22px; border-top:1px solid #edf0f2; }
+.education-btn { display:inline-flex; align-items:center; justify-content:center; min-width:120px; padding:11px 20px; border:0; border-radius:10px; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; text-decoration:none; transition:.2s; }
+.education-btn.primary { background:#568fa8; color:#fff; }
+.education-btn.primary:hover { background:#477d94; }
+.education-btn.secondary { background:#eef2f5; color:#263d4a; }
+.education-btn.secondary:hover { background:#dfe7ec; }
+.education-btn:disabled { opacity:.6; cursor:not-allowed; }
+.education-alert { margin-top:20px; padding:13px 16px; border-radius:10px; font-size:14px; }
+.education-alert.success { background:#eaf7ef; color:#247447; border:1px solid #ccebd8; }
+.education-alert.error { background:#fff0f0; color:#a33b3b; border:1px solid #f2cccc; }
+@@media (max-width:700px) { .education-form-grid { grid-template-columns:1fr; } .education-form-group-full { grid-column:auto; } .education-form-actions { flex-direction:column; } .education-btn { width:100%; } }
+</style>
+<div class="education-page">
+
+    <main class="education-main">
+
+        <div class="education-page-header">
+            <div>
+                <h1>ویرایش دانشجو</h1>
+                <p>اطلاعات پرونده دانشجو را ویرایش کنید.</p>
+            </div>
+        </div>
+
+        @if (IsLoading)
+        {
+            <div class="education-card">
+                در حال دریافت اطلاعات...
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="education-alert error">
+                @ErrorMessage
+            </div>
+        }
+        else
+        {
+            <div class="education-card education-form-card">
+
+                <div class="education-form-grid">
+
+                    <div class="education-form-group">
+                        <label>نام</label>
+                        <input @bind="Model.FirstName" />
+                    </div>
+
+                    <div class="education-form-group">
+                        <label>نام خانوادگی</label>
+                        <input @bind="Model.LastName" />
+                    </div>
+
+                    <div class="education-form-group">
+                        <label>کد ملی</label>
+                        <input @bind="Model.NationalCode" />
+                    </div>
+
+                    <div class="education-form-group">
+                        <label>تاریخ تولد</label>
+                        <input type="date" value="@BirthDateText" @onchange="HandleBirthDateChange" />
+                    </div>
+
+                    <div class="education-form-group">
+                        <label>شماره موبایل</label>
+                        <input @bind="Model.Mobile" />
+                    </div>
+
+                    <div class="education-form-group">
+                        <label>نام ولی</label>
+                        <input @bind="Model.GuardianName" />
+                    </div>
+
+                    <div class="education-form-group">
+                        <label>موبایل ولی</label>
+                        <input @bind="Model.GuardianMobile" />
+                    </div>
+
+                    <div class="education-form-group education-form-group-full">
+                        <label>آدرس</label>
+                        <textarea rows="4" @bind="Model.Address"></textarea>
+                    </div>
+
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(SuccessMessage))
+                {
+                    <div class="education-alert success">
+                        @SuccessMessage
+                    </div>
+                }
+
+                <div class="education-form-actions">
+
+                    <button class="education-btn secondary"
+                            @onclick="GoBack">
+                        انصراف
+                    </button>
+
+                    <button class="education-btn primary"
+                            @onclick="Save"
+                            disabled="@IsSaving">
+                        @(IsSaving ? "در حال ذخیره..." : "ذخیره تغییرات")
+                    </button>
+
+                </div>
+
+            </div>
+        }
+
+    </main>
+
+</div>
+
+@code {
+
+    [Parameter]
+    public int StudentId { get; set; }
+
+    private StudentEditModel Model { get; set; } = new();
+
+    private bool IsLoading { get; set; } = true;
+    private bool IsSaving { get; set; }
+
+    private string? ErrorMessage { get; set; }
+    private string? SuccessMessage { get; set; }
+
+    private string BirthDateText { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Auth.RestoreAsync();
+
+        if (Auth.Role != "EducationStaff" && Auth.Role != "Admin")
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        await LoadStudent();
+    }
+
+    private async Task LoadStudent()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var result = await client.GetFromJsonAsync<StudentEditModel>(
+                $"api/Students/{StudentId}"
+            );
+
+            if (result == null)
+            {
+                ErrorMessage = "اطلاعات دانشجو دریافت نشد.";
+                return;
+            }
+
+            Model = result;
+            BirthDateText = Model.BirthDate?.ToString("yyyy-MM-dd") ?? "";
+        }
+        catch
+        {
+            ErrorMessage = "دریافت اطلاعات دانشجو ناموفق بود.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void HandleBirthDateChange(ChangeEventArgs e)
+    {
+        BirthDateText = e.Value?.ToString() ?? "";
+    }
+
+    private async Task Save()
+    {
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        if (string.IsNullOrWhiteSpace(Model.FirstName) ||
+            string.IsNullOrWhiteSpace(Model.LastName) ||
+            string.IsNullOrWhiteSpace(Model.NationalCode) ||
+            string.IsNullOrWhiteSpace(Model.Mobile))
+        {
+            ErrorMessage = "نام، نام خانوادگی، کد ملی و موبایل الزامی است.";
+            return;
+        }
+
+        if (DateTime.TryParse(BirthDateText, out var parsedBirthDate))
+            Model.BirthDate = parsedBirthDate;
+        else
+            Model.BirthDate = null;
+
+        IsSaving = true;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            var response = await client.PutAsJsonAsync(
+                $"api/Students/{StudentId}",
+                Model
+            );
+
+            if (response.IsSuccessStatusCode)
+            {
+                Navigation.NavigateTo("/education");
+                return;
+            }
+            else
+            {
+                ErrorMessage = await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch
+        {
+            ErrorMessage = "ذخیره اطلاعات با خطا مواجه شد.";
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/education");
+    }
+
+    public class StudentEditModel
+    {
+        public int Id { get; set; }
+
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
+        public string NationalCode { get; set; } = "";
+
+        public DateTime? BirthDate { get; set; }
+
+        public string Mobile { get; set; } = "";
+
+        public string? Address { get; set; }
+        public string? GuardianName { get; set; }
+        public string? GuardianMobile { get; set; }
+
+        public int? MarketingUserId { get; set; }
+        public int? SupportUserId { get; set; }
+
+        public DateTime CreatedDate { get; set; }
+    }
+}

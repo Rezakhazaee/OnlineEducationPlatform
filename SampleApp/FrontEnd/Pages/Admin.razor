@@ -4,13 +4,72 @@
 @using FrontEnd.Services
 
 @inject AuthService Auth
-@inject NavigationManager Navigation
 
-<PageTitle>@(Auth.IsAdmin ? "پنل مدیریت" : "پنل آموزش") | آموزش‌یار</PageTitle>
+<PageTitle>پنل مدیریت | آموزش‌یار</PageTitle>
 
 <div class="admin-page">
 
-        <AdminSidebar ActivePage="dashboard" />
+    <aside class="admin-sidebar">
+
+        <div class="admin-brand">
+            <div class="admin-brand-mark">آ</div>
+            <div>
+                <strong>آموزش‌یار</strong>
+                <small>پنل مدیریت</small>
+            </div>
+        </div>
+
+        <nav class="admin-menu">
+
+            <a href="/admin" class="active">
+                <span>⌂</span>
+                داشبورد
+            </a>
+
+            <a href="/admin/courses">
+                <span>▣</span>
+                دوره‌ها
+            </a>
+
+            <a href="/admin/users">
+                <span>♙</span>
+                کاربران
+            </a>
+
+            <a href="/admin/enrollments">
+                <span>✓</span>
+                ثبت‌نام‌ها
+            </a>
+
+            <a href="/admin/payments">
+                <span>₿</span>
+                پرداخت‌ها
+            </a>
+
+            <a href="/admin/partner-organizations">
+                <span>♧</span>
+                سازمان‌های طرف قرارداد
+            </a>
+
+            <a href="/admin/reports">
+                <span>▤</span>
+                گزارش‌ها
+            </a>
+
+            <a href="/admin/organizations">
+                <span>◈</span>
+                سازمان‌ها و ظاهر
+            </a>
+
+        </nav>
+
+        <div class="admin-sidebar-bottom">
+            <a href="/">
+                ← بازگشت به سایت
+            </a>
+        </div>
+
+    </aside>
 
 
     <main class="admin-main">
@@ -18,14 +77,9 @@
         <header class="admin-topbar">
 
             <div>
-                <span class="admin-label">@(Auth.IsAdmin ? "مدیریت سامانه" : "مدیریت آموزش")</span>
-
-                <h1>
-                    داشبورد
-                </h1>
+                <span class="admin-label">مدیریت سامانه</span>
+                <h1>داشبورد</h1>
             </div>
-
-            <AdminLogout />
 
             <div class="admin-user">
 
@@ -34,11 +88,8 @@
                 </div>
 
                 <div>
-                    <strong>
-                        @(Auth.FullName ?? "مدیر سیستم")
-                    </strong>
-
-                    <small>@(Auth.IsAdmin ? "مدیر سیستم" : "کارشناس آموزش")</small>
+                    <strong>@(Auth.FullName ?? "مدیر سیستم")</strong>
+                    <small>Administrator</small>
                 </div>
 
             </div>
@@ -50,170 +101,213 @@
         {
             <div class="admin-loading">
                 <div class="admin-loading-icon">↻</div>
-
-                <h3>
-                    در حال دریافت اطلاعات...
-                </h3>
-
-                <p>
-                    اطلاعات واقعی سامانه در حال بارگذاری است.
-                </p>
+                <h3>در حال دریافت اطلاعات...</h3>
+                <p>اطلاعات واقعی سامانه در حال بارگذاری است.</p>
             </div>
         }
         else if (!string.IsNullOrWhiteSpace(ErrorMessage))
         {
             <div class="admin-error">
-                <strong>
-                    خطا در دریافت اطلاعات
-                </strong>
 
-                <p>
-                    @ErrorMessage
-                </p>
+                <strong>خطا در دریافت اطلاعات</strong>
 
-                <button
-                    class="admin-outline-btn"
-                    @onclick="LoadDashboard">
+                <p>@ErrorMessage</p>
 
+                <button class="admin-outline-btn" @onclick="LoadDashboard">
                     تلاش مجدد
                 </button>
+
             </div>
         }
         else if (Summary != null)
         {
-            <section class="admin-stats">
 
-                <div class="admin-stat-card">
+            <!-- =====================================================
+                 نمای کلی
+            ====================================================== -->
 
-                    <span class="stat-icon">
-                        ▣
-                    </span>
+            <section class="admin-dashboard-block">
 
-                    <div>
-                        <small>
-                            دوره‌ها
-                        </small>
-
-                        <strong>
-                            @Summary.TotalCourses
-                        </strong>
-                    </div>
-
-                </div>
-
-
-                <div class="admin-stat-card">
-
-                    <span class="stat-icon">
-                        ♙
-                    </span>
+                <div class="admin-dashboard-title">
 
                     <div>
-                        <small>
-                            دانشجویان
-                        </small>
-
-                        <strong>
-                            @Summary.TotalStudents
-                        </strong>
+                        <span>نمای کلی سامانه</span>
+                        <h2>وضعیت کلی آموزش‌یار</h2>
                     </div>
 
-                </div>
-
-
-                <div class="admin-stat-card">
-
-                    <span class="stat-icon">
-                        ✓
-                    </span>
-
-                    <div>
-                        <small>
-                            ثبت‌نام‌ها
-                        </small>
-
-                        <strong>
-                            @Summary.TotalEnrollments
-                        </strong>
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            <section class="admin-content-card">
-
-                <div class="admin-card-header">
-
-                    <div>
-                        <span>
-                            وضعیت مالی
-                        </span>
-
-                        <h2>
-                            گزارش پرداخت‌ها
-                        </h2>
-                    </div>
-
-                    <a
-                        href="/admin/courses"
-                        class="admin-primary-btn">
-
-                        + افزودن دوره
-
+                    <a href="/admin/reports">
+                        مشاهده گزارش‌ها ←
                     </a>
 
                 </div>
 
 
-                <div class="admin-financial-grid">
+                <div class="admin-dashboard-main-grid">
 
-                    <div class="admin-financial-card">
+                    <div class="admin-dashboard-main-card blue">
 
-                        <small>
-                            پرداخت‌شده
-                        </small>
+                        <div class="admin-dashboard-icon">
+                            ▣
+                        </div>
 
-                        <strong>
-                            @Summary.TotalPaid.ToString("N0")
-                        </strong>
-
-                        <span>
-                            تومان
-                        </span>
+                        <div>
+                            <span>دوره‌ها</span>
+                            <strong>@Summary.TotalCourses</strong>
+                            <small>دوره فعال سامانه</small>
+                        </div>
 
                     </div>
 
 
-                    <div class="admin-financial-card">
+                    <div class="admin-dashboard-main-card green">
 
-                        <small>
-                            در انتظار پرداخت
-                        </small>
+                        <div class="admin-dashboard-icon">
+                            ♙
+                        </div>
 
-                        <strong>
-                            @Summary.TotalPending.ToString("N0")
-                        </strong>
-
-                        <span>
-                            تومان
-                        </span>
+                        <div>
+                            <span>دانشجویان</span>
+                            <strong>@Summary.TotalStudents</strong>
+                            <small>دانشجوی ثبت‌نام‌شده</small>
+                        </div>
 
                     </div>
 
 
-                    <div class="admin-financial-card">
+                    <div class="admin-dashboard-main-card purple">
 
-                        <small>
-                            لغوشده
-                        </small>
+                        <div class="admin-dashboard-icon">
+                            ✓
+                        </div>
+
+                        <div>
+                            <span>ثبت‌نام‌ها</span>
+                            <strong>@Summary.TotalEnrollments</strong>
+                            <small>مجموع ثبت‌نام‌ها</small>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+                 وضعیت مالی
+            ====================================================== -->
+
+            <section class="admin-dashboard-panel">
+
+                <div class="admin-dashboard-panel-header">
+
+                    <div>
+                        <span>وضعیت مالی</span>
+                        <h2>خلاصه مالی سامانه</h2>
+                    </div>
+
+                    <a href="/admin/reports/financial">
+                        جزئیات مالی
+                    </a>
+
+                </div>
+
+
+                <div class="admin-dashboard-financial-grid">
+
+                    <div class="admin-dashboard-money-card expected">
+
+                        <div class="money-icon">◉</div>
+
+                        <div>
+                            <span>مبلغ مورد انتظار</span>
+                            <strong>@Summary.TotalExpected.ToString("N0")</strong>
+                            <small>تومان</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="admin-dashboard-money-card paid">
+
+                        <div class="money-icon">✓</div>
+
+                        <div>
+                            <span>پرداخت‌شده</span>
+                            <strong>@Summary.TotalPaid.ToString("N0")</strong>
+                            <small>تومان</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="admin-dashboard-money-card remaining">
+
+                        <div class="money-icon">◷</div>
+
+                        <div>
+                            <span>مانده قابل وصول</span>
+                            <strong>@Summary.TotalRemaining.ToString("N0")</strong>
+                            <small>تومان</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="admin-dashboard-money-card collection">
+
+                        <div class="money-icon">%</div>
+
+                        <div>
+                            <span>درصد وصول</span>
+                            <strong>@Summary.CollectionPercent.ToString("0.##")٪</strong>
+                            <small>از مبلغ مورد انتظار</small>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="admin-dashboard-collection">
+
+                    <div class="collection-header">
+
+                        <div>
+                            <span>پیشرفت وصول مطالبات</span>
+                            <small>
+                                پرداخت‌شده:
+                                @Summary.TotalPaid.ToString("N0")
+                                تومان
+                            </small>
+                        </div>
 
                         <strong>
-                            @Summary.TotalCancelled.ToString("N0")
+                            @Summary.CollectionPercent.ToString("0.##")٪
                         </strong>
 
+                    </div>
+
+                    <div class="collection-track">
+
+                        <div
+                            class="collection-fill"
+                            style="width:@ProgressWidth(Summary.CollectionPercent)%">
+                        </div>
+
+                    </div>
+
+                    <div class="collection-footer">
+
                         <span>
+                            مانده:
+                            @Summary.TotalRemaining.ToString("N0")
+                            تومان
+                        </span>
+
+                        <span>
+                            مبلغ مورد انتظار:
+                            @Summary.TotalExpected.ToString("N0")
                             تومان
                         </span>
 
@@ -224,83 +318,160 @@
             </section>
 
 
-        <section class="admin-content-card">
+            <!-- =====================================================
+                 وضعیت ثبت نام
+            ====================================================== -->
 
-            <div class="admin-card-header">
+            <section class="admin-dashboard-panel">
 
-                <div>
-                    <span>
-                        فعالیت‌های اخیر
-                    </span>
+                <div class="admin-dashboard-panel-header">
 
-                    <h2>
-                        آخرین ثبت‌نام‌ها
-                    </h2>
+                    <div>
+                        <span>وضعیت ثبت‌نام</span>
+                        <h2>وضعیت فعلی ثبت‌نام‌ها</h2>
+                    </div>
+
+                    <a href="/admin/reports/enrollments">
+                        جزئیات ثبت‌نام‌ها
+                    </a>
+
                 </div>
 
-                <a
-                    href="/admin/enrollments"
-                    class="admin-outline-btn">
 
-                    مشاهده همه
+                <div class="admin-dashboard-status-grid">
 
-                </a>
+                    <div class="admin-dashboard-status-card active">
 
-            </div>
+                        <div class="status-icon">✓</div>
 
-
-            @if (RecentEnrollments.Count == 0)
-            {
-                <div class="admin-empty-state">
-                    هنوز ثبت‌نامی ثبت نشده است.
-                </div>
-            }
-            else
-            {
-                <div class="admin-recent-enrollments">
-
-                    @foreach (var enrollment in RecentEnrollments)
-                    {
-                        <div class="admin-recent-enrollment">
-
-                            <div class="recent-enrollment-main">
-
-                                <strong>
-                                    @enrollment.StudentName
-                                </strong>
-
-                                <span>
-                                    @enrollment.CourseTitle
-                                </span>
-
-                            </div>
-
-                            <div class="recent-enrollment-financial">
-
-                                <strong>
-                                    @enrollment.RemainingAmount.ToString("N0")
-                                    تومان
-                                </strong>
-
-                                <small>
-                                    مانده
-                                </small>
-
-                            </div>
-
-                            <div class="recent-enrollment-date">
-
-                                @enrollment.StartDate.ToString("yyyy/MM/dd")
-
-                            </div>
-
+                        <div>
+                            <span>فعال</span>
+                            <strong>@Summary.ActiveEnrollments</strong>
+                            <small>ثبت‌نام فعال</small>
                         </div>
-                    }
+
+                    </div>
+
+
+                    <div class="admin-dashboard-status-card cancelled">
+
+                        <div class="status-icon">×</div>
+
+                        <div>
+                            <span>لغوشده</span>
+                            <strong>@Summary.CancelledEnrollments</strong>
+                            <small>ثبت‌نام لغوشده</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="admin-dashboard-status-card total">
+
+                        <div class="status-icon">#</div>
+
+                        <div>
+                            <span>کل ثبت‌نام‌ها</span>
+                            <strong>@Summary.TotalEnrollments</strong>
+                            <small>مجموع ثبت‌نام</small>
+                        </div>
+
+                    </div>
 
                 </div>
-            }
 
-        </section>
+            </section>
+
+
+            <!-- =====================================================
+                 وضعیت آموزشی
+            ====================================================== -->
+
+            <section class="admin-dashboard-panel">
+
+                <div class="admin-dashboard-panel-header">
+
+                    <div>
+                        <span>پیشرفت آموزشی</span>
+                        <h2>وضعیت یادگیری دانشجویان</h2>
+                    </div>
+
+                    <a href="/admin/reports">
+                        گزارش کامل
+                    </a>
+
+                </div>
+
+
+                <div class="admin-dashboard-learning-grid">
+
+                    <div class="admin-dashboard-learning-card average">
+
+                        <div class="learning-top">
+                            <div class="learning-icon">↗</div>
+                            <span>میانگین پیشرفت</span>
+                        </div>
+
+                        <strong>
+                            @Summary.AverageProgressPercent.ToString("0.##")٪
+                        </strong>
+
+                        <div class="learning-track">
+                            <div
+                                class="learning-fill"
+                                style="width:@ProgressWidth(Summary.AverageProgressPercent)%">
+                            </div>
+                        </div>
+
+                        <small>میانگین پیشرفت دانشجویان</small>
+
+                    </div>
+
+
+                    <div class="admin-dashboard-learning-card completed">
+
+                        <div class="learning-top">
+                            <div class="learning-icon">✓</div>
+                            <span>تکمیل‌شده</span>
+                        </div>
+
+                        <strong>@Summary.CompletedCount</strong>
+
+                        <small>دانشجوی تکمیل‌کننده</small>
+
+                    </div>
+
+
+                    <div class="admin-dashboard-learning-card progress">
+
+                        <div class="learning-top">
+                            <div class="learning-icon">◷</div>
+                            <span>در حال پیشرفت</span>
+                        </div>
+
+                        <strong>@Summary.InProgressCount</strong>
+
+                        <small>دانشجوی در حال یادگیری</small>
+
+                    </div>
+
+
+                    <div class="admin-dashboard-learning-card not-started">
+
+                        <div class="learning-top">
+                            <div class="learning-icon">○</div>
+                            <span>شروع‌نشده</span>
+                        </div>
+
+                        <strong>@Summary.NotStartedCount</strong>
+
+                        <small>بدون فعالیت آموزشی</small>
+
+                    </div>
+
+                </div>
+
+            </section>
 
         }
 
@@ -317,40 +488,11 @@
 
     private string? ErrorMessage { get; set; }
 
-    private List<RecentEnrollmentDto> RecentEnrollments { get; set; } = new();
 
-public class RecentEnrollmentDto
-{
-    public int Id { get; set; }
-
-    public string StudentName { get; set; } = string.Empty;
-
-    public string CourseTitle { get; set; } = string.Empty;
-
-    public decimal CoursePrice { get; set; }
-
-    public decimal TotalPaid { get; set; }
-
-    public decimal RemainingAmount { get; set; }
-
-    public string PaymentStatus { get; set; } = string.Empty;
-
-    public DateTime StartDate { get; set; }
-
-    public string Status { get; set; } = string.Empty;
-}
-
-
-protected override async Task OnInitializedAsync()
-{
-    if (!Auth.IsLoggedIn || !Auth.IsManagementPanelUser)
+    protected override async Task OnInitializedAsync()
     {
-        Navigation.NavigateTo("/login", replace: true);
-        return;
+        await LoadDashboard();
     }
-
-    await LoadDashboard();
-}
 
 
     private async Task LoadDashboard()
@@ -365,16 +507,6 @@ protected override async Task OnInitializedAsync()
             Summary = await client.GetFromJsonAsync<ReportsSummaryDto>(
                 "api/Reports/summary"
             );
-              var enrollments =
-    await client.GetFromJsonAsync<List<RecentEnrollmentDto>>(
-        "api/Enrollments"
-    );
-
-RecentEnrollments =
-    (enrollments ?? new List<RecentEnrollmentDto>())
-        .OrderByDescending(x => x.StartDate)
-        .Take(5)
-        .ToList();
 
             if (Summary == null)
             {
@@ -394,18 +526,32 @@ RecentEnrollments =
     }
 
 
+    private static decimal ProgressWidth(decimal value)
+    {
+        return Math.Clamp(value, 0, 100);
+    }
+
+
     public class ReportsSummaryDto
     {
         public int TotalStudents { get; set; }
-
         public int TotalCourses { get; set; }
-
         public int TotalEnrollments { get; set; }
 
+        public decimal TotalExpected { get; set; }
         public decimal TotalPaid { get; set; }
-
+        public decimal TotalRemaining { get; set; }
         public decimal TotalPending { get; set; }
-
         public decimal TotalCancelled { get; set; }
+
+        public int ActiveEnrollments { get; set; }
+        public int CancelledEnrollments { get; set; }
+
+        public decimal CollectionPercent { get; set; }
+        public decimal AverageProgressPercent { get; set; }
+
+        public int CompletedCount { get; set; }
+        public int InProgressCount { get; set; }
+        public int NotStartedCount { get; set; }
     }
 }

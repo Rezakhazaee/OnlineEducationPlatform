@@ -1,0 +1,28 @@
+namespace BackEnd.Models;
+
+public class Course
+{
+    public int Id { get; set; }
+
+    public string Title { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+
+    public decimal Price { get; set; }
+
+    // ظرفیت دوره
+    public int Capacity { get; set; } = 0;
+
+    // نوع برگزاری دوره:
+    // Online = آنلاین
+    // InPerson = حضوری
+    // Hybrid = ترکیبی
+    public string DeliveryType { get; set; } = "Online";
+
+    // استاد دوره
+    public int? InstructorId { get; set; }
+
+    public User? Instructor { get; set; }
+
+    public bool IsActive { get; set; } = true;
+}

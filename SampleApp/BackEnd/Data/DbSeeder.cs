@@ -75,10 +75,58 @@ public static class DbSeeder
             };
 
             db.Users.Add(support);
-            await db.SaveChangesAsync();
         }
 
         // ==========================================
+        // ==========================================
+        // ==========================================
+        // 5. Test Marketer
+        // ==========================================
+
+        var marketer = await db.Users
+            .FirstOrDefaultAsync(u => u.Username == "test.marketer");
+
+        if (marketer == null)
+        {
+            marketer = new User
+            {
+                FullName = "بازاریاب تست",
+                Mobile = "09120000007",
+                Username = "test.marketer",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@12345"),
+                Role = "Marketer",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            db.Users.Add(marketer);
+            await db.SaveChangesAsync();
+        }
+
+        // 4. Test Education Staff
+        // ==========================================
+
+        var educationStaff = await db.Users
+            .FirstOrDefaultAsync(u => u.Username == "test.education");
+
+        if (educationStaff == null)
+        {
+            educationStaff = new User
+            {
+                FullName = "کارشناس آموزش تست",
+                Mobile = "09120000006",
+                Username = "test.education",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Test@12345"),
+                Role = "EducationStaff",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            db.Users.Add(educationStaff);
+            await db.SaveChangesAsync();
+        }
+
+
         // 4. Organization Settings
         // ==========================================
 
@@ -150,6 +198,13 @@ public static class DbSeeder
         }
 
         // ==========================================
+        if (course.DeliveryType != "Online")
+        {
+            course.DeliveryType = "Online";
+            await db.SaveChangesAsync();
+        }
+
+
         // 7. Course - Partner Organization Agreement
         // ==========================================
 
@@ -228,6 +283,12 @@ public static class DbSeeder
             db.Students.Add(student);
             await db.SaveChangesAsync();
         }
+        if (student.MarketingUserId != marketer.Id)
+        {
+            student.MarketingUserId = marketer.Id;
+            await db.SaveChangesAsync();
+        }
+
 
         // ==========================================
         // 10. Enrollment
@@ -303,5 +364,75 @@ public static class DbSeeder
 
             await db.SaveChangesAsync();
         }
-    }
+
+        // ==========================================
+        // 13. Test Course Module & Lessons
+        // ==========================================
+
+        var module = await db.CourseModules
+            .FirstOrDefaultAsync(m => m.CourseId == course.Id && m.SortOrder == 1);
+
+        if (module == null)
+        {
+            module = new CourseModule
+            {
+                CourseId = course.Id,
+                Title = "ماژول تستی",
+                SortOrder = 1,
+                IsActive = true
+            };
+
+            db.CourseModules.Add(module);
+            await db.SaveChangesAsync();
+        }
+
+        var lesson1 = await db.CourseLessons
+            .FirstOrDefaultAsync(l => l.CourseModuleId == module.Id && l.SortOrder == 1);
+
+        if (lesson1 == null)
+        {
+            db.CourseLessons.Add(new CourseLesson
+            {
+                CourseModuleId = module.Id,
+                Title = "درس تستی اول",
+                Description = "درس آزمایشی برای تست محتوای دوره",
+                ContentType = "Text",
+                ContentUrl = "",
+                Content = "متن واقعی درس تستی آموزش‌یار برای بررسی نمایش محتوای متنی دوره.",
+                DurationMinutes = 20,
+                SortOrder = 1,
+                IsActive = true,
+                IsFreePreview = true
+            });
+        }
+
+
+        if (lesson1 != null && string.IsNullOrWhiteSpace(lesson1.Content))
+        {
+            lesson1.Content = "متن واقعی درس تستی آموزش‌یار برای بررسی نمایش محتوای متنی دوره.";
+            await db.SaveChangesAsync();
+        }
+
+        var lesson2 = await db.CourseLessons
+            .FirstOrDefaultAsync(l => l.CourseModuleId == module.Id && l.SortOrder == 2);
+
+        if (lesson2 == null)
+        {
+            db.CourseLessons.Add(new CourseLesson
+            {
+                CourseModuleId = module.Id,
+                Title = "درس ویدئویی تست",
+                Description = "درس آزمایشی برای تست پخش ویدئو",
+                ContentType = "Video",
+                ContentUrl = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+                DurationMinutes = 1,
+                SortOrder = 2,
+                IsActive = true,
+                IsFreePreview = true
+            });
+        }
+
+        await db.SaveChangesAsync();
+}
+
 }

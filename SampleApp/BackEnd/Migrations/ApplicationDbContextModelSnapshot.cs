@@ -17,6 +17,41 @@ namespace BackEnd.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
 
+            modelBuilder.Entity("BackEnd.Models.Certificate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CertificateNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CourseTitle")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EnrollmentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("IssuedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("StudentName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CertificateNumber")
+                        .IsUnique();
+
+                    b.HasIndex("EnrollmentId")
+                        .IsUnique();
+
+                    b.ToTable("Certificates");
+                });
+
             modelBuilder.Entity("BackEnd.Models.Course", b =>
                 {
                     b.Property<int>("Id")
@@ -55,6 +90,9 @@ namespace BackEnd.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ContentType")
                         .IsRequired()
@@ -203,7 +241,7 @@ namespace BackEnd.Migrations
                     b.ToTable("Enrollments");
                 });
 
-            modelBuilder.Entity("BackEnd.Models.EnrollmentLessonProgress", b =>
+            modelBuilder.Entity("BackEnd.Models.LessonProgress", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -225,9 +263,10 @@ namespace BackEnd.Migrations
 
                     b.HasIndex("CourseLessonId");
 
-                    b.HasIndex("EnrollmentId");
+                    b.HasIndex("EnrollmentId", "CourseLessonId")
+                        .IsUnique();
 
-                    b.ToTable("EnrollmentLessonProgresses");
+                    b.ToTable("LessonProgresses");
                 });
 
             modelBuilder.Entity("BackEnd.Models.OrganizationSettings", b =>
@@ -249,9 +288,7 @@ namespace BackEnd.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("PackageLevel")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(1);
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("PrimaryColor")
                         .IsRequired()
@@ -480,6 +517,17 @@ namespace BackEnd.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("BackEnd.Models.Certificate", b =>
+                {
+                    b.HasOne("BackEnd.Models.Enrollment", "Enrollment")
+                        .WithMany()
+                        .HasForeignKey("EnrollmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Enrollment");
+                });
+
             modelBuilder.Entity("BackEnd.Models.Course", b =>
                 {
                     b.HasOne("BackEnd.Models.User", "Instructor")
@@ -571,7 +619,7 @@ namespace BackEnd.Migrations
                     b.Navigation("SupportUser");
                 });
 
-            modelBuilder.Entity("BackEnd.Models.EnrollmentLessonProgress", b =>
+            modelBuilder.Entity("BackEnd.Models.LessonProgress", b =>
                 {
                     b.HasOne("BackEnd.Models.CourseLesson", "CourseLesson")
                         .WithMany()

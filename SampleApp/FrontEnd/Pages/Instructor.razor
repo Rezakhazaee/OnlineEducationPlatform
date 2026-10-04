@@ -1,0 +1,958 @@
+@page "/instructor"
+
+@using System.Net.Http.Json
+@using FrontEnd.Services
+
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>پنل مدرس | آموزش‌یار</PageTitle>
+
+@if (Loading)
+{
+    <div class="instructor-loading">در حال بارگذاری پنل مدرس...</div>
+}
+else if (Auth.Role != "Instructor")
+{
+    <div class="instructor-loading">
+        <h3>دسترسی غیرمجاز</h3>
+        <p>این صفحه فقط برای مدرس قابل دسترسی است.</p>
+        <button class="instructor-primary-btn" @onclick="GoLogin">
+            ورود
+        </button>
+    </div>
+}
+else
+{
+    <div class="instructor-page" dir="rtl">
+
+        <aside class="instructor-sidebar">
+
+            <div class="instructor-brand">
+                <div class="instructor-brand-mark">آ</div>
+                <div>
+                    <strong>آموزش‌یار</strong>
+                    <small>پنل مدرس</small>
+                </div>
+            </div>
+
+            <div class="instructor-user">
+                <div class="instructor-avatar">
+                    @(string.IsNullOrWhiteSpace(Auth.FullName)
+                        ? "م"
+                        : Auth.FullName!.Substring(0, 1))
+                </div>
+                <div>
+                    <strong>@Auth.FullName</strong>
+                    <small>مدرس</small>
+                </div>
+            </div>
+
+            <nav class="instructor-nav">
+                <button class="@(SelectedCourse == null ? "active" : "")"
+                        @onclick="ClearSelection">
+                    <span>⌂</span>
+                    داشبورد مدرس
+                </button>
+
+                <a href="/courses">
+                    <span>◫</span>
+                    مشاهده دوره‌های سایت
+                </a>
+
+                <button @onclick="Logout">
+                    <span>↪</span>
+                    خروج
+                </button>
+            </nav>
+
+        </aside>
+
+        <main class="instructor-main">
+
+            <header class="instructor-topbar">
+                <div>
+                    <small>پنل مدرس</small>
+                    <h1>مدیریت دوره‌های آموزشی</h1>
+                </div>
+
+                <div class="instructor-course-count">
+                    <span>دوره‌های من</span>
+                    <strong>@Courses.Count</strong>
+                </div>
+            </header>
+
+            <section class="instructor-content">
+
+                @if (Courses.Count == 0)
+                {
+                    <div class="instructor-empty">
+                        <h3>هنوز دوره‌ای به شما اختصاص داده نشده است.</h3>
+                        <p>وقتی یک دوره به این مدرس اختصاص داده شود، از اینجا قابل مدیریت خواهد بود.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="instructor-layout">
+
+                        <section class="instructor-courses-card">
+
+                            <div class="instructor-section-title">
+                                <div>
+                                    <small>COURSES</small>
+                                    <h2>دوره‌های من</h2>
+                                </div>
+                            </div>
+
+                            <div class="instructor-course-list">
+
+                                @foreach (var course in Courses)
+                                {
+                                    <button type="button"
+                                            class="instructor-course-item @(SelectedCourse?.Id == course.Id ? "selected" : "")"
+                                            @onclick="() => SelectCourse(course.Id)">
+
+                                        <div class="course-item-icon">آ</div>
+
+                                        <div class="course-item-info">
+                                            <strong>@course.Title</strong>
+                                            <small>
+                                                @(course.IsActive ? "فعال" : "غیرفعال")
+                                                · @($"{course.Price:N0}") تومان
+                                            </small>
+                                        </div>
+
+                                        <span>←</span>
+
+                                    </button>
+                                }
+
+                            </div>
+
+                        </section>
+
+                        @if (SelectedCourse != null)
+                        {
+                            <section class="instructor-workspace">
+
+                                <div class="instructor-course-header">
+
+                                    <div>
+                                        <small>COURSE</small>
+                                        <h2>@SelectedCourse.Title</h2>
+                                        <p>
+                                            @(string.IsNullOrWhiteSpace(SelectedCourse.Description)
+                                                ? "برای این دوره توضیحی ثبت نشده است."
+                                                : SelectedCourse.Description)
+                                        </p>
+                                    </div>
+
+                                    <span class="instructor-status @(SelectedCourse.IsActive ? "active" : "inactive")">
+                                        @(SelectedCourse.IsActive ? "فعال" : "غیرفعال")
+                                    </span>
+
+                                </div>
+
+                                <div class="instructor-course-edit">
+
+                                    <h3>اطلاعات دوره</h3>
+
+                                    <div class="instructor-form-grid">
+
+                                        <div>
+                                            <label>عنوان دوره</label>
+                                            <input @bind="CourseTitle" />
+                                        </div>
+
+                                        <div>
+                                            <label>شهریه</label>
+                                            <input type="number" @bind="CoursePrice" />
+                                        </div>
+
+                                        <div class="full">
+                                            <label>توضیحات</label>
+                                            <textarea rows="3" @bind="CourseDescription"></textarea>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="instructor-form-actions">
+                                        <label class="instructor-check">
+                                            <input type="checkbox" @bind="CourseIsActive" />
+                                            دوره فعال باشد
+                                        </label>
+
+                                        <button class="instructor-primary-btn"
+                                                @onclick="SaveCourse"
+                                                disabled="@Saving">
+                                            @(Saving ? "در حال ذخیره..." : "ذخیره اطلاعات دوره")
+                                        </button>
+                                    </div>
+
+                                </div>
+
+                                <div class="instructor-content-grid">
+
+                                    <section class="instructor-modules-card">
+
+                                        <div class="instructor-card-header">
+                                            <div>
+                                                <small>STRUCTURE</small>
+                                                <h3>سرفصل‌ها</h3>
+                                            </div>
+
+                                            <button class="instructor-small-btn"
+                                                    @onclick="BeginNewModule">
+                                                + سرفصل جدید
+                                            </button>
+                                        </div>
+
+                                        @if (Modules.Count == 0)
+                                        {
+                                            <div class="instructor-mini-empty">
+                                                هنوز سرفصلی ثبت نشده است.
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            foreach (var module in Modules)
+                                            {
+                                                <div class="instructor-module-row @(SelectedModule?.Id == module.Id ? "selected" : "")">
+
+                                                    <button class="module-select"
+                                                            @onclick="() => SelectModule(module.Id)">
+                                                        <strong>@module.Title</strong>
+                                                        <small>@module.LessonCount درس</small>
+                                                    </button>
+
+                                                    <div class="module-actions">
+                                                        <button @onclick="() => BeginEditModule(module)">ویرایش</button>
+                                                        <button class="danger" @onclick="() => DeleteModule(module.Id)">حذف</button>
+                                                    </div>
+
+                                                </div>
+                                            }
+                                        }
+
+                                    </section>
+
+                                    <section class="instructor-lessons-card">
+
+                                        @if (SelectedModule == null)
+                                        {
+                                            <div class="instructor-mini-empty large">
+                                                یک سرفصل را انتخاب کنید تا درس‌های آن نمایش داده شوند.
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="instructor-card-header">
+                                                <div>
+                                                    <small>LESSONS</small>
+                                                    <h3>@SelectedModule.Title</h3>
+                                                </div>
+
+                                                <button class="instructor-small-btn"
+                                                        @onclick="BeginNewLesson">
+                                                    + درس جدید
+                                                </button>
+                                            </div>
+
+                                            @if (Lessons.Count == 0)
+                                            {
+                                                <div class="instructor-mini-empty">
+                                                    هنوز درسی برای این سرفصل ثبت نشده است.
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                foreach (var lesson in Lessons)
+                                                {
+                                                    <div class="instructor-lesson-row">
+
+                                                        <div>
+                                                            <strong>@lesson.Title</strong>
+                                                            <small>
+                                                                @GetContentTypeText(lesson.ContentType)
+                                                                · @lesson.DurationMinutes دقیقه
+                                                            </small>
+                                                        </div>
+
+                                                        <div class="lesson-actions">
+                                                            <button @onclick="() => BeginEditLesson(lesson)">ویرایش</button>
+                                                            <button class="danger" @onclick="() => DeleteLesson(lesson.Id)">حذف</button>
+                                                        </div>
+
+                                                    </div>
+                                                }
+                                            }
+                                        }
+
+                                    </section>
+
+                                </div>
+
+                                <InstructorCourseStudents CourseId="@SelectedCourse.Id" />
+
+
+                                @if (EditingModule)
+                                {
+                                    <div class="instructor-editor">
+
+                                        <h3>@(EditingModuleId.HasValue ? "ویرایش سرفصل" : "سرفصل جدید")</h3>
+
+                                        <div class="instructor-form-grid">
+                                            <div>
+                                                <label>عنوان سرفصل</label>
+                                                <input @bind="ModuleTitle" />
+                                            </div>
+
+                                            <div>
+                                                <label>ترتیب</label>
+                                                <input type="number" @bind="ModuleSortOrder" />
+                                            </div>
+                                        </div>
+
+                                        <div class="instructor-form-actions">
+                                            <label class="instructor-check">
+                                                <input type="checkbox" @bind="ModuleIsActive" />
+                                                فعال
+                                            </label>
+
+                                            <div>
+                                                <button class="instructor-outline-btn"
+                                                        @onclick="CancelModuleEditor">
+                                                    انصراف
+                                                </button>
+
+                                                <button class="instructor-primary-btn"
+                                                        @onclick="SaveModule"
+                                                        disabled="@Saving">
+                                                    ذخیره
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                }
+
+                                @if (EditingLesson && SelectedModule != null)
+                                {
+                                    <div class="instructor-editor">
+
+                                        <h3>@(EditingLessonId.HasValue ? "ویرایش درس" : "درس جدید")</h3>
+
+                                        <div class="instructor-form-grid">
+
+                                            <div>
+                                                <label>عنوان درس</label>
+                                                <input @bind="LessonTitle" />
+                                            </div>
+
+                                            <div>
+                                                <label>نوع محتوا</label>
+                                                <select @bind="LessonContentType">
+                                                    <option value="Text">متنی</option>
+                                                    <option value="Video">ویدئویی</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label>مدت (دقیقه)</label>
+                                                <input type="number" @bind="LessonDuration" />
+                                            </div>
+
+                                            <div>
+                                                <label>ترتیب</label>
+                                                <input type="number" @bind="LessonSortOrder" />
+                                            </div>
+
+                                            <div class="full">
+                                                <label>توضیح کوتاه</label>
+                                                <textarea rows="2" @bind="LessonDescription"></textarea>
+                                            </div>
+
+                                            @if (LessonContentType == "Video")
+                                            {
+                                                <div class="full">
+                                                    <label>آدرس ویدئو</label>
+                                                    <input @bind="LessonContentUrl" />
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="full">
+                                                    <label>متن کامل درس</label>
+                                                    <textarea rows="8" @bind="LessonContent"></textarea>
+                                                </div>
+                                            }
+
+                                        </div>
+
+                                        <div class="instructor-form-actions">
+
+                                            <div class="instructor-checks">
+                                                <label class="instructor-check">
+                                                    <input type="checkbox" @bind="LessonIsActive" />
+                                                    فعال
+                                                </label>
+
+                                                <label class="instructor-check">
+                                                    <input type="checkbox" @bind="LessonIsFreePreview" />
+                                                    پیش‌نمایش رایگان
+                                                </label>
+                                            </div>
+
+                                            <div>
+                                                <button class="instructor-outline-btn"
+                                                        @onclick="CancelLessonEditor">
+                                                    انصراف
+                                                </button>
+
+                                                <button class="instructor-primary-btn"
+                                                        @onclick="SaveLesson"
+                                                        disabled="@Saving">
+                                                    ذخیره درس
+                                                </button>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                                {
+                                    <div class="instructor-error">
+                                        @ErrorMessage
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(SuccessMessage))
+                                {
+                                    <div class="instructor-success">
+                                        @SuccessMessage
+                                    </div>
+                                }
+
+                            </section>
+                        }
+
+                    </div>
+                }
+
+            </section>
+
+        </main>
+
+    </div>
+}
+
+@code {
+
+    private List<CourseDto> Courses { get; set; } = new();
+    private List<CourseModuleDto> Modules { get; set; } = new();
+    private List<CourseLessonDto> Lessons { get; set; } = new();
+
+    private CourseDto? SelectedCourse { get; set; }
+    private CourseModuleDto? SelectedModule { get; set; }
+
+    private bool Loading { get; set; } = true;
+    private bool Saving { get; set; }
+
+    private string? ErrorMessage { get; set; }
+    private string? SuccessMessage { get; set; }
+
+    private string CourseTitle { get; set; } = "";
+    private string? CourseDescription { get; set; }
+    private decimal CoursePrice { get; set; }
+    private bool CourseIsActive { get; set; }
+
+    private bool EditingModule { get; set; }
+    private int? EditingModuleId { get; set; }
+    private string ModuleTitle { get; set; } = "";
+    private int ModuleSortOrder { get; set; }
+    private bool ModuleIsActive { get; set; } = true;
+
+    private bool EditingLesson { get; set; }
+    private int? EditingLessonId { get; set; }
+    private string LessonTitle { get; set; } = "";
+    private string? LessonDescription { get; set; }
+    private string LessonContentType { get; set; } = "Text";
+    private string? LessonContentUrl { get; set; }
+    private string? LessonContent { get; set; }
+    private int LessonDuration { get; set; }
+    private int LessonSortOrder { get; set; }
+    private bool LessonIsActive { get; set; } = true;
+    private bool LessonIsFreePreview { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Auth.RestoreAsync();
+
+        if (Auth.Role != "Instructor")
+        {
+            Loading = false;
+            StateHasChanged();
+            return;
+        }
+
+        await LoadCourses();
+
+        Loading = false;
+        StateHasChanged();
+    }
+
+    private HttpClient Client() => Auth.CreateAuthenticatedClient();
+
+    private async Task LoadCourses()
+    {
+        ErrorMessage = null;
+
+        try
+        {
+            Courses = await Client().GetFromJsonAsync<List<CourseDto>>(
+                "api/Courses") ?? new();
+
+            if (Courses.Count > 0)
+            {
+                await SelectCourse(Courses[0].Id);
+            }
+        }
+        catch
+        {
+            ErrorMessage = "دریافت دوره‌های مدرس با خطا مواجه شد.";
+        }
+    }
+
+    private async Task SelectCourse(int id)
+    {
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        SelectedCourse = Courses.FirstOrDefault(x => x.Id == id);
+
+        if (SelectedCourse == null)
+        {
+            return;
+        }
+
+        CourseTitle = SelectedCourse.Title;
+        CourseDescription = SelectedCourse.Description;
+        CoursePrice = SelectedCourse.Price;
+        CourseIsActive = SelectedCourse.IsActive;
+
+        SelectedModule = null;
+        Lessons = new();
+
+        await LoadModules();
+    }
+
+    private async Task LoadModules()
+    {
+        if (SelectedCourse == null)
+            return;
+
+        try
+        {
+            Modules = await Client().GetFromJsonAsync<List<CourseModuleDto>>(
+                $"api/CourseModules/course/{SelectedCourse.Id}") ?? new();
+        }
+        catch
+        {
+            ErrorMessage = "دریافت سرفصل‌ها با خطا مواجه شد.";
+        }
+    }
+
+    private async Task SelectModule(int id)
+    {
+        SelectedModule = Modules.FirstOrDefault(x => x.Id == id);
+        EditingLesson = false;
+        await LoadLessons();
+    }
+
+    private async Task LoadLessons()
+    {
+        if (SelectedModule == null)
+            return;
+
+        try
+        {
+            Lessons = await Client().GetFromJsonAsync<List<CourseLessonDto>>(
+                $"api/CourseLessons/module/{SelectedModule.Id}") ?? new();
+        }
+        catch
+        {
+            ErrorMessage = "دریافت درس‌ها با خطا مواجه شد.";
+        }
+    }
+
+    private async Task SaveCourse()
+    {
+        if (SelectedCourse == null)
+            return;
+
+        Saving = true;
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        try
+        {
+            var response = await Client().PutAsJsonAsync(
+                $"api/Courses/{SelectedCourse.Id}",
+                new
+                {
+                    title = CourseTitle,
+                    description = CourseDescription,
+                    price = CoursePrice,
+                    isActive = CourseIsActive
+                });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = "ذخیره اطلاعات دوره انجام نشد.";
+                return;
+            }
+
+            var updated = await response.Content.ReadFromJsonAsync<CourseDto>();
+
+            if (updated != null)
+            {
+                var index = Courses.FindIndex(x => x.Id == updated.Id);
+                if (index >= 0)
+                    Courses[index] = updated;
+
+                SelectedCourse = updated;
+            }
+
+            SuccessMessage = "اطلاعات دوره ذخیره شد.";
+        }
+        catch
+        {
+            ErrorMessage = "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            Saving = false;
+        }
+    }
+
+    private void BeginNewModule()
+    {
+        EditingModule = true;
+        EditingModuleId = null;
+        ModuleTitle = "";
+        ModuleSortOrder = Modules.Count;
+        ModuleIsActive = true;
+    }
+
+    private void BeginEditModule(CourseModuleDto module)
+    {
+        EditingModule = true;
+        EditingModuleId = module.Id;
+        ModuleTitle = module.Title;
+        ModuleSortOrder = module.SortOrder;
+        ModuleIsActive = module.IsActive;
+    }
+
+    private void CancelModuleEditor()
+    {
+        EditingModule = false;
+        EditingModuleId = null;
+    }
+
+    private async Task SaveModule()
+    {
+        if (SelectedCourse == null || string.IsNullOrWhiteSpace(ModuleTitle))
+            return;
+
+        Saving = true;
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        try
+        {
+            HttpResponseMessage response;
+
+            if (EditingModuleId.HasValue)
+            {
+                response = await Client().PutAsJsonAsync(
+                    $"api/CourseModules/{EditingModuleId.Value}",
+                    new
+                    {
+                        title = ModuleTitle,
+                        sortOrder = ModuleSortOrder,
+                        isActive = ModuleIsActive
+                    });
+            }
+            else
+            {
+                response = await Client().PostAsJsonAsync(
+                    "api/CourseModules",
+                    new
+                    {
+                        courseId = SelectedCourse.Id,
+                        title = ModuleTitle,
+                        sortOrder = ModuleSortOrder,
+                        isActive = ModuleIsActive
+                    });
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = "ذخیره سرفصل انجام نشد.";
+                return;
+            }
+
+            EditingModule = false;
+            EditingModuleId = null;
+
+            await LoadModules();
+            SuccessMessage = "سرفصل ذخیره شد.";
+        }
+        catch
+        {
+            ErrorMessage = "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            Saving = false;
+        }
+    }
+
+    private async Task DeleteModule(int id)
+    {
+        try
+        {
+            var response = await Client().DeleteAsync($"api/CourseModules/{id}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = "حذف سرفصل انجام نشد.";
+                return;
+            }
+
+            if (SelectedModule?.Id == id)
+            {
+                SelectedModule = null;
+                Lessons = new();
+            }
+
+            await LoadModules();
+            SuccessMessage = "سرفصل حذف شد.";
+        }
+        catch
+        {
+            ErrorMessage = "ارتباط با سرور برقرار نشد.";
+        }
+    }
+
+    private void BeginNewLesson()
+    {
+        if (SelectedModule == null)
+            return;
+
+        EditingLesson = true;
+        EditingLessonId = null;
+
+        LessonTitle = "";
+        LessonDescription = null;
+        LessonContentType = "Text";
+        LessonContentUrl = null;
+        LessonContent = "";
+        LessonDuration = 0;
+        LessonSortOrder = Lessons.Count;
+        LessonIsActive = true;
+        LessonIsFreePreview = false;
+    }
+
+    private void BeginEditLesson(CourseLessonDto lesson)
+    {
+        EditingLesson = true;
+        EditingLessonId = lesson.Id;
+
+        LessonTitle = lesson.Title;
+        LessonDescription = lesson.Description;
+        LessonContentType = lesson.ContentType;
+        LessonContentUrl = lesson.ContentUrl;
+        LessonContent = lesson.Content;
+        LessonDuration = lesson.DurationMinutes;
+        LessonSortOrder = lesson.SortOrder;
+        LessonIsActive = lesson.IsActive;
+        LessonIsFreePreview = lesson.IsFreePreview;
+    }
+
+    private void CancelLessonEditor()
+    {
+        EditingLesson = false;
+        EditingLessonId = null;
+    }
+
+    private async Task SaveLesson()
+    {
+        if (SelectedModule == null || string.IsNullOrWhiteSpace(LessonTitle))
+            return;
+
+        Saving = true;
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        try
+        {
+            HttpResponseMessage response;
+
+            var payload = new
+            {
+                title = LessonTitle,
+                description = LessonDescription,
+                contentType = LessonContentType,
+                contentUrl = LessonContentUrl,
+                content = LessonContent,
+                durationMinutes = LessonDuration,
+                sortOrder = LessonSortOrder,
+                isActive = LessonIsActive,
+                isFreePreview = LessonIsFreePreview
+            };
+
+            if (EditingLessonId.HasValue)
+            {
+                response = await Client().PutAsJsonAsync(
+                    $"api/CourseLessons/{EditingLessonId.Value}",
+                    payload);
+            }
+            else
+            {
+                response = await Client().PostAsJsonAsync(
+                    "api/CourseLessons",
+                    new
+                    {
+                        courseModuleId = SelectedModule.Id,
+                        payload.title,
+                        payload.description,
+                        payload.contentType,
+                        payload.contentUrl,
+                        payload.content,
+                        payload.durationMinutes,
+                        payload.sortOrder,
+                        payload.isActive,
+                        payload.isFreePreview
+                    });
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = "ذخیره درس انجام نشد.";
+                return;
+            }
+
+            EditingLesson = false;
+            EditingLessonId = null;
+
+            await LoadLessons();
+            await LoadModules();
+
+            if (SelectedModule != null)
+                SelectedModule = Modules.FirstOrDefault(x => x.Id == SelectedModule.Id);
+
+            SuccessMessage = "درس ذخیره شد.";
+        }
+        catch
+        {
+            ErrorMessage = "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            Saving = false;
+        }
+    }
+
+    private async Task DeleteLesson(int id)
+    {
+        try
+        {
+            var response = await Client().DeleteAsync(
+                $"api/CourseLessons/{id}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = "حذف درس انجام نشد.";
+                return;
+            }
+
+            await LoadLessons();
+            await LoadModules();
+            SuccessMessage = "درس حذف شد.";
+        }
+        catch
+        {
+            ErrorMessage = "ارتباط با سرور برقرار نشد.";
+        }
+    }
+
+    private string GetContentTypeText(string type)
+    {
+        return type switch
+        {
+            "Text" => "متنی",
+            "Video" => "ویدئویی",
+            _ => type
+        };
+    }
+
+    private void ClearSelection()
+    {
+        SelectedCourse = null;
+        SelectedModule = null;
+        Modules = new();
+        Lessons = new();
+    }
+
+    private void GoLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    private async Task Logout()
+    {
+        await Auth.LogoutAsync();
+        Navigation.NavigateTo("/login");
+    }
+
+    private class CourseDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+        public string? Description { get; set; }
+        public decimal Price { get; set; }
+        public int? InstructorId { get; set; }
+        public bool IsActive { get; set; }
+    }
+
+    private class CourseModuleDto
+    {
+        public int Id { get; set; }
+        public int CourseId { get; set; }
+        public string Title { get; set; } = "";
+        public int SortOrder { get; set; }
+        public bool IsActive { get; set; }
+        public int LessonCount { get; set; }
+    }
+
+    private class CourseLessonDto
+    {
+        public int Id { get; set; }
+        public int CourseModuleId { get; set; }
+        public string Title { get; set; } = "";
+        public string? Description { get; set; }
+        public string ContentType { get; set; } = "Text";
+        public string? ContentUrl { get; set; }
+        public string? Content { get; set; }
+        public int DurationMinutes { get; set; }
+        public int SortOrder { get; set; }
+        public bool IsActive { get; set; }
+        public bool IsFreePreview { get; set; }
+    }
+}
