@@ -135,6 +135,8 @@
         }
         else
         {
+            @if (ShowEnrollmentForm || IsEditMode)
+            {
             <section class="admin-content-card">
 
                 <div class="admin-card-header">
@@ -151,9 +153,6 @@
 
                 </div>
 
-
-                @if (ShowEnrollmentForm || IsEditMode)
-                {
                 <div class="course-form-card">
 
                     <div class="course-form-header">
@@ -451,9 +450,9 @@
 </div>
 
                 </div>
-                }
 
             </section>
+            }
 
 
             <section class="admin-content-card">
@@ -477,13 +476,33 @@
                     </div>
 
                     <span class="users-count">
-                        @Enrollments.Count ثبت‌نام
+                        @FilteredEnrollments.Count() ثبت‌نام
                     </span>
 
                 </div>
 
 
-                @if (Enrollments.Count == 0)
+
+                <div class="admin-search-bar">
+                    <input
+                        class="admin-search-input"
+                        type="text"
+                        placeholder="جستجوی دانشجو، دوره، سازمان یا وضعیت..."
+                        @bind="EnrollmentSearchText"
+                        @bind:event="oninput" />
+
+                    @if (!string.IsNullOrWhiteSpace(EnrollmentSearchText))
+                    {
+                        <button
+                            type="button"
+                            class="admin-secondary-btn"
+                            @onclick="ClearEnrollmentSearch">
+                            پاک کردن
+                        </button>
+                    }
+                </div>
+
+                @if (FilteredEnrollments.Count() == 0)
                 {
                     <div class="admin-empty-state">
 
@@ -544,7 +563,7 @@
 
                             <tbody>
 
-                                @foreach (var enrollment in Enrollments)
+                                @foreach (var enrollment in FilteredEnrollments)
                                 {
                                     <tr>
 
@@ -676,6 +695,22 @@ else
     private string FormStatus { get; set; } = "Active";
 
     private string FormDescription { get; set; } = string.Empty;
+
+    private string EnrollmentSearchText { get; set; } = string.Empty;
+
+    private IEnumerable<EnrollmentDto> FilteredEnrollments =>
+        Enrollments.Where(e =>
+            string.IsNullOrWhiteSpace(EnrollmentSearchText) ||
+            e.StudentName.Contains(EnrollmentSearchText, StringComparison.OrdinalIgnoreCase) ||
+            e.CourseTitle.Contains(EnrollmentSearchText, StringComparison.OrdinalIgnoreCase) ||
+            (e.CoursePartnerOrganization?.PartnerOrganization?.Name ?? string.Empty)
+                .Contains(EnrollmentSearchText, StringComparison.OrdinalIgnoreCase) ||
+            e.Status.Contains(EnrollmentSearchText, StringComparison.OrdinalIgnoreCase));
+
+    private void ClearEnrollmentSearch()
+    {
+        EnrollmentSearchText = string.Empty;
+    }
 
 
     private int? SelectedCourseId =>
