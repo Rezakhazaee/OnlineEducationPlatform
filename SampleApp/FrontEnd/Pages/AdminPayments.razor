@@ -9,49 +9,60 @@
 
 <div class="admin-page">
 
-<aside class="admin-sidebar">
+    <aside class="admin-sidebar">
 
-    <div class="admin-brand">
-        آموزش‌یار
-    </div>
+        <div class="admin-brand">
+            <div class="admin-brand-mark">آ</div>
 
-    <nav class="admin-nav">
+            <div>
+                <strong>آموزش‌یار</strong>
+                <small>پنل مدیریت</small>
+            </div>
+        </div>
 
-        <a href="/admin">
-            داشبورد
-        </a>
+        <nav class="admin-menu">
 
-        <a href="/admin/users">
-            کاربران
-        </a>
+            <a href="/admin">
+                <span>⌂</span>
+                داشبورد
+            </a>
 
-        <a href="/admin/courses">
-            دوره‌ها
-        </a>
+            <a href="/admin/courses">
+                <span>▣</span>
+                دوره‌ها
+            </a>
 
-        <a href="/admin/enrollments">
-            ثبت‌نام‌ها
-        </a>
+            <a href="/admin/users">
+                <span>♙</span>
+                کاربران
+            </a>
 
-        <a href="/admin/payments" class="active">
-            پرداخت‌ها
-        </a>
+            <a href="/admin/enrollments">
+                <span>✓</span>
+                ثبت‌نام‌ها
+            </a>
 
-        <a href="/admin/organizations">
-            سازمان‌ها و ظاهر
-        </a>
+            <a href="/admin/payments" class="active">
+                <span>₿</span>
+                پرداخت‌ها
+            </a>
 
-        <a href="/admin/partner-organizations">
-            سازمان‌های طرف قرارداد
-        </a>
+            <a href="/admin/reports">
+                <span>▤</span>
+                گزارش‌ها
+            </a>
 
-        <a href="/admin/reports">
-            گزارش‌ها
-        </a>
+        </nav>
 
-    </nav>
+        <div class="admin-sidebar-bottom">
 
-</aside>
+            <a href="/">
+                ← بازگشت به سایت
+            </a>
+
+        </div>
+
+    </aside>
 
 
 <main class="admin-main">
@@ -85,6 +96,8 @@
     }
 
 
+    @if (ShowPaymentForm)
+    {
     <section class="admin-card">
 
         <div class="admin-card-header">
@@ -268,6 +281,7 @@
 
         <div class="course-form-actions">
 
+
             <button
                 class="admin-primary-btn"
                 @onclick="CreatePayment"
@@ -282,6 +296,7 @@
         </div>
 
     </section>
+    }
 
 
     <section class="admin-card">
@@ -290,6 +305,7 @@
 
             <div>
                 <h3>لیست پرداخت‌ها</h3>
+                <button type="button" class="admin-primary-btn" @onclick="OpenCreatePaymentForm">+ افزودن پرداخت</button>
 
                 <p>
                     @Payments.Count پرداخت ثبت شده
@@ -472,6 +488,8 @@ private List<EnrollmentDto> Enrollments { get; set; } = new();
 private bool IsLoading { get; set; } = true;
 
 private bool IsSaving { get; set; }
+private bool ShowPaymentForm { get; set; }
+
 
 private bool IsProcessingPayment { get; set; }
 
@@ -758,6 +776,19 @@ private async Task CancelPayment(
     {
         IsProcessingPayment = false;
     }
+}
+
+
+private void OpenCreatePaymentForm()
+{
+    ResetForm();
+    ShowPaymentForm = true;
+}
+
+private void ClosePaymentForm()
+{
+    ShowPaymentForm = false;
+    ResetForm();
 }
 
 

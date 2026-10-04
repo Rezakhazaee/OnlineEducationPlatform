@@ -407,6 +407,25 @@
 
                         + افزودن کاربر
 
+
+                    <div class="admin-search-bar">
+                        <input
+                            class="admin-input admin-search-input"
+                            placeholder="جستجو در نام، نام کاربری، موبایل یا نقش..."
+                            @bind="SearchText"
+                            @bind:event="oninput" />
+
+                        @if (!string.IsNullOrWhiteSpace(SearchText))
+                        {
+                            <button
+                                type="button"
+                                class="admin-secondary-btn"
+                                @onclick="ClearSearch">
+                                پاک کردن
+                            </button>
+                        }
+                    </div>
+
                     </button>
 
                 </div>
@@ -474,7 +493,7 @@
 
                             <tbody>
 
-                                @foreach (var user in Users)
+                                @foreach (var user in FilteredUsers)
                                 {
                                     <tr>
 
@@ -621,6 +640,22 @@
       }
 
     private List<UserDto> Users { get; set; } = new();
+
+    private string SearchText { get; set; } = string.Empty;
+
+    private IEnumerable<UserDto> FilteredUsers =>
+        Users.Where(u =>
+            string.IsNullOrWhiteSpace(SearchText) ||
+            u.FullName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+            u.Username.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+            u.Mobile.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+            u.Role.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+
+    private void ClearSearch()
+    {
+        SearchText = string.Empty;
+    }
+
 
     private bool IsLoading { get; set; } = true;
 
