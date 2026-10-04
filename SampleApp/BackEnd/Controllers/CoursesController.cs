@@ -1,7 +1,6 @@
 using BackEnd.Data;
 using BackEnd.DTOs;
 using BackEnd.Models;
-using BackEnd.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,13 +12,10 @@ namespace BackEnd.Controllers;
 public class CoursesController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-    private readonly PackageAccessService _packageAccess;
-public CoursesController(
-        ApplicationDbContext context,
-        PackageAccessService packageAccess)
+
+    public CoursesController(ApplicationDbContext context)
     {
         _context = context;
-        _packageAccess = packageAccess;
     }
 
     // =========================
@@ -55,7 +51,6 @@ public CoursesController(
                 Title = c.Title,
                 Description = c.Description,
                 Price = c.Price,
-                DeliveryType = c.DeliveryType,
                 InstructorId = c.InstructorId,
                 IsActive = c.IsActive
             })
@@ -115,7 +110,6 @@ public CoursesController(
             Title = course.Title,
             Description = course.Description,
             Price = course.Price,
-            DeliveryType = course.DeliveryType,
             InstructorId = course.InstructorId,
             IsActive = course.IsActive
         };
@@ -130,20 +124,12 @@ public CoursesController(
     // =========================
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,EducationStaff,Instructor")]
+    [Authorize(Roles = "Admin,Instructor")]
     public async Task<ActionResult<CourseDto>> Update(
         int id,
         UpdateCourseDto dto)
     {
-        if (!await _packageAccess.HasPackageAsync(2) && !string.Equals(dto.DeliveryType, "InPerson", StringComparison.OrdinalIgnoreCase))
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new
-            {
-                message = "در پکیج پایه فقط دوره حضوری قابل استفاده است."
-            });
-        }
-
-var course = await _context.Courses
+        var course = await _context.Courses
             .FirstOrDefaultAsync(c => c.Id == id);
 
         // دوره پیدا نشد
@@ -184,7 +170,6 @@ var course = await _context.Courses
         course.Title = dto.Title;
         course.Description = dto.Description;
         course.Price = dto.Price;
-        course.DeliveryType = dto.DeliveryType;
         course.IsActive = dto.IsActive;
 
         await _context.SaveChangesAsync();
@@ -195,7 +180,6 @@ var course = await _context.Courses
             Title = course.Title,
             Description = course.Description,
             Price = course.Price,
-            DeliveryType = course.DeliveryType,
             InstructorId = course.InstructorId,
             IsActive = course.IsActive
         };
@@ -211,7 +195,7 @@ var course = await _context.Courses
 // =========================
 
 [HttpPut("{id}/status")]
-[Authorize(Roles = "Admin,EducationStaff,Instructor")]
+[Authorize(Roles = "Admin,Instructor")]
 public async Task<ActionResult<CourseDto>> UpdateStatus(
     int id,
     UpdateCourseStatusDto dto)
@@ -279,7 +263,7 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
     // =========================
 
     [HttpGet("instructors")]
-    [Authorize(Roles = "Admin,EducationStaff")]
+    [Authorize(Roles = "Admin")]
     public async Task<List<InstructorDto>> GetInstructors()
     {
         return await _context.Users
@@ -306,19 +290,11 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
     // =========================
 
     [HttpPost]
-    [Authorize(Roles = "Admin,EducationStaff")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<CourseDto>> Create(
         CreateCourseDto dto)
     {
-        if (!await _packageAccess.HasPackageAsync(2) && !string.Equals(dto.DeliveryType, "InPerson", StringComparison.OrdinalIgnoreCase))
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new
-            {
-                message = "در پکیج پایه فقط دوره حضوری قابل ایجاد است."
-            });
-        }
-
-// اگر برای دوره مدرس تعیین شده است
+        // اگر برای دوره مدرس تعیین شده است
         if (dto.InstructorId.HasValue)
         {
             var instructor = await _context.Users
@@ -358,7 +334,6 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
             Title = dto.Title,
             Description = dto.Description,
             Price = dto.Price,
-            DeliveryType = dto.DeliveryType,
             InstructorId = dto.InstructorId,
             IsActive = dto.IsActive
         };
@@ -373,7 +348,6 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
             Title = course.Title,
             Description = course.Description,
             Price = course.Price,
-            DeliveryType = course.DeliveryType,
             InstructorId = course.InstructorId,
             IsActive = course.IsActive
         };

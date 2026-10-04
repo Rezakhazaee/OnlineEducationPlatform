@@ -4,13 +4,70 @@
 @using FrontEnd.Services
 
 @inject AuthService Auth
-@inject NavigationManager Navigation
 
 <PageTitle>تنظیمات سامانه | آموزش‌یار</PageTitle>
 
 <div class="admin-page">
 
-        <AdminSidebar ActivePage="settings" />
+    <aside class="admin-sidebar">
+
+        <div class="admin-brand">
+            <div class="admin-brand-mark">آ</div>
+
+            <div>
+                <strong>آموزش‌یار</strong>
+                <small>پنل مدیریت</small>
+            </div>
+        </div>
+
+        <nav class="admin-menu">
+
+            <a href="/admin">
+                <span>⌂</span>
+                داشبورد
+            </a>
+
+            <a href="/admin/courses">
+                <span>▣</span>
+                دوره‌ها
+            </a>
+
+            <a href="/admin/users">
+                <span>♙</span>
+                کاربران
+            </a>
+
+            <a href="/admin/enrollments">
+                <span>✓</span>
+                ثبت‌نام‌ها
+            </a>
+
+            <a href="/admin/payments">
+                <span>₿</span>
+                پرداخت‌ها
+            </a>
+
+            <a href="/admin/reports">
+                <span>▤</span>
+                گزارش‌ها
+            </a>
+
+            <a href="/admin/organizations" class="active">
+                <span>⚙</span>
+                تنظیمات سامانه
+            </a>
+
+        </nav>
+
+        <div class="admin-sidebar-bottom">
+
+            <a href="/">
+                ← بازگشت به سایت
+            </a>
+
+        </div>
+
+    </aside>
 
     <main class="admin-main">
 
@@ -25,8 +82,6 @@
                     تنظیمات سامانه
                 </h1>
             </div>
-
-            <AdminLogout />
 
             <div class="admin-user">
 
@@ -160,36 +215,6 @@
                             </select>
 
                         </div>
-
-                         <div class="admin-form">
-
-    <label>
-        سطح محصول
-    </label>
-
-    <select
-        class="admin-input"
-        @bind="PackageLevel">
-
-        <option value="1">
-            ۱ - پایه حضوری
-        </option>
-
-        <option value="2">
-            ۲ - آموزش آنلاین
-        </option>
-
-        <option value="3">
-            ۳ - پرداخت آنلاین
-        </option>
-
-        <option value="4">
-            ۴ - سازمانی
-        </option>
-
-    </select>
-
-</div>
 
                     </div>
 
@@ -411,8 +436,8 @@
     private string? OrganizationDescription { get; set; }
 
     private bool OrganizationIsActive { get; set; } = true;
-   private int PackageLevel { get; set; } = 1;
-       private string PrimaryColor { get; set; } = "#568fa8";
+
+    private string PrimaryColor { get; set; } = "#568fa8";
 
     private string SecondaryColor { get; set; } = "#263d4a";
 
@@ -438,12 +463,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (!Auth.IsLoggedIn || !Auth.IsAdmin)
-        {
-            Navigation.NavigateTo(Auth.IsLoggedIn ? "/admin" : "/login");
-            return;
-        }
-
         await LoadSettings();
     }
 
@@ -494,8 +513,6 @@
 
             IsThemeActive =
                 settings.ThemeIsActive;
-                 PackageLevel =
-                 settings.PackageLevel;
         }
         catch
         {
@@ -567,7 +584,7 @@
         {
             var client = Auth.CreateAuthenticatedClient();
 
-                       var request =
+            var request =
                 new UpdateOrganizationSettingsDto
                 {
                     Name =
@@ -589,10 +606,7 @@
                         SecondaryColor,
 
                     ThemeIsActive =
-                        IsThemeActive,
-
-                    PackageLevel =
-                        PackageLevel
+                        IsThemeActive
                 };
 
             var response =
@@ -698,23 +712,20 @@
         public string? SecondaryColor { get; set; }
 
         public bool ThemeIsActive { get; set; }
-        public int PackageLevel { get; set; }
     }
 
-private class UpdateOrganizationSettingsDto
-{
-    public string Name { get; set; } = string.Empty;
+    private class UpdateOrganizationSettingsDto
+    {
+        public string Name { get; set; } = string.Empty;
 
-    public string? Description { get; set; }
+        public string? Description { get; set; }
 
-    public bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; } = true;
 
-    public string PrimaryColor { get; set; } = "#568fa8";
+        public string PrimaryColor { get; set; } = "#568fa8";
 
-    public string SecondaryColor { get; set; } = "#263d4a";
+        public string SecondaryColor { get; set; } = "#263d4a";
 
-    public bool ThemeIsActive { get; set; } = true;
-
-    public int PackageLevel { get; set; } = 1;
-}
+        public bool ThemeIsActive { get; set; } = true;
+    }
 }

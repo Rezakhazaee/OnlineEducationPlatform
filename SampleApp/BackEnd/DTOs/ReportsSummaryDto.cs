@@ -9,7 +9,4 @@ public class ReportsSummaryDto
     public decimal TotalPaid { get; set; }
     public decimal TotalPending { get; set; }
     public decimal TotalCancelled { get; set; }
-    public decimal TotalEnrollmentValue { get; set; }
-    public decimal TotalRemainingAmount { get; set; }
-
 }

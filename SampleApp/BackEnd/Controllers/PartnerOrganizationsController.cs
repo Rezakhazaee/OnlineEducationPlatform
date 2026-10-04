@@ -1,7 +1,6 @@
 using BackEnd.Data;
 using BackEnd.DTOs;
 using BackEnd.Models;
-using BackEnd.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,34 +9,19 @@ namespace BackEnd.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin,EducationStaff")]
+[Authorize(Roles = "Admin")]
 public class PartnerOrganizationsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-    private readonly PackageAccessService _packageAccess;
 
-    public PartnerOrganizationsController(
-        ApplicationDbContext context,
-        PackageAccessService packageAccess)
+    public PartnerOrganizationsController(ApplicationDbContext context)
     {
         _context = context;
-        _packageAccess = packageAccess;
     }
-
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PartnerOrganization>>> GetAll()
     {
-        if (!await _packageAccess.HasPackageAsync(4))
-        {
-            return StatusCode(
-                StatusCodes.Status403Forbidden,
-                new
-                {
-                    message = "قابلیت سازمان‌های طرف قرارداد فقط در پکیج سازمانی فعال است."
-                });
-        }
-
         var organizations = await _context.PartnerOrganizations
             .OrderByDescending(x => x.Id)
             .ToListAsync();
@@ -45,49 +29,22 @@ public class PartnerOrganizationsController : ControllerBase
         return Ok(organizations);
     }
 
-
     [HttpGet("{id}")]
     public async Task<ActionResult<PartnerOrganization>> GetById(int id)
     {
-        if (!await _packageAccess.HasPackageAsync(4))
-        {
-            return StatusCode(
-                StatusCodes.Status403Forbidden,
-                new
-                {
-                    message = "قابلیت سازمان‌های طرف قرارداد فقط در پکیج سازمانی فعال است."
-                });
-        }
-
         var organization = await _context.PartnerOrganizations
             .FirstOrDefaultAsync(x => x.Id == id);
 
         if (organization == null)
-        {
-            return NotFound(new
-            {
-                message = "سازمان طرف قرارداد پیدا نشد."
-            });
-        }
+            return NotFound(new { message = "سازمان طرف قرارداد پیدا نشد." });
 
         return Ok(organization);
     }
-
 
     [HttpPost]
     public async Task<ActionResult<PartnerOrganization>> Create(
         [FromBody] CreatePartnerOrganizationDto request)
     {
-        if (!await _packageAccess.HasPackageAsync(4))
-        {
-            return StatusCode(
-                StatusCodes.Status403Forbidden,
-                new
-                {
-                    message = "قابلیت سازمان‌های طرف قرارداد فقط در پکیج سازمانی فعال است."
-                });
-        }
-
         if (request.ContractEndDate.HasValue &&
             request.ContractStartDate.HasValue &&
             request.ContractEndDate < request.ContractStartDate)
@@ -120,32 +77,16 @@ public class PartnerOrganizationsController : ControllerBase
             organization);
     }
 
-
     [HttpPut("{id}")]
     public async Task<ActionResult<PartnerOrganization>> Update(
         int id,
         [FromBody] UpdatePartnerOrganizationDto request)
     {
-        if (!await _packageAccess.HasPackageAsync(4))
-        {
-            return StatusCode(
-                StatusCodes.Status403Forbidden,
-                new
-                {
-                    message = "قابلیت سازمان‌های طرف قرارداد فقط در پکیج سازمانی فعال است."
-                });
-        }
-
         var organization = await _context.PartnerOrganizations
             .FirstOrDefaultAsync(x => x.Id == id);
 
         if (organization == null)
-        {
-            return NotFound(new
-            {
-                message = "سازمان طرف قرارداد پیدا نشد."
-            });
-        }
+            return NotFound(new { message = "سازمان طرف قرارداد پیدا نشد." });
 
         if (request.ContractEndDate.HasValue &&
             request.ContractStartDate.HasValue &&
@@ -171,33 +112,16 @@ public class PartnerOrganizationsController : ControllerBase
         return Ok(organization);
     }
 
-
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        if (!await _packageAccess.HasPackageAsync(4))
-        {
-            return StatusCode(
-                StatusCodes.Status403Forbidden,
-                new
-                {
-                    message = "قابلیت سازمان‌های طرف قرارداد فقط در پکیج سازمانی فعال است."
-                });
-        }
-
         var organization = await _context.PartnerOrganizations
             .FirstOrDefaultAsync(x => x.Id == id);
 
         if (organization == null)
-        {
-            return NotFound(new
-            {
-                message = "سازمان طرف قرارداد پیدا نشد."
-            });
-        }
+            return NotFound(new { message = "سازمان طرف قرارداد پیدا نشد." });
 
         _context.PartnerOrganizations.Remove(organization);
-
         await _context.SaveChangesAsync();
 
         return NoContent();
