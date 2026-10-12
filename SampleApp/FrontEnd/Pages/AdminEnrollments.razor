@@ -477,11 +477,40 @@
                     </div>
 
                     <span class="users-count">
-                        @Enrollments.Count ثبت‌نام
+                        @FilteredEnrollments.Count از @Enrollments.Count ثبت‌نام
                     </span>
 
                 </div>
 
+
+                <div class="admin-form-grid" style="margin-bottom:20px;">
+                    <div class="admin-form-group">
+                        <label>جست‌وجوی دانشجو یا دوره</label>
+                        <input class="admin-input" type="search" placeholder="نام دانشجو یا عنوان دوره" @bind="EnrollmentSearch" />
+                    </div>
+                    <div class="admin-form-group">
+                        <label>وضعیت ثبت‌نام</label>
+                        <select class="admin-input" @bind="EnrollmentStatusFilter">
+                            <option value="">همه وضعیت‌ها</option>
+                            <option value="Active">فعال</option>
+                            <option value="Completed">تکمیل‌شده</option>
+                            <option value="Suspended">متوقف</option>
+                            <option value="Cancelled">لغوشده</option>
+                        </select>
+                    </div>
+                    <div class="admin-form-group">
+                        <label>از تاریخ شروع</label>
+                        <input class="admin-input" type="date" @bind="EnrollmentFromDate" />
+                    </div>
+                    <div class="admin-form-group">
+                        <label>تا تاریخ شروع</label>
+                        <input class="admin-input" type="date" @bind="EnrollmentToDate" />
+                    </div>
+                    <div class="admin-form-group">
+                        <label>عملیات فیلتر</label>
+                        <button type="button" class="admin-secondary-btn" @onclick="ClearEnrollmentFilters">پاک‌کردن فیلترها</button>
+                    </div>
+                </div>
 
                 @if (Enrollments.Count == 0)
                 {
@@ -499,6 +528,13 @@
                             از فرم بالا اولین ثبت‌نام را ایجاد کنید.
                         </p>
 
+                    </div>
+                }
+                else if (FilteredEnrollments.Count == 0)
+                {
+                    <div class="admin-empty-state">
+                        <h3>موردی پیدا نشد</h3>
+                        <p>عبارت جست‌وجو، وضعیت یا بازه تاریخ را تغییر دهید.</p>
                     </div>
                 }
                 else
@@ -544,7 +580,7 @@
 
                             <tbody>
 
-                                @foreach (var enrollment in Enrollments)
+                                @foreach (var enrollment in FilteredEnrollments)
                                 {
                                     <tr>
 
@@ -650,6 +686,30 @@ else
     private List<CoursePartnerOrganizationDto> CoursePartnerOrganizations { get; set; } = new();
 
     private List<EnrollmentDto> Enrollments { get; set; } = new();
+
+    private string EnrollmentSearch { get; set; } = string.Empty;
+    private string EnrollmentStatusFilter { get; set; } = string.Empty;
+    private DateTime? EnrollmentFromDate { get; set; }
+    private DateTime? EnrollmentToDate { get; set; }
+
+    private List<EnrollmentDto> FilteredEnrollments =>
+        Enrollments.Where(e =>
+            (string.IsNullOrWhiteSpace(EnrollmentSearch)
+             || (e.StudentName ?? string.Empty).Contains(EnrollmentSearch.Trim(), StringComparison.OrdinalIgnoreCase)
+             || (e.CourseTitle ?? string.Empty).Contains(EnrollmentSearch.Trim(), StringComparison.OrdinalIgnoreCase)
+             || (e.CoursePartnerOrganization?.PartnerOrganization?.Name ?? string.Empty).Contains(EnrollmentSearch.Trim(), StringComparison.OrdinalIgnoreCase))
+            && (string.IsNullOrWhiteSpace(EnrollmentStatusFilter) || e.Status == EnrollmentStatusFilter)
+            && (!EnrollmentFromDate.HasValue || e.StartDate.Date >= EnrollmentFromDate.Value.Date)
+            && (!EnrollmentToDate.HasValue || e.StartDate.Date <= EnrollmentToDate.Value.Date)
+        ).ToList();
+
+    private void ClearEnrollmentFilters()
+    {
+        EnrollmentSearch = string.Empty;
+        EnrollmentStatusFilter = string.Empty;
+        EnrollmentFromDate = null;
+        EnrollmentToDate = null;
+    }
 
     private bool IsLoading { get; set; } = true;
 

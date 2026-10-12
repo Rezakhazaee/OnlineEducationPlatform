@@ -308,12 +308,40 @@
                 <button type="button" class="admin-primary-btn" @onclick="OpenCreatePaymentForm">+ افزودن پرداخت</button>
 
                 <p>
-                    @Payments.Count پرداخت ثبت شده
+                    @FilteredPayments.Count از @Payments.Count پرداخت ثبت شده
                 </p>
             </div>
 
         </div>
 
+
+        <div class="admin-form-grid" style="margin-bottom:20px;">
+            <div class="admin-form-group">
+                <label>جست‌وجوی پرداخت</label>
+                <input class="admin-input" type="search" placeholder="نام دانشجو، دوره یا توضیحات" @bind="PaymentSearch" />
+            </div>
+            <div class="admin-form-group">
+                <label>وضعیت پرداخت</label>
+                <select class="admin-input" @bind="PaymentStatusFilter">
+                    <option value="">همه وضعیت‌ها</option>
+                    <option value="Paid">پرداخت‌شده</option>
+                    <option value="Pending">در انتظار</option>
+                    <option value="Cancelled">لغوشده</option>
+                </select>
+            </div>
+            <div class="admin-form-group">
+                <label>از تاریخ پرداخت</label>
+                <input class="admin-input" type="date" @bind="PaymentFromDate" />
+            </div>
+            <div class="admin-form-group">
+                <label>تا تاریخ پرداخت</label>
+                <input class="admin-input" type="date" @bind="PaymentToDate" />
+            </div>
+            <div class="admin-form-group">
+                <label>عملیات فیلتر</label>
+                <button type="button" class="admin-secondary-btn" @onclick="ClearPaymentFilters">پاک‌کردن فیلترها</button>
+            </div>
+        </div>
 
         @if (IsLoading)
         {
@@ -325,6 +353,12 @@
         {
             <div class="admin-empty-state">
                 هنوز پرداختی ثبت نشده است.
+            </div>
+        }
+        else if (FilteredPayments.Count == 0)
+        {
+            <div class="admin-empty-state">
+                موردی با فیلترهای انتخاب‌شده پیدا نشد.
             </div>
         }
         else
@@ -376,7 +410,7 @@
 
                     <tbody>
 
-                        @foreach (var payment in Payments)
+                        @foreach (var payment in FilteredPayments)
                         {
                             <tr>
 
@@ -482,6 +516,30 @@
 @code {
 
 private List<PaymentDetailDto> Payments { get; set; } = new();
+
+private string PaymentSearch { get; set; } = string.Empty;
+private string PaymentStatusFilter { get; set; } = string.Empty;
+private DateTime? PaymentFromDate { get; set; }
+private DateTime? PaymentToDate { get; set; }
+
+private List<PaymentDetailDto> FilteredPayments =>
+    Payments.Where(p =>
+        (string.IsNullOrWhiteSpace(PaymentSearch)
+         || (p.StudentName ?? string.Empty).Contains(PaymentSearch.Trim(), StringComparison.OrdinalIgnoreCase)
+         || (p.CourseTitle ?? string.Empty).Contains(PaymentSearch.Trim(), StringComparison.OrdinalIgnoreCase)
+         || (p.Description ?? string.Empty).Contains(PaymentSearch.Trim(), StringComparison.OrdinalIgnoreCase))
+        && (string.IsNullOrWhiteSpace(PaymentStatusFilter) || p.Status == PaymentStatusFilter)
+        && (!PaymentFromDate.HasValue || p.PaymentDate.ToLocalTime().Date >= PaymentFromDate.Value.Date)
+        && (!PaymentToDate.HasValue || p.PaymentDate.ToLocalTime().Date <= PaymentToDate.Value.Date)
+    ).ToList();
+
+private void ClearPaymentFilters()
+{
+    PaymentSearch = string.Empty;
+    PaymentStatusFilter = string.Empty;
+    PaymentFromDate = null;
+    PaymentToDate = null;
+}
 
 private List<EnrollmentDto> Enrollments { get; set; } = new();
 
