@@ -484,11 +484,11 @@
 
 
                 <div class="admin-form-grid" style="margin-bottom:20px;">
-                    <div class="admin-form-group">
+                    <div class="admin-form-group" style="min-width:0;">
                         <label>جست‌وجوی دانشجو یا دوره</label>
                         <input class="admin-input" type="search" placeholder="نام دانشجو یا عنوان دوره" @bind="EnrollmentSearch" />
                     </div>
-                    <div class="admin-form-group">
+                    <div class="admin-form-group" style="min-width:0;">
                         <label>وضعیت ثبت‌نام</label>
                         <select class="admin-input" @bind="EnrollmentStatusFilter">
                             <option value="">همه وضعیت‌ها</option>
@@ -498,15 +498,15 @@
                             <option value="Cancelled">لغوشده</option>
                         </select>
                     </div>
-                    <div class="admin-form-group">
+                    <div class="admin-form-group" style="min-width:0;">
                         <label>از تاریخ شروع</label>
                         <input class="admin-input" type="date" @bind="EnrollmentFromDate" />
                     </div>
-                    <div class="admin-form-group">
+                    <div class="admin-form-group" style="min-width:0;">
                         <label>تا تاریخ شروع</label>
                         <input class="admin-input" type="date" @bind="EnrollmentToDate" />
                     </div>
-                    <div class="admin-form-group">
+                    <div class="admin-form-group" style="min-width:0;">
                         <label>عملیات فیلتر</label>
                         <button type="button" class="admin-secondary-btn" @onclick="ClearEnrollmentFilters">پاک‌کردن فیلترها</button>
                     </div>
