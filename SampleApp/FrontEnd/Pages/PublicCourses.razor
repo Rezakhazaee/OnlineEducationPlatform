@@ -108,7 +108,7 @@
                                 <button
                                     type="button"
                                     class="public-course-btn primary"
-                                    @onclick="Login">
+                                    @onclick="() => Login(course.Id)">
                                     ورود و ثبت‌نام
                                 </button>
                             }
@@ -192,9 +192,9 @@
         return SubmittingCourseId == courseId;
     }
 
-    private void Login()
+    private void Login(int courseId)
     {
-        Navigation.NavigateTo("/register?returnUrl=/courses");
+        Navigation.NavigateTo("/courses/" + courseId + "/enroll");
     }
 
     private void OpenCourse(int courseId)
@@ -207,7 +207,7 @@
     {
         if (!Auth.IsStudent)
         {
-            Login();
+            Navigation.NavigateTo("/courses/" + course.Id + "/enroll");
             return;
         }
 

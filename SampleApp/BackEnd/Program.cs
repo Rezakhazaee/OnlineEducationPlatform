@@ -85,6 +85,12 @@ using (var scope = app.Services.CreateScope())
         .GetRequiredService<ApplicationDbContext>();
 
     await DbSeeder.SeedAsync(db);
+
+    if (args.Contains("--seed-demo-data", StringComparer.Ordinal))
+    {
+        await DemoDataSeeder.SeedAsync(db);
+        return;
+    }
 }
 
 // OpenAPI + Scalar
