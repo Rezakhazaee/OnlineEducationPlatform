@@ -88,6 +88,16 @@
         </button>
     </div>
 
+    <nav class="reports-jump-nav" aria-label="دسترسی سریع به گزارش‌ها">
+        <a href="#registration-summary">ثبت‌نام‌ها</a>
+        <a href="#registration-details">جزئیات ثبت‌نام</a>
+        <a href="#financial-summary">وضعیت مالی</a>
+        <a href="#course-finance">مالی دوره‌ها</a>
+        <a href="#course-performance">عملکرد دوره‌ها</a>
+        <a href="#instructor-performance">عملکرد مدرس‌ها</a>
+        <a href="#learning-progress">پیشرفت آموزشی</a>
+    </nav>
+
     @if (Loading)
     {
         <div class="report-state">در حال دریافت اطلاعات...</div>
@@ -99,7 +109,7 @@
     else if (Report != null)
     {
         <!-- ثبت نام -->
-        <section class="report-section">
+        <section id="registration-summary" class="report-section">
             <div class="section-title">
                 <div>
                     <h2>وضعیت ثبت‌نام</h2>
@@ -152,7 +162,7 @@
             </div>
         </section>
 
-        <section class="registration-breakdown">
+        <section id="registration-details" class="registration-breakdown">
             <div class="breakdown-header">
                 <div>
                     <span>جزئیات ثبت‌نام</span>
@@ -248,7 +258,7 @@
         </section>
 
         <!-- مالی -->
-        <section class="report-section financial-section">
+        <section id="financial-summary" class="report-section financial-section">
             <div class="section-title">
                 <div>
                     <h2>وضعیت مالی</h2>
@@ -309,7 +319,7 @@
         </section>
 
         <!-- جدول دوره ها -->
-        <section class="report-section course-section">
+        <section id="course-finance" class="report-section course-section">
             <div class="section-title">
                 <div>
                     <h2>وضعیت مالی دوره‌ها</h2>
@@ -361,7 +371,7 @@
         </section>
 
         <!-- گزارش عملکرد دوره‌ها -->
-        <section class="report-section performance-section">
+        <section id="course-performance" class="report-section performance-section">
             <div class="section-title">
                 <div>
                     <h2>گزارش عملکرد دوره‌ها</h2>
@@ -427,7 +437,7 @@
         </section>
     }
 <!-- گزارش عملکرد مدرس -->
-<section class="report-section instructor-performance-section">
+<section id="instructor-performance" class="report-section instructor-performance-section">
     <div class="section-title">
         <div>
             <h2>گزارش عملکرد مدرس</h2>
@@ -509,7 +519,7 @@
     </div>
 </section>
 
-    <section class="report-section learning-progress-section">
+    <section id="learning-progress" class="report-section learning-progress-section">
         <div class="section-title">
             <div>
                 <h2>گزارش پیشرفت آموزشی</h2>
@@ -1375,6 +1385,74 @@
 .instructor-performance-table tbody tr:hover {
     background: #fafcfd;
 }
+
+    .reports-jump-nav {
+        position: sticky;
+        top: 8px;
+        z-index: 100;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px;
+        margin: 0 0 22px;
+        background: rgba(255,255,255,.97);
+        border: 1px solid #e2eaee;
+        border-radius: 14px;
+        box-shadow: 0 5px 18px rgba(38,61,74,.09);
+        backdrop-filter: blur(8px);
+    }
+
+    .reports-jump-nav a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 13px;
+        border-radius: 9px;
+        background: #f0f6f8;
+        color: #31596b;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .reports-jump-nav a:hover {
+        background: #568fa8;
+        color: white;
+    }
+
+    .reports-page section[id] {
+        scroll-margin-top: 100px;
+    }
+
+    .table-wrapper {
+        max-height: 390px;
+        overflow: auto;
+        overscroll-behavior: contain;
+        border-radius: 10px;
+        scrollbar-width: thin;
+        scrollbar-color: #b7cbd4 #f2f6f8;
+    }
+
+    .reports-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #f1f6f8;
+    }
+
+    @@media (max-width: 768px) {
+        .reports-jump-nav {
+            top: 4px;
+            gap: 6px;
+            padding: 9px;
+        }
+
+        .reports-jump-nav a {
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+    }
 
 </style>
 
