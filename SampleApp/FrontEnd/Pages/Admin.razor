@@ -4,6 +4,7 @@
 @using FrontEnd.Services
 
 @inject AuthService Auth
+@inject NavigationManager NavigationManager
 
 <PageTitle>پنل مدیریت | آموزش‌یار</PageTitle>
 
@@ -489,9 +490,17 @@
     private string? ErrorMessage { get; set; }
 
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender) return;
+        await Auth.RestoreAsync();
+        if (!Auth.IsLoggedIn || !Auth.IsAdmin)
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
         await LoadDashboard();
+        StateHasChanged();
     }
 
 

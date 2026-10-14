@@ -72,10 +72,10 @@
         }
     }
 
-    private void Logout()
+    private async Task Logout()
     {
-        Auth.Logout();
-        NavigationManager.NavigateTo("/login");
+        await Auth.LogoutAsync();
+        NavigationManager.NavigateTo("/login", true);
     }
 
     protected override async Task OnInitializedAsync()

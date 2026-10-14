@@ -291,10 +291,8 @@ public class ReportsController : ControllerBase
         var today = DateTime.Today;
         var monthStart = new DateTime(today.Year, today.Month, 1);
 
-        var todayEnrollments = enrollments.Count(e => e.StartDate.Date == today);
-        var monthEnrollments = enrollments.Count(e =>
-            e.StartDate >= monthStart &&
-            e.StartDate < monthStart.AddMonths(1));
+        var todayEnrollments = await _context.Enrollments.AsNoTracking().CountAsync(e => e.StartDate >= today && e.StartDate < today.AddDays(1));
+        var monthEnrollments = await _context.Enrollments.AsNoTracking().CountAsync(e => e.StartDate >= monthStart && e.StartDate < monthStart.AddMonths(1));
 
         var onlineEnrollments = enrollments.Count(e => e.Course!.DeliveryType == "Online");
         var inPersonEnrollments = enrollments.Count(e => e.Course!.DeliveryType == "InPerson");

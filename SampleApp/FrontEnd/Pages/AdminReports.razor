@@ -2,6 +2,7 @@
 
 @using System.Net.Http.Json
 @using FrontEnd.Services
+@inject NavigationManager NavigationManager
 
 @inject AuthService Auth
 
@@ -91,6 +92,7 @@
     <nav class="reports-jump-nav" aria-label="دسترسی سریع به گزارش‌ها">
         <a href="#registration-summary">ثبت‌نام‌ها</a>
         <a href="#registration-details">جزئیات ثبت‌نام</a>
+        <a href="/admin/reports#registration-table" :preventDefault="true" ="() => NavigationManager.NavigateTo("/admin/reports#registration-table", false)">جدول ثبت‌نام‌ها</a>
         <a href="#financial-summary">وضعیت مالی</a>
         <a href="#course-finance">مالی دوره‌ها</a>
         <a href="#course-performance">عملکرد دوره‌ها</a>
@@ -226,6 +228,104 @@
                     </div>
                 </div>
             </div>
+        </section>
+
+        <section id="registration-table" class="report-section enrollment-table-section">
+            <div class="section-title">
+                <div>
+                    <h2>جدول ثبت‌نام‌ها</h2>
+                    <span>جست‌وجو و فیلتر ثبت‌نام‌ها؛ مستقل از محاسبات مالی داشبورد</span>
+                </div>
+                <strong>@FilteredEnrollmentRows.Count() مورد</strong>
+            </div>
+
+            <div class="enrollment-filters">
+                <input type="search"
+                       placeholder="جست‌وجوی دانشجو، دوره یا مدرس..."
+                       @bind="EnrollmentSearch"
+                       @bind:event="oninput" />
+
+                <select @bind="EnrollmentCourseFilter">
+                    <option value="0">همه دوره‌ها</option>
+                    @foreach (var course in (Report?.Courses ?? new List<CourseReport>()).OrderBy(c => c.CourseTitle))
+                    {
+                        <option value="@course.CourseId">@course.CourseTitle</option>
+                    }
+                </select>
+
+                <select @bind="EnrollmentInstructorFilter">
+                    <option value="0">همه مدرس‌ها</option>
+                    @foreach (var instructor in EnrollmentRows
+                        .Where(e => e.InstructorId.HasValue)
+                        .GroupBy(e => e.InstructorId)
+                        .Select(g => g.First())
+                        .OrderBy(e => e.InstructorName))
+                    {
+                        <option value="@instructor.InstructorId">@instructor.InstructorName</option>
+                    }
+                </select>
+
+                <select @bind="EnrollmentDeliveryFilter">
+                    <option value="">همه شیوه‌ها</option>
+                    <option value="Online">آنلاین</option>
+                    <option value="InPerson">حضوری</option>
+                    <option value="Hybrid">ترکیبی</option>
+                </select>
+
+                <select @bind="EnrollmentStatusFilter">
+                    <option value="">همه وضعیت‌ها</option>
+                    <option value="Active">فعال</option>
+                    <option value="Cancelled">لغوشده</option>
+                    <option value="Completed">تکمیل‌شده</option>
+                </select>
+
+                <button type="button" class="refresh-btn" @onclick="ClearEnrollmentFilters">
+                    پاک‌کردن فیلترها
+                </button>
+            </div>
+
+            @if (EnrollmentRows.Count == 0)
+            {
+                <div class="report-state">ثبت‌نامی برای نمایش دریافت نشده است.</div>
+            }
+            else
+            {
+                <div class="table-wrapper">
+                    <table class="reports-table">
+                        <thead>
+                            <tr>
+                                <th>شناسه</th>
+                                <th>دانشجو</th>
+                                <th>دوره</th>
+                                <th>مدرس</th>
+                                <th>شیوه برگزاری</th>
+                                <th>تاریخ شروع</th>
+                                <th>وضعیت</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in FilteredEnrollmentRows.OrderByDescending(e => e.StartDate))
+                            {
+                                var delivery = Report?.Courses.FirstOrDefault(c => c.CourseId == row.CourseId)?.DeliveryType;
+                                <tr>
+                                    <td>@row.Id</td>
+                                    <td>@(string.IsNullOrWhiteSpace(row.StudentName) ? "-" : row.StudentName)</td>
+                                    <td class="course-name">@(string.IsNullOrWhiteSpace(row.CourseTitle) ? "-" : row.CourseTitle)</td>
+                                    <td>@(string.IsNullOrWhiteSpace(row.InstructorName) ? "-" : row.InstructorName)</td>
+                                    <td>@DeliveryLabel(delivery)</td>
+                                    <td>@row.StartDate.ToString("yyyy/MM/dd")</td>
+                                    <td>@EnrollmentStatusLabel(row.Status)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (!FilteredEnrollmentRows.Any())
+                {
+                    <div class="report-state">با فیلترهای فعلی موردی پیدا نشد.</div>
+                }
+            }
         </section>
 
         <section class="report-section detail-links-section">
@@ -967,6 +1067,25 @@
         }
     }
 
+    .enrollment-filters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 12px;
+        margin: 18px 0;
+    }
+
+    .enrollment-filters input,
+    .enrollment-filters select {
+        width: 100%;
+        min-width: 0;
+        padding: 10px 12px;
+        border: 1px solid var(--border-color, #d7e0e5);
+        border-radius: 10px;
+        background: var(--card-bg, #fff);
+        color: inherit;
+        font: inherit;
+    }
+
     .detail-links-section {
         margin-top: 24px;
     }
@@ -1462,13 +1581,40 @@
     private bool Loading = true;
     private List<InstructorReport> InstructorReports { get; set; } = new();
     private LearningProgressReport? LearningProgress { get; set; }
+    private List<EnrollmentRow> EnrollmentRows { get; set; } = new();
+    private string EnrollmentSearch { get; set; } = "";
+    private string EnrollmentStatusFilter { get; set; } = "";
+    private string EnrollmentDeliveryFilter { get; set; } = "";
+    private int EnrollmentCourseFilter { get; set; }
+    private int EnrollmentInstructorFilter { get; set; }
     private string? Error;
+
+    private IEnumerable<EnrollmentRow> FilteredEnrollmentRows =>
+        EnrollmentRows.Where(e =>
+            (string.IsNullOrWhiteSpace(EnrollmentSearch) ||
+             (e.StudentName ?? "").Contains(EnrollmentSearch, StringComparison.OrdinalIgnoreCase) ||
+             (e.CourseTitle ?? "").Contains(EnrollmentSearch, StringComparison.OrdinalIgnoreCase) ||
+             (e.InstructorName ?? "").Contains(EnrollmentSearch, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrWhiteSpace(EnrollmentStatusFilter) || e.Status == EnrollmentStatusFilter) &&
+            (EnrollmentCourseFilter == 0 || e.CourseId == EnrollmentCourseFilter) &&
+            (EnrollmentInstructorFilter == 0 || e.InstructorId == EnrollmentInstructorFilter) &&
+            (string.IsNullOrWhiteSpace(EnrollmentDeliveryFilter) ||
+             Report?.Courses.FirstOrDefault(c => c.CourseId == e.CourseId)?.DeliveryType == EnrollmentDeliveryFilter));
 
     private double CollectionWidth =>
         Math.Clamp((double)(Report?.Summary.CollectionPercent ?? 0), 0, 100);
 
     protected override async Task OnInitializedAsync()
     {
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || Auth.Role != "Admin")
+        {
+            Error = "دسترسی غیرمجاز. لطفاً با حساب مدیر وارد شوید.";
+            Loading = false;
+            return;
+        }
+
         await LoadReport();
     }
 
@@ -1511,6 +1657,16 @@
 
             LearningProgress = await client.GetFromJsonAsync<LearningProgressReport>(
                 "api/ManagementReports/learning-progress");
+
+            try
+            {
+                EnrollmentRows = await client.GetFromJsonAsync<List<EnrollmentRow>>(
+                    "api/Enrollments") ?? new();
+            }
+            catch
+            {
+                EnrollmentRows = new();
+            }
         }
         catch (Exception ex)
         {
@@ -1553,6 +1709,24 @@
     {
         return Math.Clamp((double)percent, 0, 100);
     }
+
+    private void ClearEnrollmentFilters()
+    {
+        EnrollmentSearch = "";
+        EnrollmentStatusFilter = "";
+        EnrollmentDeliveryFilter = "";
+        EnrollmentCourseFilter = 0;
+        EnrollmentInstructorFilter = 0;
+    }
+
+    private static string EnrollmentStatusLabel(string? status) =>
+        status switch
+        {
+            "Active" => "فعال",
+            "Cancelled" => "لغوشده",
+            "Completed" => "تکمیل‌شده",
+            _ => status ?? "-"
+        };
 
     private static string DeliveryLabel(string? deliveryType)
     {
@@ -1603,6 +1777,20 @@
         public int TotalLessons { get; set; }
         public int CompletedLessons { get; set; }
         public decimal AverageProgress { get; set; }
+    }
+
+    public class EnrollmentRow
+    {
+        public int Id { get; set; }
+        public int StudentId { get; set; }
+        public string? StudentName { get; set; }
+        public int CourseId { get; set; }
+        public string? CourseTitle { get; set; }
+        public int? InstructorId { get; set; }
+        public string? InstructorName { get; set; }
+        public DateTime StartDate { get; set; }
+        public string Status { get; set; } = "";
+        public string? Description { get; set; }
     }
 
     public class DashboardReport

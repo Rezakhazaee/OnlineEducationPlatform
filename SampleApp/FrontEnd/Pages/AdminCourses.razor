@@ -245,6 +245,15 @@
 
                             </div>
 
+                            <div class="form-group">
+                                <label>نوع برگزاری دوره</label>
+                                <select @bind="FormDeliveryType">
+                                    <option value="Online">آنلاین</option>
+                                    <option value="InPerson">حضوری</option>
+                                    <option value="Hybrid">ترکیبی</option>
+                                </select>
+                            </div>
+
 
                             <div class="form-group">
 
@@ -539,6 +548,7 @@
 
     private string FormInstructorId { get; set; } = string.Empty;
 
+    private string FormDeliveryType { get; set; } = "Online";
     private bool FormIsActive { get; set; } = true;
 
 
@@ -605,6 +615,7 @@
         FormPrice = 0;
         FormInstructorId = string.Empty;
         FormIsActive = true;
+        FormDeliveryType = "Online";
 
         FormError = null;
         ShowForm = true;
@@ -623,6 +634,7 @@ private void EditCourse(CourseDto course)
         ?? string.Empty;
 
     FormIsActive = course.IsActive;
+    FormDeliveryType = string.IsNullOrWhiteSpace(course.DeliveryType) ? "Online" : course.DeliveryType;
 
     FormError = null;
 
@@ -687,7 +699,8 @@ private void EditCourse(CourseDto course)
                     Description = FormDescription,
                     Price = FormPrice,
                     InstructorId = instructorId,
-                    IsActive = FormIsActive
+                    IsActive = FormIsActive,
+                    DeliveryType = FormDeliveryType,
                 };
 
                 var response =
@@ -711,7 +724,8 @@ private void EditCourse(CourseDto course)
                     Title = FormTitle,
                     Description = FormDescription,
                     Price = FormPrice,
-                    IsActive = FormIsActive
+                    IsActive = FormIsActive,
+                    DeliveryType = FormDeliveryType,
                 };
 
                 var response =
@@ -794,6 +808,7 @@ private void EditCourse(CourseDto course)
 
         public int? InstructorId { get; set; }
 
+        public string DeliveryType { get; set; } = "Online";
         public bool IsActive { get; set; }
     }
 
@@ -808,6 +823,7 @@ private void EditCourse(CourseDto course)
 
         public string? Username { get; set; }
 
+        public string DeliveryType { get; set; } = "Online";
         public bool IsActive { get; set; }
 
         public int CourseCount { get; set; }
@@ -824,6 +840,7 @@ private void EditCourse(CourseDto course)
 
         public int? InstructorId { get; set; }
 
+        public string DeliveryType { get; set; } = "Online";
         public bool IsActive { get; set; } = true;
     }
 
@@ -836,6 +853,7 @@ private void EditCourse(CourseDto course)
 
         public decimal Price { get; set; }
 
+        public string DeliveryType { get; set; } = "Online";
         public bool IsActive { get; set; }
     }
 

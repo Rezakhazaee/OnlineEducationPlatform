@@ -52,6 +52,7 @@ public class CoursesController : ControllerBase
                 Description = c.Description,
                 Price = c.Price,
                 InstructorId = c.InstructorId,
+                DeliveryType = c.DeliveryType,
                 IsActive = c.IsActive
             })
             .ToListAsync();
@@ -111,6 +112,7 @@ public class CoursesController : ControllerBase
             Description = course.Description,
             Price = course.Price,
             InstructorId = course.InstructorId,
+            DeliveryType = course.DeliveryType,
             IsActive = course.IsActive
         };
 
@@ -170,6 +172,7 @@ public class CoursesController : ControllerBase
         course.Title = dto.Title;
         course.Description = dto.Description;
         course.Price = dto.Price;
+        course.DeliveryType = dto.DeliveryType;
         course.IsActive = dto.IsActive;
 
         await _context.SaveChangesAsync();
@@ -181,6 +184,7 @@ public class CoursesController : ControllerBase
             Description = course.Description,
             Price = course.Price,
             InstructorId = course.InstructorId,
+            DeliveryType = course.DeliveryType,
             IsActive = course.IsActive
         };
 
@@ -249,6 +253,7 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
         Description = course.Description,
         Price = course.Price,
         InstructorId = course.InstructorId,
+            DeliveryType = course.DeliveryType,
         IsActive = course.IsActive
     };
 
@@ -335,7 +340,7 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
             Description = dto.Description,
             Price = dto.Price,
             InstructorId = dto.InstructorId,
-            IsActive = dto.IsActive
+            DeliveryType = dto.DeliveryType,
         };
 
         _context.Courses.Add(course);
@@ -349,6 +354,7 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
             Description = course.Description,
             Price = course.Price,
             InstructorId = course.InstructorId,
+            DeliveryType = course.DeliveryType,
             IsActive = course.IsActive
         };
 
