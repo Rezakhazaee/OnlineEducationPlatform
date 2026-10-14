@@ -12,11 +12,6 @@ public static class DemoDataSeeder
     {
         var admin = await db.Users.FirstAsync(u => u.Role == "Admin");
 
-        var nonAdminUsers = await db.Users.Where(u => u.Role != "Admin").ToListAsync();
-        foreach (var user in nonAdminUsers)
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(DemoPassword);
-        await db.SaveChangesAsync();
-
         var instructorNames = new[]
         {
             ("test.instructor", "استاد تست"),
