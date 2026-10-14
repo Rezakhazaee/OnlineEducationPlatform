@@ -81,23 +81,10 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider
-        .GetRequiredService<ApplicationDbContext>();
-
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await db.Database.MigrateAsync();
     await DbSeeder.SeedAsync(db);
-
-    if (args.Contains("--seed-demo-data", StringComparer.Ordinal))
-    {
-        await DemoDataSeeder.SeedAsync(db);
-        return;
-    }
-}
-
-using (var demoScope = app.Services.CreateScope())
-{
-    var demoDb = demoScope.ServiceProvider.GetRequiredService<BackEnd.Data.ApplicationDbContext>();
-    await BackEnd.Data.DemoDataSeeder.SeedAsync(demoDb);
+    await DemoDataSeeder.SeedAsync(db);
 }
 
 // OpenAPI + Scalar
