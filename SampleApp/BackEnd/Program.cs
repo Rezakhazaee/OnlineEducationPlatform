@@ -93,6 +93,12 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+using (var demoScope = app.Services.CreateScope())
+{
+    var demoDb = demoScope.ServiceProvider.GetRequiredService<BackEnd.Data.ApplicationDbContext>();
+    await BackEnd.Data.DemoDataSeeder.SeedAsync(demoDb);
+}
+
 // OpenAPI + Scalar
 if (app.Environment.IsDevelopment())
 {
