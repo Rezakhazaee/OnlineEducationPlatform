@@ -205,11 +205,6 @@ public static class DbSeeder
         }
 
 
-        if (course.DeliveryType != "Online")
-        {
-            course.DeliveryType = "Online";
-            await db.SaveChangesAsync();
-        }
 
 
         // 7. Course - Partner Organization Agreement

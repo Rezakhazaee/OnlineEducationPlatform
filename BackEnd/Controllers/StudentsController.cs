@@ -230,6 +230,50 @@ public class StudentsController : ControllerBase
             return Forbid();
         }
 
+        if (dto.UserId.HasValue)
+        {
+            var linkedUserExists = await _context.Users
+                .AnyAsync(u =>
+                    u.Id == dto.UserId.Value &&
+                    u.Role == "Student");
+
+            if (!linkedUserExists)
+            {
+                return BadRequest(new
+                {
+                    message = "حساب کاربری معتبر با نقش دانشجو پیدا نشد."
+                });
+            }
+
+            var userAlreadyLinked = await _context.Students
+                .AnyAsync(s => s.UserId == dto.UserId.Value);
+
+            if (userAlreadyLinked)
+            {
+                return BadRequest(new
+                {
+                    message = "این حساب کاربری قبلاً به یک پروفایل دانشجو متصل شده است."
+                });
+            }
+        }
+
+        if (dto.SupportUserId.HasValue)
+        {
+            var supportUserExists = await _context.Users
+                .AnyAsync(u =>
+                    u.Id == dto.SupportUserId.Value &&
+                    u.Role == "Support" &&
+                    u.IsActive);
+
+            if (!supportUserExists)
+            {
+                return BadRequest(new
+                {
+                    message = "حساب کاربری پشتیبان معتبر و فعال پیدا نشد."
+                });
+            }
+        }
+
         var student = new Student
         {
             UserId = dto.UserId,
@@ -242,7 +286,7 @@ public class StudentsController : ControllerBase
             GuardianName = dto.GuardianName,
             GuardianMobile = dto.GuardianMobile,
             MarketingUserId = currentUser.Role == "Marketer" ? currentUser.Id : dto.MarketingUserId,
-            SupportUserId = dto.SupportUserId
+            SupportUserId = currentUser.Role == "Marketer" ? null : dto.SupportUserId
         };
 
         _context.Students.Add(student);

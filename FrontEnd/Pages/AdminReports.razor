@@ -141,6 +141,12 @@
                     <strong>@Report.Summary.InPersonEnrollments</strong>
                     <small>دوره‌های حضوری</small>
                 </div>
+
+                <div class="breakdown-card hybrid">
+                    <span class="breakdown-label">ثبت‌نام ترکیبی</span>
+                    <strong>@Report.Summary.HybridEnrollments</strong>
+                    <small>دوره‌های ترکیبی</small>
+                </div>
             </div>
 
             <div class="registration-status-panel">
@@ -1417,6 +1423,7 @@
         {
             "Online" => "آنلاین",
             "InPerson" => "حضوری",
+            "Hybrid" => "ترکیبی",
             _ => deliveryType ?? "-"
         };
     }
@@ -1479,6 +1486,7 @@
         public int MonthEnrollments { get; set; }
         public int OnlineEnrollments { get; set; }
         public int InPersonEnrollments { get; set; }
+        public int HybridEnrollments { get; set; }
 
         public decimal ExpectedAmount { get; set; }
         public decimal TotalPaid { get; set; }
@@ -1502,11 +1510,12 @@
     }
     private decimal RegistrationWidth(int value)
     {
-        if (Report.Summary.TotalEnrollments == 0)
+        var totalEnrollments = Report?.Summary.TotalEnrollments ?? 0;
+        if (totalEnrollments == 0)
             return 0;
 
         return Math.Round(
-            value * 100m / Report.Summary.TotalEnrollments,
+            value * 100m / totalEnrollments,
             2);
     }
 

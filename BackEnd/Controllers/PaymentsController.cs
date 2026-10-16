@@ -196,6 +196,20 @@ public class PaymentsController : ControllerBase
             });
         }
 
+        if (User.IsInRole("Support"))
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(userIdClaim, out var supportUserId) ||
+                enrollment.Student?.SupportUserId != supportUserId)
+            {
+                return NotFound(new
+                {
+                    message = "ثبت نام مورد نظر وجود ندارد"
+                });
+            }
+        }
+
         // ----------------------------------------
 // 3.5 بررسی وضعیت ثبت نام
 // ----------------------------------------
@@ -577,6 +591,23 @@ if (payment.Enrollment.Status == "Cancelled" ||
             totalAfterPayment
         });
     }
+    if (payment.PaymentType == "FullPayment")
+    {
+        var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
+
+        if (payment.Amount != remainingAmount)
+        {
+            return BadRequest(new
+            {
+                message = "مبلغ پرداخت کامل باید دقیقاً برابر مبلغ باقی‌مانده باشد",
+                coursePrice,
+                totalPaid,
+                remainingAmount,
+                paymentAmount = payment.Amount
+            });
+        }
+    }
+
     // تغییر وضعیت
     payment.Status = "Paid";
 

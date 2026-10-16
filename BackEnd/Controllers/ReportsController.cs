@@ -164,6 +164,9 @@ public class ReportsController : ControllerBase
         var inPersonEnrollments = enrollments.Count(e =>
             e.Course!.DeliveryType == "InPerson");
 
+        var hybridEnrollments = enrollments.Count(e =>
+            e.Course!.DeliveryType == "Hybrid");
+
         var distinctStudents = enrollments
             .Select(e => e.StudentId)
             .Distinct()
@@ -378,6 +381,7 @@ public class ReportsController : ControllerBase
                 monthEnrollments,
                 onlineEnrollments,
                 inPersonEnrollments,
+                hybridEnrollments,
 
                 expectedAmount,
                 totalPaid,

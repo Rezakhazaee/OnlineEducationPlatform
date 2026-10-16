@@ -15,6 +15,10 @@ public class CreateCourseDto
     [Range(0, double.MaxValue, ErrorMessage = "قیمت دوره نمی‌تواند منفی باشد")]
     public decimal Price { get; set; }
 
+    [RegularExpression("^(Online|InPerson|Hybrid)$", ErrorMessage = "نوع برگزاری نامعتبر است")]
+    [Required(ErrorMessage = "نوع برگزاری دوره الزامی است")]
+    public string DeliveryType { get; set; } = "Online";
+
 
     public int? InstructorId { get; set; }
 

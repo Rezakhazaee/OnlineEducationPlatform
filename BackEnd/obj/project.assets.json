@@ -35,10 +35,10 @@
           "Microsoft.AspNetCore.App"
         ]
       },
-      "Microsoft.AspNetCore.OpenApi/10.0.12": {
+      "Microsoft.AspNetCore.OpenApi/10.0.13": {
         "type": "package",
         "dependencies": {
-          "Microsoft.OpenApi": "[2.12.0, 3.0.0)"
+          "Microsoft.OpenApi": "[2.12.2, 3.0.0)"
         },
         "compile": {
           "lib/net10.0/Microsoft.AspNetCore.OpenApi.dll": {}
@@ -577,7 +577,7 @@
           "lib/net10.0/Microsoft.IdentityModel.Tokens.dll": {}
         }
       },
-      "Microsoft.OpenApi/2.12.0": {
+      "Microsoft.OpenApi/2.12.2": {
         "type": "package",
         "compile": {
           "lib/net8.0/Microsoft.OpenApi.dll": {
@@ -701,7 +701,7 @@
           }
         }
       },
-      "Scalar.AspNetCore/2.17.13": {
+      "Scalar.AspNetCore/2.18.0": {
         "type": "package",
         "compile": {
           "lib/net10.0/Scalar.AspNetCore.dll": {}
@@ -1022,10 +1022,10 @@
         "microsoft.aspnetcore.authentication.jwtbearer.nuspec"
       ]
     },
-    "Microsoft.AspNetCore.OpenApi/10.0.12": {
-      "sha512": "7RnQ/UKn+kK3JDLmTpW+vVqNErWthGPAVAy1aIiBzv4ucQ6g9NFvOJUuT0PHcpvcJxGVxctMxj6t+NESWMrgHQ==",
+    "Microsoft.AspNetCore.OpenApi/10.0.13": {
+      "sha512": "XVuqUBGjVUVyb4DXR5BrSkrW0Br7sYKq39f723ILhQLlFHCyhAgWe1PkJBc42R/5mKBIgHiKVSY+PN5/4XtcQw==",
       "type": "package",
-      "path": "microsoft.aspnetcore.openapi/10.0.12",
+      "path": "microsoft.aspnetcore.openapi/10.0.13",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -1035,7 +1035,7 @@
         "analyzers/dotnet/cs/Microsoft.AspNetCore.OpenApi.SourceGenerators.dll",
         "build/Microsoft.AspNetCore.OpenApi.targets",
         "lib/net10.0/Microsoft.AspNetCore.OpenApi.dll",
-        "microsoft.aspnetcore.openapi.10.0.12.nupkg.sha512",
+        "microsoft.aspnetcore.openapi.10.0.13.nupkg.sha512",
         "microsoft.aspnetcore.openapi.nuspec"
       ]
     },
@@ -2378,10 +2378,10 @@
         "microsoft.identitymodel.tokens.nuspec"
       ]
     },
-    "Microsoft.OpenApi/2.12.0": {
-      "sha512": "0xB/be+f6qYOhvQPUrVsLrau+fkowYv6gt9RIkajMhwT7sZnqtcA797yW3bS5kgSje+AQW4xZgyLnW641YFioQ==",
+    "Microsoft.OpenApi/2.12.2": {
+      "sha512": "ZkT7qiJe0Kj0+DTZOZo+xrDy1kNmdsWFQVPIQLNx9ZJ0T9cB2LG7r+Bi60so8/+yg1nkS7QCPadrzsTG4VPKrA==",
       "type": "package",
-      "path": "microsoft.openapi/2.12.0",
+      "path": "microsoft.openapi/2.12.2",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -2390,7 +2390,7 @@
         "lib/net8.0/Microsoft.OpenApi.pdb",
         "lib/netstandard2.0/Microsoft.OpenApi.dll",
         "lib/netstandard2.0/Microsoft.OpenApi.pdb",
-        "microsoft.openapi.2.12.0.nupkg.sha512",
+        "microsoft.openapi.2.12.2.nupkg.sha512",
         "microsoft.openapi.nuspec"
       ]
     },
@@ -2511,10 +2511,10 @@
         "runtimes/win-x86/native/qpdf.dll"
       ]
     },
-    "Scalar.AspNetCore/2.17.13": {
-      "sha512": "+R0eJtJIIHW9owY61rIOgR2lywjZnjqUPAM7ll+lZYML7mZ4LxokG6wpAmkuyaLS1Ml4fI4kdAC2U6KkdrDDiA==",
+    "Scalar.AspNetCore/2.18.0": {
+      "sha512": "wwI3khcYNM7oL6axr4a41G29fJYOS3ckusgYZ4NiIccL8Amh2LOeu4HSK1SrQWiMJNrgoFqyWfDkOkunQCiRDw==",
       "type": "package",
-      "path": "scalar.aspnetcore/2.17.13",
+      "path": "scalar.aspnetcore/2.18.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -2523,7 +2523,7 @@
         "lib/net10.0/Scalar.AspNetCore.dll",
         "lib/net8.0/Scalar.AspNetCore.dll",
         "lib/net9.0/Scalar.AspNetCore.dll",
-        "scalar.aspnetcore.2.17.13.nupkg.sha512",
+        "scalar.aspnetcore.2.18.0.nupkg.sha512",
         "scalar.aspnetcore.nuspec"
       ]
     },
@@ -2813,11 +2813,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/workspaces/OnlineEducationPlatform/SampleApp/BackEnd/BackEnd.csproj",
+      "projectUniqueName": "/workspaces/OnlineEducationPlatform/BackEnd/BackEnd.csproj",
       "projectName": "BackEnd",
-      "projectPath": "/workspaces/OnlineEducationPlatform/SampleApp/BackEnd/BackEnd.csproj",
+      "projectPath": "/workspaces/OnlineEducationPlatform/BackEnd/BackEnd.csproj",
       "packagesPath": "/root/.nuget/packages/",
-      "outputPath": "/workspaces/OnlineEducationPlatform/SampleApp/BackEnd/obj/",
+      "outputPath": "/workspaces/OnlineEducationPlatform/BackEnd/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/root/.nuget/NuGet/NuGet.Config"
@@ -2902,7 +2902,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.401/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.402/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
