@@ -375,6 +375,10 @@
                                     </th>
 
                                     <th>
+                                        نوع برگزاری
+                                    </th>
+
+                                    <th>
                                         مدرس
                                     </th>
 
@@ -421,9 +425,11 @@
 
 
                                         <td>
+                                            @GetDeliveryTypeName(course.DeliveryType)
+                                        </td>
 
+                                        <td>
                                             @GetInstructorName(course.InstructorId)
-
                                         </td>
 
 
@@ -726,6 +732,19 @@ private void EditCourse(CourseDto course)
             IsSaving = false;
         }
     }
+
+    private string GetDeliveryTypeName(string? deliveryType)
+    {
+        return deliveryType switch
+        {
+            "Online" => "آنلاین",
+            "InPerson" => "حضوری",
+            "Hybrid" => "ترکیبی",
+            _ => "نامشخص"
+        };
+    }
+
+
 
 
     private string GetInstructorName(int? instructorId)
