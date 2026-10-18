@@ -4,6 +4,7 @@
 @using FrontEnd.Services
 
 @inject AuthService Auth
+@inject NavigationManager Navigation
 
 <PageTitle>پرداخت‌ها | آموزش‌یار</PageTitle>
 
@@ -15,7 +16,7 @@
         آموزش‌یار
     </div>
 
-    <nav class="admin-nav">
+    <nav class="admin-menu">
 
         <a href="/admin">
             داشبورد
@@ -292,12 +293,37 @@
                 <h3>لیست پرداخت‌ها</h3>
 
                 <p>
-                    @Payments.Count پرداخت ثبت شده
+                    @FilteredPayments.Count از @Payments.Count پرداخت
                 </p>
             </div>
 
         </div>
 
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0">
+            <input type="search" placeholder="جستجوی دانشجو، دوره یا شماره پرداخت..."
+                   @bind="PaymentSearch"
+                   style="flex:1;min-width:220px;padding:10px;border:1px solid #ccc;border-radius:8px" />
+            <select @bind="PaymentStatusFilter"
+                    style="padding:10px;border:1px solid #ccc;border-radius:8px">
+                <option value="">همه وضعیت‌ها</option>
+                <option value="Paid">پرداخت‌شده</option>
+                <option value="Pending">در انتظار تأیید</option>
+                <option value="Cancelled">لغوشده</option>
+            </select>
+            <select @bind="PaymentTypeFilter"
+                    style="padding:10px;border:1px solid #ccc;border-radius:8px">
+                <option value="">همه انواع پرداخت</option>
+                <option value="FirstInstallment">قسط اول</option>
+                <option value="SecondInstallment">قسط دوم</option>
+                <option value="ThirdInstallment">قسط سوم</option>
+                <option value="FullPayment">پرداخت کامل</option>
+            </select>
+            <button type="button" @onclick="ClearPaymentFilters"
+                    style="padding:10px 16px;border:1px solid #ccc;border-radius:8px">
+                پاک‌کردن فیلترها
+            </button>
+        </div>
 
         @if (IsLoading)
         {
@@ -305,7 +331,7 @@
                 در حال دریافت اطلاعات...
             </div>
         }
-        else if (Payments.Count == 0)
+        else if (FilteredPayments.Count == 0)
         {
             <div class="admin-empty-state">
                 هنوز پرداختی ثبت نشده است.
@@ -360,7 +386,7 @@
 
                     <tbody>
 
-                        @foreach (var payment in Payments)
+                        @foreach (var payment in FilteredPayments)
                         {
                             <tr>
 
@@ -467,6 +493,27 @@
 
 private List<PaymentDetailDto> Payments { get; set; } = new();
 
+private string PaymentSearch { get; set; } = string.Empty;
+private string PaymentStatusFilter { get; set; } = string.Empty;
+private string PaymentTypeFilter { get; set; } = string.Empty;
+
+private List<PaymentDetailDto> FilteredPayments =>
+    Payments.Where(p =>
+        (string.IsNullOrWhiteSpace(PaymentSearch) ||
+         (p.StudentName ?? string.Empty).Contains(PaymentSearch, StringComparison.OrdinalIgnoreCase) ||
+         (p.CourseTitle ?? string.Empty).Contains(PaymentSearch, StringComparison.OrdinalIgnoreCase) ||
+         p.Id.ToString().Contains(PaymentSearch, StringComparison.OrdinalIgnoreCase)) &&
+        (string.IsNullOrWhiteSpace(PaymentStatusFilter) || p.Status == PaymentStatusFilter) &&
+        (string.IsNullOrWhiteSpace(PaymentTypeFilter) || p.PaymentType == PaymentTypeFilter))
+    .ToList();
+
+private void ClearPaymentFilters()
+{
+    PaymentSearch = string.Empty;
+    PaymentStatusFilter = string.Empty;
+    PaymentTypeFilter = string.Empty;
+}
+
 private List<EnrollmentDto> Enrollments { get; set; } = new();
 
 private bool IsLoading { get; set; } = true;
@@ -511,6 +558,15 @@ private EnrollmentDto? SelectedEnrollment =>
 
 protected override async Task OnInitializedAsync()
 {
+    await Auth.RestoreAsync();
+
+    if (!Auth.IsLoggedIn || Auth.Role != "Admin")
+        {
+            await Auth.LogoutAsync();
+            Navigation.NavigateTo("/login", forceLoad: true, replace: true);
+            return;
+        }
+
     await LoadData();
 }
 

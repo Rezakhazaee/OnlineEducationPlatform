@@ -4,6 +4,7 @@
 @using FrontEnd.Services
 
 @inject AuthService Auth
+@inject NavigationManager Navigation
 
 <PageTitle>مدیریت ثبت‌نام‌ها | آموزش‌یار</PageTitle>
 
@@ -475,13 +476,31 @@
                     </div>
 
                     <span class="users-count">
-                        @Enrollments.Count ثبت‌نام
+                        @FilteredEnrollments.Count از @Enrollments.Count ثبت‌نام
                     </span>
 
                 </div>
 
 
-                @if (Enrollments.Count == 0)
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0">
+                    <input type="search" placeholder="جستجوی دانشجو یا دوره..."
+                           @bind="EnrollmentSearch"
+                           style="flex:1;min-width:220px;padding:10px;border:1px solid #ccc;border-radius:8px" />
+                    <select @bind="EnrollmentStatusFilter"
+                            style="padding:10px;border:1px solid #ccc;border-radius:8px">
+                        <option value="">همه وضعیت‌ها</option>
+                        <option value="Active">فعال</option>
+                        <option value="Completed">تکمیل‌شده</option>
+                        <option value="Suspended">تعلیق‌شده</option>
+                        <option value="Cancelled">لغوشده</option>
+                    </select>
+                    <button type="button" @onclick="ClearEnrollmentFilters"
+                            style="padding:10px 16px;border:1px solid #ccc;border-radius:8px">
+                        پاک‌کردن فیلترها
+                    </button>
+                </div>
+
+                @if (FilteredEnrollments.Count == 0)
                 {
                     <div class="admin-empty-state">
 
@@ -542,7 +561,7 @@
 
                             <tbody>
 
-                                @foreach (var enrollment in Enrollments)
+                                @foreach (var enrollment in FilteredEnrollments)
                                 {
                                     <tr>
 
@@ -649,6 +668,23 @@ else
 
     private List<EnrollmentDto> Enrollments { get; set; } = new();
 
+    private string EnrollmentSearch { get; set; } = string.Empty;
+    private string EnrollmentStatusFilter { get; set; } = string.Empty;
+
+    private List<EnrollmentDto> FilteredEnrollments =>
+        Enrollments.Where(e =>
+            (string.IsNullOrWhiteSpace(EnrollmentSearch) ||
+             (e.StudentName ?? string.Empty).Contains(EnrollmentSearch, StringComparison.OrdinalIgnoreCase) ||
+             (e.CourseTitle ?? string.Empty).Contains(EnrollmentSearch, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrWhiteSpace(EnrollmentStatusFilter) || e.Status == EnrollmentStatusFilter))
+        .ToList();
+
+    private void ClearEnrollmentFilters()
+    {
+        EnrollmentSearch = string.Empty;
+        EnrollmentStatusFilter = string.Empty;
+    }
+
     private bool IsLoading { get; set; } = true;
 
     private bool IsLoadingContracts { get; set; }
@@ -707,6 +743,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || Auth.Role != "Admin")
+        {
+            await Auth.LogoutAsync();
+            Navigation.NavigateTo("/login", forceLoad: true, replace: true);
+            return;
+        }
+
         await LoadData();
     }
 
