@@ -552,7 +552,7 @@
                 .OrderBy(x => x.Name)
                 .ToList();
 
-            ApplyFilters();
+            await ApplyFilters();
         }
         catch (Exception ex)
         {
@@ -565,50 +565,32 @@
         }
     }
 
-    private void ApplyFilters()
+    private async Task ApplyFilters()
     {
-        IEnumerable<EnrollmentDto> query = Enrollments;
-
-        if (!string.IsNullOrWhiteSpace(SearchText))
+        try
         {
-            var search = SearchText.Trim();
+            var client = Auth.CreateAuthenticatedClient();
+            var url = "api/Enrollments?search=" + Uri.EscapeDataString(SearchText)
+                + "&status=" + Uri.EscapeDataString(StatusFilter)
+                + "&supportUserId=" + Uri.EscapeDataString(SupportFilter)
+                + "&instructorId=" + Uri.EscapeDataString(InstructorFilter);
 
-            query = query.Where(x =>
-                (x.StudentName ?? "")
-                    .Contains(search, StringComparison.OrdinalIgnoreCase)
-                ||
-                (x.CourseTitle ?? "")
-                    .Contains(search, StringComparison.OrdinalIgnoreCase));
+            FilteredEnrollments = await client.GetFromJsonAsync<List<EnrollmentDto>>(url) ?? new();
+            FilteredEnrollments = FilteredEnrollments.OrderByDescending(x => x.StartDate).ToList();
         }
-
-        if (!string.IsNullOrWhiteSpace(StatusFilter))
+        catch (Exception ex)
         {
-            query = query.Where(x => x.Status == StatusFilter);
+            ErrorMessage = "اعمال فیلتر ثبت‌نام‌ها با خطا مواجه شد: " + ex.Message;
         }
-
-        if (int.TryParse(SupportFilter, out var supportId))
-        {
-            query = query.Where(x => x.SupportUserId == supportId);
-        }
-
-        if (int.TryParse(InstructorFilter, out var instructorId))
-        {
-            query = query.Where(x => x.InstructorId == instructorId);
-        }
-
-        FilteredEnrollments = query
-            .OrderByDescending(x => x.StartDate)
-            .ToList();
     }
 
-    private void ClearFilters()
+    private async Task ClearFilters()
     {
         SearchText = "";
         StatusFilter = "";
         SupportFilter = "";
         InstructorFilter = "";
-
-        ApplyFilters();
+        await ApplyFilters();
     }
 
     private static string StatusLabel(string status)

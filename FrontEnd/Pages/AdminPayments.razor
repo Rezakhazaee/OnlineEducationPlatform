@@ -303,8 +303,10 @@
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0">
             <input type="search" placeholder="جستجوی دانشجو، دوره یا شماره پرداخت..."
                    @bind="PaymentSearch"
+                   @bind:after="LoadData"
                    style="flex:1;min-width:220px;padding:10px;border:1px solid #ccc;border-radius:8px" />
             <select @bind="PaymentStatusFilter"
+                    @bind:after="LoadData"
                     style="padding:10px;border:1px solid #ccc;border-radius:8px">
                 <option value="">همه وضعیت‌ها</option>
                 <option value="Paid">پرداخت‌شده</option>
@@ -312,6 +314,7 @@
                 <option value="Cancelled">لغوشده</option>
             </select>
             <select @bind="PaymentTypeFilter"
+                    @bind:after="LoadData"
                     style="padding:10px;border:1px solid #ccc;border-radius:8px">
                 <option value="">همه انواع پرداخت</option>
                 <option value="FirstInstallment">قسط اول</option>
@@ -507,11 +510,12 @@ private List<PaymentDetailDto> FilteredPayments =>
         (string.IsNullOrWhiteSpace(PaymentTypeFilter) || p.PaymentType == PaymentTypeFilter))
     .ToList();
 
-private void ClearPaymentFilters()
+private async Task ClearPaymentFilters()
 {
     PaymentSearch = string.Empty;
     PaymentStatusFilter = string.Empty;
     PaymentTypeFilter = string.Empty;
+    await LoadData();
 }
 
 private List<EnrollmentDto> Enrollments { get; set; } = new();
@@ -585,7 +589,7 @@ private async Task LoadData()
         var paymentsTask =
             client.GetFromJsonAsync<
                 List<PaymentDetailDto>>(
-                "api/Payments");
+                $"api/Payments?search={Uri.EscapeDataString(PaymentSearch)}&status={Uri.EscapeDataString(PaymentStatusFilter)}&paymentType={Uri.EscapeDataString(PaymentTypeFilter)}");
 
 
         var enrollmentsTask =

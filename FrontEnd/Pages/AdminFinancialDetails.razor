@@ -639,7 +639,7 @@
                     "api/Installments")
                 ?? new();
 
-            ApplyFilters();
+            await ApplyFilters();
         }
         catch (Exception ex)
         {
@@ -652,52 +652,33 @@
         }
     }
 
-    private void ApplyFilters()
+    private async Task ApplyFilters()
     {
-        IEnumerable<PaymentDto> query = Payments;
-
-        if (!string.IsNullOrWhiteSpace(SearchText))
+        try
         {
-            var search = SearchText.Trim();
+            var client = Auth.CreateAuthenticatedClient();
+            var url = "api/Payments?search=" + Uri.EscapeDataString(SearchText)
+                + "&status=" + Uri.EscapeDataString(StatusFilter)
+                + "&paymentType=" + Uri.EscapeDataString(PaymentTypeFilter)
+                + "&minAmount=" + (MinAmount.HasValue ? MinAmount.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "");
 
-            query = query.Where(x =>
-                (x.StudentName ?? "")
-                    .Contains(search, StringComparison.OrdinalIgnoreCase)
-                ||
-                (x.CourseTitle ?? "")
-                    .Contains(search, StringComparison.OrdinalIgnoreCase));
+            FilteredPayments = await client.GetFromJsonAsync<List<PaymentDto>>(url) ?? new();
+            FilteredPayments = FilteredPayments.OrderByDescending(x => x.PaymentDate).ToList();
         }
-
-        if (!string.IsNullOrWhiteSpace(StatusFilter))
+        catch (Exception ex)
         {
-            query = query.Where(x => x.Status == StatusFilter);
+            ErrorMessage = "اعمال فیلتر پرداخت‌ها با خطا مواجه شد: " + ex.Message;
         }
-
-        if (!string.IsNullOrWhiteSpace(PaymentTypeFilter))
-        {
-            query = query.Where(x => x.PaymentType == PaymentTypeFilter);
-        }
-
-        if (MinAmount.HasValue)
-        {
-            query = query.Where(x => x.Amount >= MinAmount.Value);
-        }
-
-        FilteredPayments = query
-            .OrderByDescending(x => x.PaymentDate)
-            .ToList();
     }
 
-    private void ClearFilters()
+    private async Task ClearFilters()
     {
         SearchText = "";
         StatusFilter = "";
         PaymentTypeFilter = "";
         MinAmount = null;
-
-        ApplyFilters();
+        await ApplyFilters();
     }
-
 
     private static string InstallmentStatusLabel(string status)
     {

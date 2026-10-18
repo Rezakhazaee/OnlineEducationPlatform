@@ -353,7 +353,7 @@ public async Task<ActionResult<List<EnrollmentDetailDto>>> GetMySupportEnrollmen
     
     [Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Student")]
 [HttpGet]
-public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
+public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments([FromQuery] string? search = null, [FromQuery] string? status = null, [FromQuery] int? supportUserId = null, [FromQuery] int? instructorId = null)
 {
     var query = _context.Enrollments
         .Include(e => e.Student)
@@ -426,6 +426,18 @@ public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
             e.Student != null &&
             e.Student.MarketingUserId == userId);
     }
+
+    if (!string.IsNullOrWhiteSpace(search)) {
+        var term = search.Trim();
+        var hasId = int.TryParse(term, out var enrollmentId);
+        query = query.Where(e =>
+            (e.Student != null && (e.Student.FirstName + " " + e.Student.LastName).Contains(term)) ||
+            (e.Course != null && e.Course.Title.Contains(term)) ||
+            (hasId && e.Id == enrollmentId));
+    }
+    if (!string.IsNullOrWhiteSpace(status)) query = query.Where(e => e.Status == status);
+    if (supportUserId.HasValue) query = query.Where(e => e.SupportUserId == supportUserId.Value);
+    if (instructorId.HasValue) query = query.Where(e => e.InstructorId == instructorId.Value);
 
     var enrollments = await query
         .Select(e => new EnrollmentDto

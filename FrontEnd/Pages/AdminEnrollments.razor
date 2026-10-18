@@ -485,8 +485,10 @@
                 <div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0">
                     <input type="search" placeholder="جستجوی دانشجو یا دوره..."
                            @bind="EnrollmentSearch"
+                           @bind:after="LoadData"
                            style="flex:1;min-width:220px;padding:10px;border:1px solid #ccc;border-radius:8px" />
                     <select @bind="EnrollmentStatusFilter"
+                            @bind:after="LoadData"
                             style="padding:10px;border:1px solid #ccc;border-radius:8px">
                         <option value="">همه وضعیت‌ها</option>
                         <option value="Active">فعال</option>
@@ -679,10 +681,11 @@ else
             (string.IsNullOrWhiteSpace(EnrollmentStatusFilter) || e.Status == EnrollmentStatusFilter))
         .ToList();
 
-    private void ClearEnrollmentFilters()
+    private async Task ClearEnrollmentFilters()
     {
         EnrollmentSearch = string.Empty;
         EnrollmentStatusFilter = string.Empty;
+        await LoadData();
     }
 
     private bool IsLoading { get; set; } = true;
@@ -775,7 +778,7 @@ else
 
             var enrollmentsTask =
                 client.GetFromJsonAsync<List<EnrollmentDto>>(
-                    "api/Enrollments");
+                    $"api/Enrollments?search={Uri.EscapeDataString(EnrollmentSearch)}&status={Uri.EscapeDataString(EnrollmentStatusFilter)}");
 
             await Task.WhenAll(
                 studentsTask,
