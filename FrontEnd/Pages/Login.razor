@@ -39,7 +39,7 @@
         </div>
 
 
-        <div class="login-form">
+        <form class="login-form" @onsubmit="HandleLogin" @onsubmit:preventDefault="true">
 
             <div class="form-group">
 
@@ -62,11 +62,21 @@
                     رمز عبور
                 </label>
 
-                <input
-                    type="password"
-                    @bind="Password" @bind:event="oninput"
-                    placeholder="رمز عبور خود را وارد کنید"
-                    disabled="@IsLoading" />
+                <div class="login-password-field">
+                    <input
+                        type="@(ShowPassword ? "text" : "password")"
+                        @bind="Password" @bind:event="oninput"
+                        placeholder="رمز عبور خود را وارد کنید"
+                        autocomplete="current-password"
+                        disabled="@IsLoading" />
+                    <button type="button" class="password-toggle"
+                            @onclick="TogglePasswordVisibility"
+                            aria-label="@(ShowPassword ? "مخفی کردن رمز عبور" : "نمایش رمز عبور")"
+                            aria-pressed="@ShowPassword"
+                            disabled="@IsLoading">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+                    </button>
+                </div>
 
             </div>
 
@@ -81,7 +91,7 @@
 
             <button
                 class="login-submit"
-                @onclick="HandleLogin"
+                type="submit"
                 disabled="@IsLoading">
 
                 @if (IsLoading)
@@ -96,7 +106,7 @@
 
             </button>
 
-        </div>
+        </form>
 
 
         <div class="login-footer">
@@ -130,6 +140,13 @@
     private string? ErrorMessage { get; set; }
 
     private bool IsLoading { get; set; }
+
+    private bool ShowPassword { get; set; }
+
+    private void TogglePasswordVisibility()
+    {
+        ShowPassword = !ShowPassword;
+    }
 
 
     private string GetReturnUrl()

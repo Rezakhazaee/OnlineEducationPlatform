@@ -4335,3 +4335,98 @@ textarea {
 
 @media (max-width: 600px) {
     .student-dashboard-payments .student-dashboard-payment {
+
+    }
+}
+
+/* Minimal password visibility control on the login page */
+.login-password-field {
+    position: relative;
+    width: 100%;
+}
+
+.login-password-field input {
+    width: 100%;
+    padding-inline-end: 44px;
+}
+
+.login-password-field .password-toggle {
+    position: absolute;
+    inset-inline-end: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #687783;
+    cursor: pointer;
+}
+
+.login-password-field .password-toggle:hover {
+    background: rgba(104, 119, 131, 0.10);
+    color: #263d4a;
+}
+
+.login-password-field .password-toggle:focus-visible {
+    outline: 2px solid #568fa8;
+    outline-offset: 1px;
+}
+
+.login-password-field .password-toggle svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+}
+
+.login-password-field .password-toggle:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Login password field: final positioning override */
+.login-form .login-password-field {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+.login-form .login-password-field > input {
+    box-sizing: border-box !important;
+    display: block !important;
+    width: 100% !important;
+    padding-inline-end: 48px !important;
+}
+
+.login-form .login-password-field > .password-toggle {
+    position: absolute !important;
+    inset-inline-end: 6px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 2 !important;
+    display: flex !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #526773 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+}
+
+.login-form .login-password-field > .password-toggle svg {
+    display: block !important;
+    width: 20px !important;
+    height: 20px !important;
+    flex: 0 0 20px !important;
+    stroke: currentColor;
+}

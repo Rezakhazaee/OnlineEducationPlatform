@@ -411,6 +411,8 @@ public class StudentsController : ControllerBase
             CreatedDate = student.CreatedDate
         });
     }
+    [Authorize(Roles = "Student")]
+    [HttpPut("me")]
     public async Task<ActionResult<StudentDto>> UpdateMyProfile(
         UpdateMyStudentProfileRequest dto)
     {
