@@ -1218,15 +1218,8 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         }
 
         // به روز رسانی اطلاعات ثبت نام
-        if (dto.SupportUserId.HasValue)
-{
-    enrollment.SupportUserId = dto.SupportUserId;
-}
-
-if (dto.InstructorId.HasValue)
-{
-    enrollment.InstructorId = dto.InstructorId;
-}
+        enrollment.SupportUserId = dto.SupportUserId;
+        enrollment.InstructorId = dto.InstructorId;
         enrollment.StartDate = dto.StartDate;
         enrollment.Status = dto.Status;
         enrollment.Description =

@@ -1,6 +1,8 @@
+@inject Microsoft.JSInterop.IJSRuntime JS
 @page "/admin/enrollments"
 
 @using System.Net.Http.Json
+@using System.Globalization
 @using FrontEnd.Services
 
 @inject AuthService Auth
@@ -170,7 +172,7 @@
                 </div>
 
 
-                <div class="course-form-card">
+                <div id="enrollment-form" tabindex="-1" class="course-form-card">
 
                     <div class="course-form-header">
 
@@ -241,6 +243,28 @@
 
 
                         <div class="form-group">
+    <label>پشتیبان ثبت‌نام</label>
+    <select @bind="FormSupportUserId">
+        <option value="">بدون پشتیبان</option>
+        @foreach (var user in SupportUsers)
+        {
+            <option value="@user.Id">@user.FullName</option>
+        }
+    </select>
+</div>
+
+<div class="form-group">
+    <label>مدرس</label>
+    <select @bind="FormInstructorId">
+        <option value="">بدون مدرس</option>
+        @foreach (var user in Instructors)
+        {
+            <option value="@user.Id">@user.FullName</option>
+        }
+    </select>
+</div>
+
+<div class="form-group">
 
                             <label>
                                 سازمان طرف قرارداد
@@ -375,9 +399,7 @@
                                 تاریخ شروع
                             </label>
 
-                            <input
-                                type="date"
-                                @bind="FormStartDate" />
+                            <input type="text" inputmode="numeric" placeholder="۱۴۰۵/۰۷/۲۷" aria-label="تاریخ شروع به شمسی" @bind="FormStartDateText" />
 
                         </div>
 
@@ -548,6 +570,9 @@
                                         دوره
                                     </th>
 
+                                    <th>مدرس</th>
+                                    <th>پشتیبان ثبت‌نام</th>
+
                                     <th>
                                         سازمان طرف قرارداد
                                     </th>
@@ -588,6 +613,13 @@
                                         </td>
 
                                         <td>
+                                            @(enrollment.InstructorName ?? "بدون مدرس")
+                                        </td>
+                                        <td>
+                                            @(enrollment.SupportUserName ?? "بدون پشتیبان")
+                                        </td>
+
+                                        <td>
                                             @(enrollment.CoursePartnerOrganization?.PartnerOrganization?.Name
                                                 ?? "بدون قرارداد سازمانی")
                                         </td>
@@ -603,7 +635,7 @@
                                         </td>
 
                                         <td>
-                                            @enrollment.StartDate.ToString("yyyy/MM/dd")
+                                            @ToPersianDate(enrollment.StartDate)
                                         </td>
 
                                         <td>
@@ -676,6 +708,9 @@ else
 
     private List<CourseDto> Courses { get; set; } = new();
 
+    private List<UserDto> SupportUsers { get; set; } = new();
+    private List<UserDto> Instructors { get; set; } = new();
+
     private List<CoursePartnerOrganizationDto> CoursePartnerOrganizations { get; set; } = new();
 
     private List<EnrollmentDto> Enrollments { get; set; } = new();
@@ -715,9 +750,68 @@ else
 
     private string FormCourseId { get; set; } = string.Empty;
 
+    private string FormSupportUserId { get; set; } = string.Empty;
+    private string FormInstructorId { get; set; } = string.Empty;
+
     private string FormCoursePartnerOrganizationId { get; set; } = string.Empty;
 
-    private DateTime FormStartDate { get; set; } = DateTime.Today;
+    private string FormStartDateText { get; set; } = ToPersianDate(DateTime.Today);
+    private static readonly PersianCalendar PersianCalendarInstance = new();
+
+    private static string ToPersianDate(DateTime date)
+    {
+        return ToPersianDigits(
+            $"{PersianCalendarInstance.GetYear(date):0000}/" +
+            $"{PersianCalendarInstance.GetMonth(date):00}/" +
+            $"{PersianCalendarInstance.GetDayOfMonth(date):00}");
+    }
+
+    private static string ToPersianDigits(string value)
+    {
+        return value
+            .Replace('0', '۰').Replace('1', '۱')
+            .Replace('2', '۲').Replace('3', '۳')
+            .Replace('4', '۴').Replace('5', '۵')
+            .Replace('6', '۶').Replace('7', '۷')
+            .Replace('8', '۸').Replace('9', '۹');
+    }
+
+    private static bool TryParsePersianDate(string? value, out DateTime date)
+    {
+        date = default;
+        if (string.IsNullOrWhiteSpace(value)) return false;
+
+        var normalized = value.Trim()
+            .Replace('۰', '0').Replace('۱', '1')
+            .Replace('۲', '2').Replace('۳', '3')
+            .Replace('۴', '4').Replace('۵', '5')
+            .Replace('۶', '6').Replace('۷', '7')
+            .Replace('۸', '8').Replace('۹', '9')
+            .Replace('٠', '0').Replace('١', '1')
+            .Replace('٢', '2').Replace('٣', '3')
+            .Replace('٤', '4').Replace('٥', '5')
+            .Replace('٦', '6').Replace('٧', '7')
+            .Replace('٨', '8').Replace('٩', '9');
+
+        var parts = normalized.Split('/');
+        if (parts.Length != 3 ||
+            !int.TryParse(parts[0], out var year) ||
+            !int.TryParse(parts[1], out var month) ||
+            !int.TryParse(parts[2], out var day))
+            return false;
+
+        try
+        {
+            date = PersianCalendarInstance.ToDateTime(
+                year, month, day, 0, 0, 0, 0);
+            return true;
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return false;
+        }
+    }
+
 
     private string FormStatus { get; set; } = "Active";
 
@@ -783,8 +877,10 @@ else
                     "api/Students");
 
             var coursesTask =
-                client.GetFromJsonAsync<List<CourseDto>>(
-                    "api/Courses");
+                client.GetFromJsonAsync<List<CourseDto>>("api/Courses");
+
+            var usersTask =
+                client.GetFromJsonAsync<List<UserDto>>("api/Users");
 
             var enrollmentsTask =
                 client.GetFromJsonAsync<List<EnrollmentDto>>(
@@ -793,6 +889,7 @@ else
             await Task.WhenAll(
                 studentsTask,
                 coursesTask,
+                usersTask,
                 enrollmentsTask);
 
             Students =
@@ -800,6 +897,10 @@ else
 
             Courses =
                 coursesTask.Result ?? new List<CourseDto>();
+
+            var users = usersTask.Result ?? new List<UserDto>();
+            SupportUsers = users.Where(u => u.IsActive && string.Equals(u.Role?.Trim(), "Support", StringComparison.OrdinalIgnoreCase)).ToList();
+            Instructors = users.Where(u => u.IsActive && string.Equals(u.Role?.Trim(), "Instructor", StringComparison.OrdinalIgnoreCase)).ToList();
 
             Enrollments =
                 enrollmentsTask.Result ?? new List<EnrollmentDto>();
@@ -818,24 +919,19 @@ else
    private async Task BeginEditEnrollment(EnrollmentDto enrollment)
 {
     FormError = null;
-
     IsEditMode = true;
     EditingEnrollmentId = enrollment.Id;
-
     FormStudentId = enrollment.StudentId.ToString();
     FormCourseId = enrollment.CourseId.ToString();
-
-    FormStartDate = enrollment.StartDate;
+    FormSupportUserId = enrollment.SupportUserId?.ToString() ?? string.Empty;
+    FormInstructorId = enrollment.InstructorId?.ToString() ?? string.Empty;
+    FormStartDateText = ToPersianDate(enrollment.StartDate);
     FormStatus = enrollment.Status;
     FormDescription = enrollment.Description ?? string.Empty;
-
+    FormCoursePartnerOrganizationId = enrollment.CoursePartnerOrganization?.Id.ToString() ?? string.Empty;
     CoursePartnerOrganizations.Clear();
-
     await LoadCoursePartnerOrganizations();
-
-    FormCoursePartnerOrganizationId =
-        enrollment.CoursePartnerOrganization?.Id.ToString()
-        ?? string.Empty;
+    await JS.InvokeVoidAsync("eval", """document.getElementById('enrollment-form')?.scrollIntoView({behavior:'smooth',block:'start'})""");
 }
 
     private async Task OnCourseChanged(ChangeEventArgs e)
@@ -920,6 +1016,12 @@ private async Task SaveEnrollment()
         return;
     }
 
+        if (!TryParsePersianDate(FormStartDateText, out var parsedStartDate))
+    {
+        FormError = "تاریخ شروع معتبر نیست؛ تاریخ شمسی را به‌شکل سال/ماه/روز وارد کنید.";
+        return;
+    }
+
     IsSaving = true;
 
     try
@@ -942,7 +1044,10 @@ private async Task SaveEnrollment()
                 CoursePartnerOrganizationId =
                     coursePartnerOrganizationId,
 
-                StartDate = FormStartDate,
+                SupportUserId = int.TryParse(FormSupportUserId, out var supportId) ? supportId : null,
+                InstructorId = int.TryParse(FormInstructorId, out var instructorId) ? instructorId : null,
+
+                StartDate = parsedStartDate,
 
                 Status = FormStatus,
 
@@ -976,7 +1081,10 @@ private async Task SaveEnrollment()
                 CoursePartnerOrganizationId =
                     coursePartnerOrganizationId,
 
-                StartDate = FormStartDate,
+                SupportUserId = int.TryParse(FormSupportUserId, out var supportId) ? supportId : null,
+                InstructorId = int.TryParse(FormInstructorId, out var instructorId) ? instructorId : null,
+
+                StartDate = parsedStartDate,
 
                 Status = FormStatus,
 
@@ -1023,8 +1131,10 @@ private async Task SaveEnrollment()
     {
         FormStudentId = string.Empty;
         FormCourseId = string.Empty;
+        FormSupportUserId = string.Empty;
+        FormInstructorId = string.Empty;
         FormCoursePartnerOrganizationId = string.Empty;
-        FormStartDate = DateTime.Today;
+        FormStartDateText = ToPersianDate(DateTime.Today);
         FormStatus = "Active";
         FormDescription = string.Empty;
         CoursePartnerOrganizations.Clear();
@@ -1111,6 +1221,11 @@ private async Task SaveEnrollment()
     {
         public int Id { get; set; }
 
+        public int? SupportUserId { get; set; }
+        public string? SupportUserName { get; set; }
+        public int? InstructorId { get; set; }
+        public string? InstructorName { get; set; }
+
         public int StudentId { get; set; }
 
         public string StudentName { get; set; } = string.Empty;
@@ -1130,6 +1245,14 @@ private async Task SaveEnrollment()
         public CoursePartnerOrganizationDto? CoursePartnerOrganization { get; set; }
     }
 
+
+    public class UserDto
+    {
+        public int Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+    }
 
     public class CreateEnrollmentDto
     {
