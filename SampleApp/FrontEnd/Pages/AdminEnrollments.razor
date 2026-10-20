@@ -163,7 +163,7 @@
                 </div>
                 @if (ShowEnrollmentForm)
                 {
-                <div class="course-form-card" hidden="@(!ShowEnrollmentForm && !IsEditMode)">
+                <div class="course-form-card">
 
                     <div class="course-form-header">
 
@@ -463,7 +463,7 @@
                 }
 
 
-                <div class="admin-form-grid" style="margin-bottom:20px;">
+                <div class="compact-filter-grid" style="display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:6px 12px !important;margin-bottom:12px;">
                     <div class="admin-form-group" style="min-width:0;">
                         <label>جست‌وجوی دانشجو یا دوره</label>
                         <input class="admin-input" type="search" placeholder="نام دانشجو یا عنوان دوره" @bind="EnrollmentSearch" />
@@ -560,7 +560,7 @@
 
                             <tbody>
 
-                                @foreach (var enrollment in FilteredEnrollments)
+                                @foreach (var enrollment in FilteredEnrollments.Skip((EnrollmentsDisplayPage - 1) * EnrollmentsPageSize).Take(EnrollmentsPageSize))
                                 {
                                     <tr>
 
@@ -645,6 +645,19 @@ else
                             </tbody>
 
                         </table>
+<div class="table-pagination">
+  <span class="table-pagination-info">نمایش @EnrollmentsStartRecord تا @EnrollmentsEndRecord از @(FilteredEnrollments.Count()) رکورد</span>
+  <div class="table-pagination-controls">
+    <label class="page-size-label">تعداد در صفحه
+      <select class="page-size-select" value="@EnrollmentsPageSize" @onchange="EnrollmentsPageSizeChanged">
+        <option value="10">۱۰</option><option value="20">۲۰</option><option value="50">۵۰</option><option value="100">۱۰۰</option>
+      </select>
+    </label>
+    <button type="button" class="btn-secondary" disabled="@(EnrollmentsDisplayPage <= 1)" @onclick="EnrollmentsPrev">قبلی</button>
+    <span class="pagination-current">صفحه @EnrollmentsDisplayPage از @EnrollmentsPageCount</span>
+    <button type="button" class="btn-secondary" disabled="@(EnrollmentsDisplayPage >= EnrollmentsPageCount)" @onclick="EnrollmentsNext">بعدی</button>
+  </div>
+</div>
 
                     </div>
                 }
@@ -658,6 +671,15 @@ else
 
 
 @code {
+    private int EnrollmentsPage { get; set; } = 1;
+    private int EnrollmentsPageSize { get; set; } = 20;
+    private int EnrollmentsDisplayPage => Math.Min(EnrollmentsPage, EnrollmentsPageCount);
+    private int EnrollmentsStartRecord => FilteredEnrollments.Count() == 0 ? 0 : (EnrollmentsDisplayPage - 1) * EnrollmentsPageSize + 1;
+    private int EnrollmentsEndRecord => Math.Min(EnrollmentsStartRecord + EnrollmentsPageSize - 1, FilteredEnrollments.Count());
+    private void EnrollmentsPageSizeChanged(ChangeEventArgs e) { if (int.TryParse(e.Value?.ToString(), out var size) && new[] { 10, 20, 50, 100 }.Contains(size)) EnrollmentsPageSize = size; EnrollmentsPage = 1; }
+    private int EnrollmentsPageCount => Math.Max(1, (int)Math.Ceiling(FilteredEnrollments.Count() / (double)EnrollmentsPageSize));
+    private void EnrollmentsPrev() => EnrollmentsPage = Math.Max(1, EnrollmentsDisplayPage - 1);
+    private void EnrollmentsNext() => EnrollmentsPage = Math.Min(EnrollmentsPageCount, EnrollmentsDisplayPage + 1);
 
     private List<StudentDto> Students { get; set; } = new();
 
@@ -697,7 +719,7 @@ else
 
     private bool IsSaving { get; set; }
     private bool IsEditMode { get; set; }
-    private bool ShowEnrollmentForm { get; set; }
+    private bool ShowEnrollmentForm { get; set; } = false;
 
     private int EditingEnrollmentId { get; set; }
 

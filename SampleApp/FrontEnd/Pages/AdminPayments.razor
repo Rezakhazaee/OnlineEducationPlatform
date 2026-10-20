@@ -316,7 +316,7 @@
     }
 
 
-        <div class="admin-form-grid" style="margin-bottom:20px;">
+        <div class="compact-filter-grid" style="display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:6px 12px !important;margin-bottom:12px;">
             <div class="admin-form-group">
                 <label>جست‌وجوی پرداخت</label>
                 <input class="admin-input" type="search" placeholder="نام دانشجو، دوره یا توضیحات" @bind="PaymentSearch" />
@@ -411,7 +411,7 @@
 
                     <tbody>
 
-                        @foreach (var payment in FilteredPayments)
+                        @foreach (var payment in FilteredPayments.Skip((PaymentsDisplayPage - 1) * PaymentsPageSize).Take(PaymentsPageSize))
                         {
                             <tr>
 
@@ -504,6 +504,19 @@
                     </tbody>
 
                 </table>
+<div class="table-pagination">
+  <span class="table-pagination-info">نمایش @PaymentsStartRecord تا @PaymentsEndRecord از @(FilteredPayments.Count()) رکورد</span>
+  <div class="table-pagination-controls">
+    <label class="page-size-label">تعداد در صفحه
+      <select class="page-size-select" value="@PaymentsPageSize" @onchange="PaymentsPageSizeChanged">
+        <option value="10">۱۰</option><option value="20">۲۰</option><option value="50">۵۰</option><option value="100">۱۰۰</option>
+      </select>
+    </label>
+    <button type="button" class="btn-secondary" disabled="@(PaymentsDisplayPage <= 1)" @onclick="PaymentsPrev">قبلی</button>
+    <span class="pagination-current">صفحه @PaymentsDisplayPage از @PaymentsPageCount</span>
+    <button type="button" class="btn-secondary" disabled="@(PaymentsDisplayPage >= PaymentsPageCount)" @onclick="PaymentsNext">بعدی</button>
+  </div>
+</div>
 
             </div>
         }
@@ -515,6 +528,15 @@
 </div>
 
 @code {
+    private int PaymentsPage { get; set; } = 1;
+    private int PaymentsPageSize { get; set; } = 20;
+    private int PaymentsDisplayPage => Math.Min(PaymentsPage, PaymentsPageCount);
+    private int PaymentsStartRecord => FilteredPayments.Count() == 0 ? 0 : (PaymentsDisplayPage - 1) * PaymentsPageSize + 1;
+    private int PaymentsEndRecord => Math.Min(PaymentsStartRecord + PaymentsPageSize - 1, FilteredPayments.Count());
+    private void PaymentsPageSizeChanged(ChangeEventArgs e) { if (int.TryParse(e.Value?.ToString(), out var size) && new[] { 10, 20, 50, 100 }.Contains(size)) PaymentsPageSize = size; PaymentsPage = 1; }
+    private int PaymentsPageCount => Math.Max(1, (int)Math.Ceiling(FilteredPayments.Count() / (double)PaymentsPageSize));
+    private void PaymentsPrev() => PaymentsPage = Math.Max(1, PaymentsDisplayPage - 1);
+    private void PaymentsNext() => PaymentsPage = Math.Min(PaymentsPageCount, PaymentsDisplayPage + 1);
 
 private List<PaymentDetailDto> Payments { get; set; } = new();
 
@@ -547,7 +569,7 @@ private List<EnrollmentDto> Enrollments { get; set; } = new();
 private bool IsLoading { get; set; } = true;
 
 private bool IsSaving { get; set; }
-private bool ShowPaymentForm { get; set; }
+private bool ShowPaymentForm { get; set; } = false;
 
 
 private bool IsProcessingPayment { get; set; }
