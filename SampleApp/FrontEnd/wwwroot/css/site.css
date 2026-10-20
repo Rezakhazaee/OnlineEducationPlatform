@@ -6780,3 +6780,17 @@ textarea {
 .registration-breakdown {
     position: relative;
 }
+
+/* اسکرول مستقل فهرست کاربران */
+.users-table-wrapper {
+    max-height: 65vh;
+    overflow-y: auto;
+    overflow-x: auto;
+    overscroll-behavior: contain;
+}
+
+.users-table-wrapper thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
