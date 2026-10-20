@@ -1736,62 +1736,42 @@
     {
         Loading = true;
         Error = null;
-
         try
         {
             var client = Auth.CreateAuthenticatedClient();
-
             var json = await client.GetStringAsync("api/Reports/dashboard");
             using var document = System.Text.Json.JsonDocument.Parse(json);
             var root = document.RootElement;
-            var summary = root.GetProperty("summary");
-
+            int ReadInt(string key) => root.TryGetProperty(key, out var v) && v.ValueKind == System.Text.Json.JsonValueKind.Number ? v.GetInt32() : 0;
+            decimal ReadDecimal(string key) => root.TryGetProperty(key, out var v) && v.ValueKind == System.Text.Json.JsonValueKind.Number ? v.GetDecimal() : 0m;
             Report = new DashboardReport
             {
                 Summary = new DashboardSummary
                 {
-                    TotalStudents = summary.GetProperty("totalStudents").GetInt32(),
-                    TotalCourses = summary.GetProperty("totalCourses").GetInt32(),
-                    TotalEnrollments = summary.GetProperty("totalEnrollments").GetInt32(),
-                    ActiveEnrollments = summary.GetProperty("activeEnrollments").GetInt32(),
-                    CancelledEnrollments = summary.GetProperty("cancelledEnrollments").GetInt32(),
-                    TodayEnrollments = summary.GetProperty("todayEnrollments").GetInt32(),
-                    MonthEnrollments = summary.GetProperty("monthEnrollments").GetInt32(),
-                    OnlineEnrollments = summary.GetProperty("onlineEnrollments").GetInt32(),
-                    InPersonEnrollments = summary.GetProperty("inPersonEnrollments").GetInt32(),
-                    HybridEnrollments = summary.TryGetProperty("hybridEnrollments", out var hybridValue) ? hybridValue.GetInt32() : 0,
-                    ExpectedAmount = summary.GetProperty("expectedAmount").GetDecimal(),
-                    TotalPaid = summary.GetProperty("totalPaid").GetDecimal(),
-                    RemainingAmount = summary.GetProperty("remainingAmount").GetDecimal(),
-                    CollectionPercent = summary.GetProperty("collectionPercent").GetDecimal()
+                    TotalStudents = ReadInt("totalStudents"),
+                    TotalCourses = ReadInt("totalCourses"),
+                    TotalEnrollments = ReadInt("totalEnrollments"),
+                    ActiveEnrollments = ReadInt("activeEnrollments"),
+                    CancelledEnrollments = ReadInt("cancelledEnrollments"),
+                    TodayEnrollments = ReadInt("todayEnrollments"),
+                    MonthEnrollments = ReadInt("monthEnrollments"),
+                    OnlineEnrollments = ReadInt("onlineEnrollments"),
+                    InPersonEnrollments = ReadInt("inPersonEnrollments"),
+                    HybridEnrollments = ReadInt("hybridEnrollments"),
+                    ExpectedAmount = ReadDecimal("totalExpected"),
+                    TotalPaid = ReadDecimal("totalPaid"),
+                    RemainingAmount = ReadDecimal("totalRemaining"),
+                    CollectionPercent = ReadDecimal("collectionPercent")
                 },
-                Courses = System.Text.Json.JsonSerializer.Deserialize<List<CourseReport>>(root.GetProperty("courses").GetRawText(), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new()
+                Courses = root.TryGetProperty("courseReports", out var courses) ? System.Text.Json.JsonSerializer.Deserialize<List<CourseReport>>(courses.GetRawText(), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new() : new()
             };
-
-            InstructorReports = await client.GetFromJsonAsync<List<InstructorReport>>(
-                "api/ManagementReports/instructors") ?? new();
-
-            LearningProgress = await client.GetFromJsonAsync<LearningProgressReport>(
-                "api/ManagementReports/learning-progress");
-
-            try
-            {
-                EnrollmentRows = await client.GetFromJsonAsync<List<EnrollmentRow>>(
-                    "api/Enrollments") ?? new();
-            }
-            catch
-            {
-                EnrollmentRows = new();
-            }
+            InstructorReports = await client.GetFromJsonAsync<List<InstructorReport>>("api/ManagementReports/instructors") ?? new();
+            LearningProgress = await client.GetFromJsonAsync<LearningProgressReport>("api/ManagementReports/learning-progress");
+            try { EnrollmentRows = await client.GetFromJsonAsync<List<EnrollmentRow>>("api/Enrollments") ?? new(); }
+            catch { EnrollmentRows = new(); }
         }
-        catch (Exception ex)
-        {
-            Error = "خطا در دریافت گزارش‌ها: " + ex.Message;
-        }
-        finally
-        {
-            Loading = false;
-        }
+        catch (Exception ex) { Error = "خطا در دریافت گزارش‌ها: " + ex.Message; }
+        finally { Loading = false; }
     }
 
     private static string ActivityStatusLabel(string status)

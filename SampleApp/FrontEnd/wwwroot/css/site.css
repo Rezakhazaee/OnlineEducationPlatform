@@ -6552,3 +6552,231 @@ textarea {
     border-color: #263d4a !important;
     color: #ffffff !important;
 }
+    width: 100%;
+}
+
+.login-password-field input {
+    width: 100%;
+    padding-inline-end: 44px;
+}
+
+.login-password-field .password-toggle {
+    position: absolute;
+    inset-inline-end: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #687783;
+    cursor: pointer;
+}
+
+.login-password-field .password-toggle:hover {
+    background: rgba(104, 119, 131, 0.10);
+    color: #263d4a;
+}
+
+.login-password-field .password-toggle:focus-visible {
+    outline: 2px solid #568fa8;
+    outline-offset: 1px;
+}
+
+.login-password-field .password-toggle svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+}
+
+.login-password-field .password-toggle:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Login password field: final positioning override */
+.login-form .login-password-field {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+.login-form .login-password-field > input {
+    box-sizing: border-box !important;
+    display: block !important;
+    width: 100% !important;
+    padding-inline-end: 48px !important;
+}
+
+.login-form .login-password-field > .password-toggle {
+    position: absolute !important;
+    inset-inline-end: 6px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 2 !important;
+    display: flex !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #526773 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+}
+
+.login-form .login-password-field > .password-toggle svg {
+    display: block !important;
+    width: 20px !important;
+    height: 20px !important;
+    flex: 0 0 20px !important;
+    stroke: currentColor;
+}
+
+/* Course search and filters */
+.course-filters {
+    width: 100%;
+}
+
+.login-password-field input {
+    width: 100%;
+    padding-inline-end: 44px;
+}
+
+.login-password-field .password-toggle {
+    position: absolute;
+    inset-inline-end: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #687783;
+    cursor: pointer;
+}
+
+.login-password-field .password-toggle:hover {
+    background: rgba(104, 119, 131, 0.10);
+    color: #263d4a;
+}
+
+.login-password-field .password-toggle:focus-visible {
+    outline: 2px solid #568fa8;
+    outline-offset: 1px;
+}
+
+.login-password-field .password-toggle svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+}
+
+.login-password-field .password-toggle:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Login password field: final positioning override */
+.login-form .login-password-field {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+.login-form .login-password-field > input {
+    box-sizing: border-box !important;
+    display: block !important;
+    width: 100% !important;
+    padding-inline-end: 48px !important;
+}
+
+.login-form .login-password-field > .password-toggle {
+    position: absolute !important;
+    inset-inline-end: 6px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 2 !important;
+    display: flex !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: #526773 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+}
+
+.login-form .login-password-field > .password-toggle svg {
+    display: block !important;
+    width: 20px !important;
+    height: 20px !important;
+    flex: 0 0 20px !important;
+    stroke: currentColor;
+}
+
+/* Course search and filters */
+.course-filters {
+
+/* Minimal Windows-style password visibility icon */
+.login-form .login-password-field > .password-toggle {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    position: absolute !important;
+    inset-inline-end: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    margin: 0 !important;
+    padding: 4px !important;
+    border: none !important;
+    border-radius: 3px !important;
+    outline-offset: 1px;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #667781 !important;
+    cursor: pointer !important;
+}
+
+.login-form .login-password-field > .password-toggle:hover {
+    background: #e9eef1 !important;
+    color: #263d4a !important;
+}
+
+.login-form .login-password-field > .password-toggle:focus-visible {
+    outline: 1px solid #667781 !important;
+}
+
+.login-form .login-password-field > .password-toggle svg {
+    width: 18px !important;
+    height: 18px !important;
+    flex: 0 0 18px !important;
+}
+
+/* Report export buttons: top-left corner of each report card */
+.report-section,
+.registration-breakdown {
+    position: relative;
+}
