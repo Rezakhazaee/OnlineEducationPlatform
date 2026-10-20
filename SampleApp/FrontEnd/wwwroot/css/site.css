@@ -6794,3 +6794,28 @@ textarea {
     top: 0;
     z-index: 2;
 }
+
+/* فهرست‌های بلند پنل مدیریت: اسکرول مستقل */
+.users-table-wrapper,
+.courses-table-wrapper,
+.admin-table-wrapper {
+    max-height: 45vh !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    overscroll-behavior: contain;
+}
+
+/* ثابت ماندن سرستون جدول هنگام اسکرول */
+.users-table-wrapper thead,
+.courses-table-wrapper thead,
+.admin-table-wrapper thead {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+/* اسکرول مستقل محتوای اصلی صفحات مدیریت */
+.admin-page {
+    min-height: 100vh;
+}
+
