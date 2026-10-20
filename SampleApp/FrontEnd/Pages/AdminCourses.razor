@@ -416,7 +416,7 @@
 
                             <tbody>
 
-                                @foreach (var course in FilteredCourses)
+                                @foreach (var course in FilteredCourses.Skip((CoursesDisplayPage - 1) * CoursesPageSize).Take(CoursesPageSize))
                                 {
                                     <tr>
 
@@ -497,6 +497,19 @@
                             </tbody>
 
                         </table>
+<div class="table-pagination">
+  <span class="table-pagination-info">نمایش @CoursesStartRecord تا @CoursesEndRecord از @(FilteredCourses.Count()) رکورد</span>
+  <div class="table-pagination-controls">
+    <label class="page-size-label">تعداد در صفحه
+      <select class="page-size-select" value="@CoursesPageSize" @onchange="CoursesPageSizeChanged">
+        <option value="10">۱۰</option><option value="20">۲۰</option><option value="50">۵۰</option><option value="100">۱۰۰</option>
+      </select>
+    </label>
+    <button type="button" class="btn-secondary" disabled="@(CoursesDisplayPage <= 1)" @onclick="CoursesPrev">قبلی</button>
+    <span class="pagination-current">صفحه @CoursesDisplayPage از @CoursesPageCount</span>
+    <button type="button" class="btn-secondary" disabled="@(CoursesDisplayPage >= CoursesPageCount)" @onclick="CoursesNext">بعدی</button>
+  </div>
+</div>
 
                     </div>
                 }
@@ -510,6 +523,15 @@
 
 
 @code {
+    private int CoursesPage { get; set; } = 1;
+    private int CoursesPageSize { get; set; } = 20;
+    private int CoursesDisplayPage => Math.Min(CoursesPage, CoursesPageCount);
+    private int CoursesStartRecord => FilteredCourses.Count() == 0 ? 0 : (CoursesDisplayPage - 1) * CoursesPageSize + 1;
+    private int CoursesEndRecord => Math.Min(CoursesStartRecord + CoursesPageSize - 1, FilteredCourses.Count());
+    private void CoursesPageSizeChanged(ChangeEventArgs e) { if (int.TryParse(e.Value?.ToString(), out var size) && new[] { 10, 20, 50, 100 }.Contains(size)) CoursesPageSize = size; CoursesPage = 1; }
+    private int CoursesPageCount => Math.Max(1, (int)Math.Ceiling(FilteredCourses.Count() / (double)CoursesPageSize));
+    private void CoursesPrev() => CoursesPage = Math.Max(1, CoursesDisplayPage - 1);
+    private void CoursesNext() => CoursesPage = Math.Min(CoursesPageCount, CoursesDisplayPage + 1);
 
     private List<CourseDto> Courses { get; set; } = new();
 
