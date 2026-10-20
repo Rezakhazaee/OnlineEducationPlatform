@@ -59,7 +59,7 @@
             </a>
             <a href="/admin/organizations">
             <span>◈</span>
-            سازمان‌ها و ظاهر  
+            سازمان‌ها و ظاهر
             </a>
 
         </nav>
@@ -174,27 +174,38 @@
 
             <div class="registration-breakdown-grid">
                 <div class="breakdown-card today">
+                    <span class="breakdown-icon" aria-hidden="true">📅</span>
                     <span class="breakdown-label">ثبت‌نام‌های امروز</span>
                     <strong>@Report.Summary.TodayEnrollments</strong>
                     <small>ثبت‌نام جدید امروز</small>
                 </div>
 
                 <div class="breakdown-card month">
+                    <span class="breakdown-icon" aria-hidden="true">🗓️</span>
                     <span class="breakdown-label">ثبت‌نام‌های این ماه</span>
                     <strong>@Report.Summary.MonthEnrollments</strong>
                     <small>از ابتدای ماه جاری</small>
                 </div>
 
                 <div class="breakdown-card online">
+                    <span class="breakdown-icon" aria-hidden="true">💻</span>
                     <span class="breakdown-label">ثبت‌نام آنلاین</span>
                     <strong>@Report.Summary.OnlineEnrollments</strong>
                     <small>دوره‌های آنلاین</small>
                 </div>
 
                 <div class="breakdown-card inperson">
+                    <span class="breakdown-icon" aria-hidden="true">🏢</span>
                     <span class="breakdown-label">ثبت‌نام حضوری</span>
                     <strong>@Report.Summary.InPersonEnrollments</strong>
                     <small>دوره‌های حضوری</small>
+                </div>
+
+                <div class="breakdown-card hybrid">
+                    <span class="breakdown-icon" aria-hidden="true">🔄</span>
+                    <span class="breakdown-label">ثبت‌نام ترکیبی</span>
+                    <strong>@Report.Summary.HybridEnrollments</strong>
+                    <small>دوره‌های ترکیبی</small>
                 </div>
             </div>
 
@@ -1276,7 +1287,7 @@
         background: #b97878;
     }
 
-    @@media (max-width: 900px) {
+    @@media (max-width: 700px) {
         .registration-breakdown-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -1573,6 +1584,109 @@
         }
     }
 
+
+    /* Registration cards redesign */
+    .registration-breakdown-grid {
+        display: grid !important;
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        gap: 12px;
+        width: 100%;
+        align-items: stretch;
+    }
+
+    .registration-breakdown-grid .breakdown-card {
+        position: relative;
+        box-sizing: border-box;
+        min-width: 0;
+        padding: 54px 12px 18px;
+        border: 1px solid #e5edf2;
+        border-top: 4px solid var(--card-accent);
+        border-radius: 16px;
+        background: linear-gradient(155deg, #ffffff 0%, var(--card-tint) 100%);
+        box-shadow: 0 5px 16px rgba(38, 61, 74, .07);
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .registration-breakdown-grid .breakdown-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px rgba(38, 61, 74, .13);
+    }
+
+    .breakdown-card.today {
+        --card-accent: #2684ff;
+        --card-tint: #eef6ff;
+    }
+
+    .breakdown-card.month {
+        --card-accent: #8b5cf6;
+        --card-tint: #f5f0ff;
+    }
+
+    .breakdown-card.online {
+        --card-accent: #0d9488;
+        --card-tint: #eafaf7;
+    }
+
+    .breakdown-card.inperson {
+        --card-accent: #e59a26;
+        --card-tint: #fff7e8;
+    }
+
+    .breakdown-card.hybrid {
+        --card-accent: #e05285;
+        --card-tint: #fff0f5;
+    }
+
+    .registration-breakdown-grid .breakdown-icon {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: var(--card-tint);
+        font-size: 20px;
+    }
+
+    .registration-breakdown-grid .breakdown-label {
+        font-size: 12px;
+        line-height: 1.8;
+        overflow-wrap: anywhere;
+        color: #435866;
+    }
+
+    .registration-breakdown-grid .breakdown-card strong {
+        font-size: clamp(22px, 2vw, 29px);
+        line-height: 1.25;
+        color: var(--card-accent);
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .registration-breakdown-grid .breakdown-card small {
+        font-size: 10px;
+        line-height: 1.8;
+        color: #7b8b96;
+    }
+
+    @@media (max-width: 560px) {
+        .registration-breakdown-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
+
+    @@media (max-width: 360px) {
+        .registration-breakdown-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
+
 </style>
 
 @code {
@@ -1630,26 +1744,28 @@
             var json = await client.GetStringAsync("api/Reports/dashboard");
             using var document = System.Text.Json.JsonDocument.Parse(json);
             var root = document.RootElement;
+            var summary = root.GetProperty("summary");
 
             Report = new DashboardReport
             {
                 Summary = new DashboardSummary
                 {
-                    TotalStudents = root.GetProperty("totalStudents").GetInt32(),
-                    TotalCourses = root.GetProperty("totalCourses").GetInt32(),
-                    TotalEnrollments = root.GetProperty("totalEnrollments").GetInt32(),
-                    ActiveEnrollments = root.GetProperty("activeEnrollments").GetInt32(),
-                    CancelledEnrollments = root.GetProperty("cancelledEnrollments").GetInt32(),
-                    TodayEnrollments = root.GetProperty("todayEnrollments").GetInt32(),
-                    MonthEnrollments = root.GetProperty("monthEnrollments").GetInt32(),
-                    OnlineEnrollments = root.GetProperty("onlineEnrollments").GetInt32(),
-                    InPersonEnrollments = root.GetProperty("inPersonEnrollments").GetInt32(),
-                    ExpectedAmount = root.GetProperty("totalExpected").GetDecimal(),
-                    TotalPaid = root.GetProperty("totalPaid").GetDecimal(),
-                    RemainingAmount = root.GetProperty("totalRemaining").GetDecimal(),
-                    CollectionPercent = root.GetProperty("collectionPercent").GetDecimal()
+                    TotalStudents = summary.GetProperty("totalStudents").GetInt32(),
+                    TotalCourses = summary.GetProperty("totalCourses").GetInt32(),
+                    TotalEnrollments = summary.GetProperty("totalEnrollments").GetInt32(),
+                    ActiveEnrollments = summary.GetProperty("activeEnrollments").GetInt32(),
+                    CancelledEnrollments = summary.GetProperty("cancelledEnrollments").GetInt32(),
+                    TodayEnrollments = summary.GetProperty("todayEnrollments").GetInt32(),
+                    MonthEnrollments = summary.GetProperty("monthEnrollments").GetInt32(),
+                    OnlineEnrollments = summary.GetProperty("onlineEnrollments").GetInt32(),
+                    InPersonEnrollments = summary.GetProperty("inPersonEnrollments").GetInt32(),
+                    HybridEnrollments = summary.TryGetProperty("hybridEnrollments", out var hybridValue) ? hybridValue.GetInt32() : 0,
+                    ExpectedAmount = summary.GetProperty("expectedAmount").GetDecimal(),
+                    TotalPaid = summary.GetProperty("totalPaid").GetDecimal(),
+                    RemainingAmount = summary.GetProperty("remainingAmount").GetDecimal(),
+                    CollectionPercent = summary.GetProperty("collectionPercent").GetDecimal()
                 },
-                Courses = System.Text.Json.JsonSerializer.Deserialize<List<CourseReport>>(root.GetProperty("courseReports").GetRawText(), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new()
+                Courses = System.Text.Json.JsonSerializer.Deserialize<List<CourseReport>>(root.GetProperty("courses").GetRawText(), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new()
             };
 
             InstructorReports = await client.GetFromJsonAsync<List<InstructorReport>>(
@@ -1810,6 +1926,7 @@
         public int MonthEnrollments { get; set; }
         public int OnlineEnrollments { get; set; }
         public int InPersonEnrollments { get; set; }
+        public int HybridEnrollments { get; set; }
 
         public decimal ExpectedAmount { get; set; }
         public decimal TotalPaid { get; set; }
