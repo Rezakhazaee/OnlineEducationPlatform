@@ -364,6 +364,21 @@
                 {
                     <div class="courses-table-wrapper">
 
+                        <div class="course-filters">
+                            <input type="search" @bind="SearchTerm" @bind:event="oninput" placeholder="جستجوی عنوان یا توضیحات دوره" />
+                            <select @bind="FilterDeliveryType">
+                                <option value="">همه انواع</option><option value="Online">آنلاین</option><option value="InPerson">حضوری</option><option value="Hybrid">ترکیبی</option>
+                            </select>
+                            <select @bind="FilterInstructorId">
+                                <option value="">همه مدرس‌ها</option>
+                                @foreach (var instructor in Instructors) { <option value="@instructor.Id">@instructor.FullName</option> }
+                            </select>
+                            <select @bind="FilterStatus">
+                                <option value="">همه وضعیت‌ها</option><option value="active">فعال</option><option value="inactive">غیرفعال</option>
+                            </select>
+                            <button type="button" class="admin-secondary-btn" @onclick="ClearCourseFilters">پاک‌کردن فیلترها</button>
+                            <span>نتایج: @FilteredCourses.Count از @Courses.Count</span>
+                        </div>
                         <table class="courses-table">
 
                             <thead>
@@ -400,7 +415,7 @@
 
                             <tbody>
 
-                                @foreach (var course in Courses)
+                                @foreach (var course in FilteredCourses)
                                 {
                                     <tr>
 
@@ -480,6 +495,7 @@
                                     </tr>
                                 }
 
+                                @if (!FilteredCourses.Any()) { <tr><td colspan="6" style="text-align:center; padding:24px;">دوره‌ای با این شرایط پیدا نشد.</td></tr> }
                             </tbody>
 
                         </table>
@@ -500,6 +516,19 @@
     private List<CourseDto> Courses { get; set; } = new();
 
     private List<InstructorDto> Instructors { get; set; } = new();
+
+    private string SearchTerm { get; set; } = string.Empty;
+    private string FilterDeliveryType { get; set; } = string.Empty;
+    private string FilterInstructorId { get; set; } = string.Empty;
+    private string FilterStatus { get; set; } = string.Empty;
+
+    private List<CourseDto> FilteredCourses => Courses.Where(course =>
+        (string.IsNullOrWhiteSpace(SearchTerm) || (course.Title ?? string.Empty).Contains(SearchTerm.Trim(), StringComparison.OrdinalIgnoreCase) || (course.Description ?? string.Empty).Contains(SearchTerm.Trim(), StringComparison.OrdinalIgnoreCase)) &&
+        (string.IsNullOrEmpty(FilterDeliveryType) || course.DeliveryType == FilterDeliveryType) &&
+        (string.IsNullOrEmpty(FilterInstructorId) || course.InstructorId?.ToString() == FilterInstructorId) &&
+        (string.IsNullOrEmpty(FilterStatus) || (FilterStatus == "active" && course.IsActive) || (FilterStatus == "inactive" && !course.IsActive))).ToList();
+
+    private void ClearCourseFilters() { SearchTerm = string.Empty; FilterDeliveryType = string.Empty; FilterInstructorId = string.Empty; FilterStatus = string.Empty; }
 
     private bool IsLoading { get; set; } = true;
 

@@ -4,6 +4,7 @@
 @using FrontEnd.Services
 
 @inject AuthService Auth
+@inject NavigationManager Navigation
 
 <PageTitle>مدیریت کاربران | آموزش‌یار</PageTitle>
 
@@ -662,9 +663,19 @@
     private string? ErrorMessage { get; set; }
 
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender) return;
+
+        await Auth.RestoreAsync();
+        if (!Auth.IsLoggedIn || !Auth.IsAdmin)
+        {
+            Navigation.NavigateTo("/login", true);
+            return;
+        }
+
         await LoadUsers();
+        StateHasChanged();
     }
 
      private bool ShowPasswordForm { get; set; }

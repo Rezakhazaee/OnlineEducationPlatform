@@ -4,6 +4,7 @@
 @using FrontEnd.Services
 
 @inject AuthService Auth
+@inject NavigationManager Navigation
 
 <PageTitle>مدیریت ثبت‌نام‌ها | آموزش‌یار</PageTitle>
 
@@ -145,16 +146,24 @@
                         </span>
 
                         <h2>
-                            ثبت‌نام جدید
+                            فهرست ثبت‌نام‌ها
                         </h2>
+                <button
+                    type="button"
+                    class="admin-primary-btn"
+                    @onclick="OpenCreateEnrollmentForm">
+                    + افزودن ثبت‌نام
+                </button>
                     </div>
 
+                    <span class="users-count">
+                        @FilteredEnrollments.Count از @Enrollments.Count ثبت‌نام
+                    </span>
+
                 </div>
-
-
-                @if (ShowEnrollmentForm || IsEditMode)
+                @if (ShowEnrollmentForm)
                 {
-                <div class="course-form-card">
+                <div class="course-form-card" hidden="@(!ShowEnrollmentForm && !IsEditMode)">
 
                     <div class="course-form-header">
 
@@ -453,35 +462,6 @@
                 </div>
                 }
 
-            </section>
-
-
-            <section class="admin-content-card">
-
-                <div class="admin-card-header">
-
-                    <div>
-                        <span>
-                            مدیریت آموزشی
-                        </span>
-
-                        <h2>
-                            فهرست ثبت‌نام‌ها
-                        </h2>
-                <button
-                    type="button"
-                    class="admin-primary-btn"
-                    @onclick="OpenCreateEnrollmentForm">
-                    + افزودن ثبت‌نام
-                </button>
-                    </div>
-
-                    <span class="users-count">
-                        @FilteredEnrollments.Count از @Enrollments.Count ثبت‌نام
-                    </span>
-
-                </div>
-
 
                 <div class="admin-form-grid" style="margin-bottom:20px;">
                     <div class="admin-form-group" style="min-width:0;">
@@ -768,9 +748,19 @@ else
         ?? 0;
 
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender) return;
+
+        await Auth.RestoreAsync();
+        if (!Auth.IsLoggedIn || !Auth.IsAdmin)
+        {
+            Navigation.NavigateTo("/login", true);
+            return;
+        }
+
         await LoadData();
+        StateHasChanged();
     }
 
 
@@ -864,7 +854,6 @@ else
         ResetForm();
         IsEditMode = false;
         EditingEnrollmentId = 0;
-        ShowEnrollmentForm = false;
         ShowEnrollmentForm = true;
     }
 

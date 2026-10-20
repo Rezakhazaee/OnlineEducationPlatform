@@ -4,6 +4,7 @@
 @using FrontEnd.Services
 
 @inject AuthService Auth
+@inject NavigationManager Navigation
 
 <PageTitle>مدیریت دوره‌ها | آموزش‌یار</PageTitle>
 
@@ -552,10 +553,20 @@
     private bool FormIsActive { get; set; } = true;
 
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender) return;
+
+        await Auth.RestoreAsync();
+        if (!Auth.IsLoggedIn || !Auth.IsAdmin)
+        {
+            Navigation.NavigateTo("/login", true);
+            return;
+        }
+
         await LoadCourses();
         await LoadInstructors();
+        StateHasChanged();
     }
 
 

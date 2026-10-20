@@ -4,6 +4,7 @@
 @using FrontEnd.Services
 
 @inject AuthService Auth
+@inject NavigationManager Navigation
 
 <PageTitle>پرداخت‌ها | آموزش‌یار</PageTitle>
 
@@ -96,11 +97,26 @@
     }
 
 
-    @if (ShowPaymentForm)
-    {
     <section class="admin-card">
 
         <div class="admin-card-header">
+
+            <div>
+                <h3>لیست پرداخت‌ها</h3>
+                <button type="button" class="admin-primary-btn" @onclick="OpenCreatePaymentForm">+ افزودن پرداخت</button>
+
+                <p>
+                    @FilteredPayments.Count از @Payments.Count پرداخت ثبت شده
+                </p>
+            </div>
+
+        </div>
+
+@if (ShowPaymentForm)
+    {
+    <div class="course-form-card">
+
+        <div class="course-form-header">
 
             <div>
                 <h3>ثبت پرداخت جدید</h3>
@@ -109,6 +125,7 @@
                     پرداخت را برای یک ثبت‌نام موجود ثبت کنید.
                 </p>
             </div>
+<button type="button" class="course-close-btn" aria-label="بستن فرم" @onclick="ClosePaymentForm">×</button>
 
         </div>
 
@@ -295,24 +312,8 @@
 
         </div>
 
-    </section>
+    </div>
     }
-
-
-    <section class="admin-card">
-
-        <div class="admin-card-header">
-
-            <div>
-                <h3>لیست پرداخت‌ها</h3>
-                <button type="button" class="admin-primary-btn" @onclick="OpenCreatePaymentForm">+ افزودن پرداخت</button>
-
-                <p>
-                    @FilteredPayments.Count از @Payments.Count پرداخت ثبت شده
-                </p>
-            </div>
-
-        </div>
 
 
         <div class="admin-form-grid" style="margin-bottom:20px;">
@@ -585,9 +586,19 @@ private EnrollmentDto? SelectedEnrollment =>
         : null;
 
 
-protected override async Task OnInitializedAsync()
+protected override async Task OnAfterRenderAsync(bool firstRender)
 {
+    if (!firstRender) return;
+
+    await Auth.RestoreAsync();
+    if (!Auth.IsLoggedIn || !Auth.IsAdmin)
+    {
+        Navigation.NavigateTo("/login", true);
+        return;
+    }
+
     await LoadData();
+    StateHasChanged();
 }
 
 

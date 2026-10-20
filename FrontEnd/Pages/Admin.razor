@@ -142,147 +142,122 @@
                 </button>
             </div>
         }
-        else if (Summary != null)
+        else if (Summary != null && Dashboard != null)
         {
-            <section class="admin-stats">
-
-                <div class="admin-stat-card">
-
-                    <span class="stat-icon">
-                        ▣
-                    </span>
-
-                    <div>
-                        <small>
-                            دوره‌ها
-                        </small>
-
-                        <strong>
-                            @Summary.TotalCourses
-                        </strong>
-                    </div>
-
+            <div class="dashboard-welcome">
+                <div>
+                    <span class="dashboard-eyebrow">مدیریت آموزش‌یار</span>
+                    <h2>نمای کلی سامانه</h2>
+                    <p>خلاصه وضعیت آموزشی، ثبت‌نام‌ها و عملکرد مالی</p>
                 </div>
+                <button class="admin-primary-btn" @onclick="LoadDashboard">↻ بروزرسانی اطلاعات</button>
+            </div>
 
-
-                <div class="admin-stat-card">
-
-                    <span class="stat-icon">
-                        ♙
-                    </span>
-
-                    <div>
-                        <small>
-                            دانشجویان
-                        </small>
-
-                        <strong>
-                            @Summary.TotalStudents
-                        </strong>
-                    </div>
-
+            <section class="dashboard-section">
+                <div class="dashboard-section-heading">
+                    <div><h2>آمار کلی سامانه</h2><p>نمای کلی اطلاعات ثبت‌شده</p></div>
                 </div>
-
-
-                <div class="admin-stat-card">
-
-                    <span class="stat-icon">
-                        ✓
-                    </span>
-
-                    <div>
-                        <small>
-                            ثبت‌نام‌ها
-                        </small>
-
-                        <strong>
-                            @Summary.TotalEnrollments
-                        </strong>
+                <div class="dashboard-overview-grid">
+                    <div class="dashboard-metric blue">
+                        <span class="dashboard-metric-icon">♙</span>
+                        <div><span>کل دانشجویان</span><strong>@Summary.TotalStudents.ToString("N0")</strong><small>دانشجوی ثبت‌شده</small></div>
                     </div>
-
+                    <div class="dashboard-metric purple">
+                        <span class="dashboard-metric-icon">▣</span>
+                        <div><span>کل دوره‌ها</span><strong>@Summary.TotalCourses.ToString("N0")</strong><small>دوره موجود در سامانه</small></div>
+                    </div>
+                    <div class="dashboard-metric green">
+                        <span class="dashboard-metric-icon">✓</span>
+                        <div><span>کل ثبت‌نام‌ها</span><strong>@Summary.TotalEnrollments.ToString("N0")</strong><small>ثبت‌نام‌های ثبت‌شده</small></div>
+                    </div>
+                    <div class="dashboard-metric orange">
+                        <span class="dashboard-metric-icon">▶</span>
+                        <div><span>کل درس‌ها</span><strong>@Dashboard.Summary.TotalLessons.ToString("N0")</strong><small>درس‌های دوره‌های دارای ثبت‌نام</small></div>
+                    </div>
                 </div>
-
             </section>
 
-
-            <section class="admin-content-card">
-
-                <div class="admin-card-header">
-
-                    <div>
-                        <span>
-                            وضعیت مالی
-                        </span>
-
-                        <h2>
-                            گزارش پرداخت‌ها
-                        </h2>
-                    </div>
-
-                    <a
-                        href="/admin/courses"
-                        class="admin-primary-btn">
-
-                        + افزودن دوره
-
-                    </a>
-
+            <section class="dashboard-section">
+                <div class="dashboard-section-heading">
+                    <div><h2>وضعیت ثبت‌نام‌ها</h2><p>فعالیت ثبت‌نام و شیوه برگزاری دوره‌ها</p></div>
+                    <a href="/admin/reports" class="dashboard-text-link">مشاهده گزارش‌ها ←</a>
                 </div>
-
-
-                <div class="admin-financial-grid">
-
-                    <div class="admin-financial-card paid">
-                        <span class="financial-icon">✓</span>
-                        <div class="financial-card-content">
-                            <small>پرداخت‌شده</small>
-                            <strong>@Summary.TotalPaid.ToString("N0")</strong>
-                            <span>تومان</span>
-                        </div>
+                <div class="dashboard-detail-grid">
+                    <div class="dashboard-detail-card">
+                        <span>ثبت‌نام فعال</span><strong>@Dashboard.Summary.ActiveEnrollments.ToString("N0")</strong><small class="dashboard-positive">در وضعیت فعال</small>
                     </div>
-
-                    <div class="admin-financial-card pending">
-                        <span class="financial-icon">◷</span>
-                        <div class="financial-card-content">
-                            <small>در انتظار پرداخت</small>
-                            <strong>@Summary.TotalPending.ToString("N0")</strong>
-                            <span>تومان</span>
-                        </div>
+                    <div class="dashboard-detail-card">
+                        <span>ثبت‌نام لغوشده</span><strong>@Dashboard.Summary.CancelledEnrollments.ToString("N0")</strong><small>ثبت‌نام‌های لغوشده</small>
                     </div>
-
-                    <div class="admin-financial-card cancelled">
-                        <span class="financial-icon">×</span>
-                        <div class="financial-card-content">
-                            <small>لغوشده</small>
-                            <strong>@Summary.TotalCancelled.ToString("N0")</strong>
-                            <span>تومان</span>
-                        </div>
+                    <div class="dashboard-detail-card">
+                        <span>ثبت‌نام امروز</span><strong>@Dashboard.Summary.TodayEnrollments.ToString("N0")</strong><small>شروع‌شده در امروز</small>
                     </div>
-
+                    <div class="dashboard-detail-card">
+                        <span>ثبت‌نام این ماه</span><strong>@Dashboard.Summary.MonthEnrollments.ToString("N0")</strong><small>از ابتدای ماه جاری</small>
+                    </div>
                 </div>
+                <div class="dashboard-delivery-grid">
+                    <div class="dashboard-delivery-card online"><span>آنلاین</span><strong>@Dashboard.Summary.OnlineEnrollments.ToString("N0")</strong></div>
+                    <div class="dashboard-delivery-card inperson"><span>حضوری</span><strong>@Dashboard.Summary.InPersonEnrollments.ToString("N0")</strong></div>
+                    <div class="dashboard-delivery-card hybrid"><span>ترکیبی</span><strong>@Dashboard.Summary.HybridEnrollments.ToString("N0")</strong></div>
+                </div>
+            </section>
 
+            <section class="dashboard-section">
+                <div class="dashboard-section-heading">
+                    <div><h2>خلاصه وضعیت مالی</h2><p>مبالغ بر اساس ثبت‌نام‌ها و پرداخت‌های مرتبط</p></div>
+                    <a href="/admin/reports" class="dashboard-text-link">گزارش مالی ←</a>
+                </div>
+                <div class="dashboard-financial-grid">
+                    <div class="dashboard-money-card expected"><span>مبلغ مورد انتظار</span><strong>@Dashboard.Summary.ExpectedAmount.ToString("N0")</strong><small>تومان</small></div>
+                    <div class="dashboard-money-card paid"><span>مبلغ وصول‌شده</span><strong>@Dashboard.Summary.TotalPaid.ToString("N0")</strong><small>تومان</small></div>
+                    <div class="dashboard-money-card remaining"><span>مانده مطالبات</span><strong>@Dashboard.Summary.RemainingAmount.ToString("N0")</strong><small>تومان</small></div>
+                    <div class="dashboard-money-card percent"><span>درصد وصول</span><strong>@Dashboard.Summary.CollectionPercent.ToString("0.##")٪</strong><small>از مبلغ مورد انتظار</small></div>
+                </div>
+                <div class="dashboard-progress-panel">
+                    <div class="dashboard-progress-heading"><span>پیشرفت وصول مطالبات</span><strong>@Dashboard.Summary.CollectionPercent.ToString("0.##")٪</strong></div>
+                    <div class="dashboard-progress-track"><div class="dashboard-progress-fill" style="width:@ProgressWidth(Dashboard.Summary.CollectionPercent)%"></div></div>
+                    <div class="dashboard-progress-footer"><span>وصول‌شده: @Dashboard.Summary.TotalPaid.ToString("N0") تومان</span><span>مانده: @Dashboard.Summary.RemainingAmount.ToString("N0") تومان</span></div>
+                </div>
+            </section>
+
+            <section class="dashboard-section">
+                <div class="dashboard-section-heading">
+                    <div><h2>پیشرفت آموزشی</h2><p>میزان تکمیل درس‌ها در ثبت‌نام‌های بررسی‌شده</p></div>
+                    <a href="/admin/reports" class="dashboard-text-link">جزئیات عملکرد ←</a>
+                </div>
+                <div class="dashboard-learning-card">
+                    <div class="dashboard-learning-summary">
+                        <div><span>درس‌های تکمیل‌شده</span><strong>@Dashboard.Summary.CompletedLessons.ToString("N0")</strong></div>
+                        <div><span>کل درس‌های محاسبه‌شده</span><strong>@Dashboard.Summary.TotalLessons.ToString("N0")</strong></div>
+                        <div><span>درصد پیشرفت</span><strong>@Dashboard.Summary.ProgressPercent.ToString("0.##")٪</strong></div>
+                    </div>
+                    <div class="dashboard-progress-track learning"><div class="dashboard-learning-fill" style="width:@ProgressWidth(Dashboard.Summary.ProgressPercent)%"></div></div>
+                </div>
+            </section>
+
+            <section class="dashboard-section">
+                <div class="dashboard-section-heading"><div><h2>دسترسی سریع</h2><p>ورود مستقیم به بخش‌های پرکاربرد مدیریت</p></div></div>
+                <div class="dashboard-shortcuts">
+                    <a href="/admin/courses"><span>▣</span><div><strong>مدیریت دوره‌ها</strong><small>مشاهده و مدیریت دوره‌ها</small></div><b>←</b></a>
+                    <a href="/admin/enrollments"><span>✓</span><div><strong>مدیریت ثبت‌نام‌ها</strong><small>بررسی ثبت‌نام‌های دانشجویان</small></div><b>←</b></a>
+                    <a href="/admin/payments"><span>₮</span><div><strong>مدیریت پرداخت‌ها</strong><small>بررسی پرداخت‌های ثبت‌شده</small></div><b>←</b></a>
+                    <a href="/admin/reports"><span>▤</span><div><strong>گزارش‌های تفصیلی</strong><small>بررسی کامل عملکرد سامانه</small></div><b>←</b></a>
+                </div>
             </section>
         }
-
-    </main>
-
+        </main>
 </div>
-
-
 @code {
-
     private ReportsSummaryDto? Summary { get; set; }
-
+    private DashboardReportDto? Dashboard { get; set; }
     private bool IsLoading { get; set; } = true;
-
     private string? ErrorMessage { get; set; }
-
 
     protected override async Task OnInitializedAsync()
     {
         await LoadDashboard();
     }
-
 
     private async Task LoadDashboard()
     {
@@ -294,19 +269,17 @@
             var client = Auth.CreateAuthenticatedClient();
 
             Summary = await client.GetFromJsonAsync<ReportsSummaryDto>(
-                "api/Reports/summary"
-            );
+                "api/Reports/summary");
 
-            if (Summary == null)
-            {
-                ErrorMessage =
-                    "اطلاعات گزارش از سرور دریافت نشد.";
-            }
+            Dashboard = await client.GetFromJsonAsync<DashboardReportDto>(
+                "api/Reports/dashboard");
+
+            if (Summary == null || Dashboard == null)
+                ErrorMessage = "اطلاعات داشبورد به‌طور کامل دریافت نشد.";
         }
         catch
         {
-            ErrorMessage =
-                "ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.";
+            ErrorMessage = "ارتباط با سرور برقرار نشد. لطفاً دوباره تلاش کنید.";
         }
         finally
         {
@@ -314,19 +287,42 @@
         }
     }
 
+    private static decimal ProgressWidth(decimal value)
+        => Math.Clamp(value, 0m, 100m);
 
     public class ReportsSummaryDto
     {
         public int TotalStudents { get; set; }
-
         public int TotalCourses { get; set; }
-
         public int TotalEnrollments { get; set; }
-
         public decimal TotalPaid { get; set; }
-
         public decimal TotalPending { get; set; }
-
         public decimal TotalCancelled { get; set; }
+    }
+
+    public class DashboardReportDto
+    {
+        public DashboardSummaryDto Summary { get; set; } = new();
+    }
+
+    public class DashboardSummaryDto
+    {
+        public int TotalStudents { get; set; }
+        public int TotalCourses { get; set; }
+        public int TotalEnrollments { get; set; }
+        public int ActiveEnrollments { get; set; }
+        public int CancelledEnrollments { get; set; }
+        public int TodayEnrollments { get; set; }
+        public int MonthEnrollments { get; set; }
+        public int OnlineEnrollments { get; set; }
+        public int InPersonEnrollments { get; set; }
+        public int HybridEnrollments { get; set; }
+        public decimal ExpectedAmount { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal RemainingAmount { get; set; }
+        public decimal CollectionPercent { get; set; }
+        public int TotalLessons { get; set; }
+        public int CompletedLessons { get; set; }
+        public decimal ProgressPercent { get; set; }
     }
 }
