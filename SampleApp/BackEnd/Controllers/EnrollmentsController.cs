@@ -853,8 +853,10 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             "Suspended"
         };
 
-        if (string.IsNullOrWhiteSpace(dto.Status) ||
-            !allowedStatuses.Contains(dto.Status))
+        var normalizedStatus = dto.Status?.Trim();
+
+        if (string.IsNullOrWhiteSpace(normalizedStatus) ||
+            !allowedStatuses.Contains(normalizedStatus, StringComparer.OrdinalIgnoreCase))
         {
             return BadRequest(new
             {
@@ -936,6 +938,14 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             });
         }
 
+        if (!course.IsActive)
+        {
+            return BadRequest(new
+            {
+                message = "ثبت‌نام در دوره غیرفعال امکان‌پذیر نیست."
+            });
+        }
+
         if (!string.Equals(course.DeliveryType, "InPerson", StringComparison.OrdinalIgnoreCase) &&
             !await _packageAccess.HasPackageAsync(2))
         {
@@ -959,6 +969,22 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             {
                 message = "این دانشجو قبلاً در این دوره ثبت نام کرده است"
             });
+        }
+
+        // ظرفیت صفر به معنی نامحدود است.
+        if (string.Equals(normalizedStatus, "Active", StringComparison.OrdinalIgnoreCase) &&
+            course.Capacity > 0)
+        {
+            var activeEnrollmentCount = await _context.Enrollments
+                .CountAsync(e => e.CourseId == dto.CourseId && e.Status == "Active");
+
+            if (activeEnrollmentCount >= course.Capacity)
+            {
+                return BadRequest(new
+                {
+                    message = "ظرفیت این دوره تکمیل شده است."
+                });
+            }
         }
         // بررسی قرارداد سازمانی، در صورت ارسال
         if (dto.CoursePartnerOrganizationId.HasValue)
@@ -1026,7 +1052,7 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             SupportUserId = dto.SupportUserId,
             InstructorId = dto.InstructorId,
             StartDate = dto.StartDate,
-            Status = dto.Status,
+            Status = normalizedStatus!,
             Description = dto.Description
         };
 
