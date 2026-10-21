@@ -76,18 +76,6 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
- // =========================
- // Seed Database
- // =========================
-
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider
-        .GetRequiredService<ApplicationDbContext>();
-
-    await DbSeeder.SeedAsync(db);
-    await DemoDataSeeder.SeedAsync(db);
-}
 
 // OpenAPI + Scalar
 if (app.Environment.IsDevelopment())

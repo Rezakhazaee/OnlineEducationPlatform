@@ -10,6 +10,9 @@ public class Course
 
     public decimal Price { get; set; }
 
+    // ظرفیت دوره
+    public int Capacity { get; set; } = 0;
+
     // نوع برگزاری دوره:
     // Online = آنلاین
     // InPerson = حضوری

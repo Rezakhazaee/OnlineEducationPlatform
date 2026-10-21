@@ -58,6 +58,9 @@ namespace BackEnd.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("Capacity")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("DeliveryType")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -241,6 +244,38 @@ namespace BackEnd.Migrations
                     b.ToTable("Enrollments");
                 });
 
+            modelBuilder.Entity("BackEnd.Models.Installment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EnrollmentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("InstallmentNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EnrollmentId");
+
+                    b.ToTable("Installments");
+                });
+
             modelBuilder.Entity("BackEnd.Models.LessonProgress", b =>
                 {
                     b.Property<int>("Id")
@@ -366,6 +401,9 @@ namespace BackEnd.Migrations
                     b.Property<int>("EnrollmentId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("InstallmentId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("PaymentDate")
                         .HasColumnType("TEXT");
 
@@ -380,6 +418,8 @@ namespace BackEnd.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EnrollmentId");
+
+                    b.HasIndex("InstallmentId");
 
                     b.ToTable("Payments");
                 });
@@ -619,6 +659,17 @@ namespace BackEnd.Migrations
                     b.Navigation("SupportUser");
                 });
 
+            modelBuilder.Entity("BackEnd.Models.Installment", b =>
+                {
+                    b.HasOne("BackEnd.Models.Enrollment", "Enrollment")
+                        .WithMany("Installments")
+                        .HasForeignKey("EnrollmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Enrollment");
+                });
+
             modelBuilder.Entity("BackEnd.Models.LessonProgress", b =>
                 {
                     b.HasOne("BackEnd.Models.CourseLesson", "CourseLesson")
@@ -646,7 +697,13 @@ namespace BackEnd.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("BackEnd.Models.Installment", "Installment")
+                        .WithMany("Payments")
+                        .HasForeignKey("InstallmentId");
+
                     b.Navigation("Enrollment");
+
+                    b.Navigation("Installment");
                 });
 
             modelBuilder.Entity("BackEnd.Models.Student", b =>
@@ -702,6 +759,16 @@ namespace BackEnd.Migrations
             modelBuilder.Entity("BackEnd.Models.CourseModule", b =>
                 {
                     b.Navigation("Lessons");
+                });
+
+            modelBuilder.Entity("BackEnd.Models.Enrollment", b =>
+                {
+                    b.Navigation("Installments");
+                });
+
+            modelBuilder.Entity("BackEnd.Models.Installment", b =>
+                {
+                    b.Navigation("Payments");
                 });
 #pragma warning restore 612, 618
         }

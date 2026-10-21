@@ -90,14 +90,14 @@
     </div>
 
     <nav class="reports-jump-nav" aria-label="دسترسی سریع به گزارش‌ها">
-        <a href="#registration-summary">ثبت‌نام‌ها</a>
-        <a href="#registration-details">جزئیات ثبت‌نام</a>
-        <a href="/admin/reports#registration-table" :preventDefault="true" ="() => NavigationManager.NavigateTo("/admin/reports#registration-table", false)">جدول ثبت‌نام‌ها</a>
-        <a href="#financial-summary">وضعیت مالی</a>
-        <a href="#course-finance">مالی دوره‌ها</a>
-        <a href="#course-performance">عملکرد دوره‌ها</a>
-        <a href="#instructor-performance">عملکرد مدرس‌ها</a>
-        <a href="#learning-progress">پیشرفت آموزشی</a>
+        <a href="/admin/reports#registration-summary">ثبت‌نام‌ها</a>
+        <a href="/admin/reports#registration-details">جزئیات ثبت‌نام</a>
+        <a href="/admin/reports#registration-table">جدول ثبت‌نام‌ها</a>
+        <a href="/admin/reports#financial-summary">وضعیت مالی</a>
+        <a href="/admin/reports#course-finance">مالی دوره‌ها</a>
+        <a href="/admin/reports#course-performance">عملکرد دوره‌ها</a>
+        <a href="/admin/reports#instructor-performance">عملکرد مدرس‌ها</a>
+        <a href="/admin/reports#learning-progress">پیشرفت آموزشی</a>
     </nav>
 
     @if (Loading)
@@ -1742,8 +1742,9 @@
             var json = await client.GetStringAsync("api/Reports/dashboard");
             using var document = System.Text.Json.JsonDocument.Parse(json);
             var root = document.RootElement;
-            int ReadInt(string key) => root.TryGetProperty(key, out var v) && v.ValueKind == System.Text.Json.JsonValueKind.Number ? v.GetInt32() : 0;
-            decimal ReadDecimal(string key) => root.TryGetProperty(key, out var v) && v.ValueKind == System.Text.Json.JsonValueKind.Number ? v.GetDecimal() : 0m;
+            var summary = root.TryGetProperty("summary", out var summaryElement) ? summaryElement : root;
+            int ReadInt(string key) => summary.TryGetProperty(key, out var v) && v.ValueKind == System.Text.Json.JsonValueKind.Number ? v.GetInt32() : 0;
+            decimal ReadDecimal(string key) => summary.TryGetProperty(key, out var v) && v.ValueKind == System.Text.Json.JsonValueKind.Number ? v.GetDecimal() : 0m;
             Report = new DashboardReport
             {
                 Summary = new DashboardSummary
@@ -1758,12 +1759,12 @@
                     OnlineEnrollments = ReadInt("onlineEnrollments"),
                     InPersonEnrollments = ReadInt("inPersonEnrollments"),
                     HybridEnrollments = ReadInt("hybridEnrollments"),
-                    ExpectedAmount = ReadDecimal("totalExpected"),
+                    ExpectedAmount = ReadDecimal(summary.TryGetProperty("totalExpected", out _) ? "totalExpected" : "expectedAmount"),
                     TotalPaid = ReadDecimal("totalPaid"),
-                    RemainingAmount = ReadDecimal("totalRemaining"),
+                    RemainingAmount = ReadDecimal(summary.TryGetProperty("totalRemaining", out _) ? "totalRemaining" : "remainingAmount"),
                     CollectionPercent = ReadDecimal("collectionPercent")
                 },
-                Courses = root.TryGetProperty("courseReports", out var courses) ? System.Text.Json.JsonSerializer.Deserialize<List<CourseReport>>(courses.GetRawText(), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new() : new()
+                Courses = (root.TryGetProperty("courseReports", out var courses) || root.TryGetProperty("courses", out courses)) ? System.Text.Json.JsonSerializer.Deserialize<List<CourseReport>>(courses.GetRawText(), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new() : new()
             };
             InstructorReports = await client.GetFromJsonAsync<List<InstructorReport>>("api/ManagementReports/instructors") ?? new();
             LearningProgress = await client.GetFromJsonAsync<LearningProgressReport>("api/ManagementReports/learning-progress");

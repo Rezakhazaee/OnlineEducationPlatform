@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using BackEnd.Data;
 using BackEnd.DTOs;
 using BackEnd.Models;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -13,10 +14,14 @@ namespace BackEnd.Controllers;
 public class EnrollmentsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly PackageAccessService _packageAccess;
 
-    public EnrollmentsController(ApplicationDbContext context)
+    public EnrollmentsController(
+        ApplicationDbContext context,
+        PackageAccessService packageAccess)
     {
         _context = context;
+        _packageAccess = packageAccess;
     }
 
 
@@ -348,7 +353,7 @@ public async Task<ActionResult<List<EnrollmentDetailDto>>> GetMySupportEnrollmen
     
     [Authorize(Roles = "Admin,EducationStaff,Marketer,Support,Student")]
 [HttpGet]
-public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
+public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments([FromQuery] string? search = null, [FromQuery] string? status = null, [FromQuery] int? supportUserId = null, [FromQuery] int? instructorId = null)
 {
     var query = _context.Enrollments
         .Include(e => e.Student)
@@ -421,6 +426,18 @@ public async Task<ActionResult<List<EnrollmentDto>>> GetEnrollments()
             e.Student != null &&
             e.Student.MarketingUserId == userId);
     }
+
+    if (!string.IsNullOrWhiteSpace(search)) {
+        var term = search.Trim();
+        var hasId = int.TryParse(term, out var enrollmentId);
+        query = query.Where(e =>
+            (e.Student != null && (e.Student.FirstName + " " + e.Student.LastName).Contains(term)) ||
+            (e.Course != null && e.Course.Title.Contains(term)) ||
+            (hasId && e.Id == enrollmentId));
+    }
+    if (!string.IsNullOrWhiteSpace(status)) query = query.Where(e => e.Status == status);
+    if (supportUserId.HasValue) query = query.Where(e => e.SupportUserId == supportUserId.Value);
+    if (instructorId.HasValue) query = query.Where(e => e.InstructorId == instructorId.Value);
 
     var enrollments = await query
         .Select(e => new EnrollmentDto
@@ -827,6 +844,24 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
     [HttpPost]
     public async Task<ActionResult<EnrollmentDto>> Create(CreateEnrollmentDto dto)
     {
+        // اعتبارسنجی وضعیت ثبت‌نام
+        var allowedStatuses = new[]
+        {
+            "Active",
+            "Completed",
+            "Cancelled",
+            "Suspended"
+        };
+
+        if (string.IsNullOrWhiteSpace(dto.Status) ||
+            !allowedStatuses.Contains(dto.Status))
+        {
+            return BadRequest(new
+            {
+                message = "وضعیت ثبت نام نامعتبر است"
+            });
+        }
+
         // بررسی شناسه کاربر از JWT
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -889,15 +924,24 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         }
 
 
-        // بررسی وجود دوره
-        var courseExists = await _context.Courses
-            .AnyAsync(c => c.Id == dto.CourseId);
+        // بررسی وجود دوره و محدودیت بسته
+        var course = await _context.Courses
+            .FirstOrDefaultAsync(c => c.Id == dto.CourseId);
 
-        if (!courseExists)
+        if (course == null)
         {
             return BadRequest(new
             {
                 message = "دوره مورد نظر وجود ندارد"
+            });
+        }
+
+        if (!string.Equals(course.DeliveryType, "InPerson", StringComparison.OrdinalIgnoreCase) &&
+            !await _packageAccess.HasPackageAsync(2))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                message = "ثبت‌نام دوره‌های آنلاین و ترکیبی در بسته پایه فعال نیست."
             });
         }
 
@@ -939,7 +983,10 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         if (dto.SupportUserId.HasValue)
         {
             var supportExists = await _context.Users
-                .AnyAsync(u => u.Id == dto.SupportUserId.Value);
+                .AnyAsync(u =>
+                    u.Id == dto.SupportUserId.Value &&
+                    u.Role == "Support" &&
+                    u.IsActive);
 
             if (!supportExists)
             {
@@ -1089,7 +1136,8 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             var instructorExists = await _context.Users
                 .AnyAsync(u =>
                     u.Id == dto.InstructorId.Value &&
-                    u.IsActive);
+                    u.IsActive &&
+                    u.Role == "Instructor");
 
             if (!instructorExists)
             {
@@ -1170,15 +1218,8 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         }
 
         // به روز رسانی اطلاعات ثبت نام
-        if (dto.SupportUserId.HasValue)
-{
-    enrollment.SupportUserId = dto.SupportUserId;
-}
-
-if (dto.InstructorId.HasValue)
-{
-    enrollment.InstructorId = dto.InstructorId;
-}
+        enrollment.SupportUserId = dto.SupportUserId;
+        enrollment.InstructorId = dto.InstructorId;
         enrollment.StartDate = dto.StartDate;
         enrollment.Status = dto.Status;
         enrollment.Description =

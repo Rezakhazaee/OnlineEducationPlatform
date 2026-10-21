@@ -16,12 +16,13 @@ QuestPDF.Settings.FontDiscoveryPath = "Fonts";
 // Controllers
 builder.Services.AddControllers();
 
-// Database - SQLite
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(
-        builder.Configuration.GetConnectionString("DefaultConnection")
-    )
-);
+// Database - SQLite: resolve relative paths against Backend.
+var cs = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("DefaultConnection is missing");
+var sqlite = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(cs);
+if (!Path.IsPathRooted(sqlite.DataSource))
+    sqlite.DataSource = Path.Combine(builder.Environment.ContentRootPath, sqlite.DataSource);
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(sqlite.ToString()));
 
 builder.Services.AddScoped<PackageAccessService>();
 
@@ -81,10 +82,9 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await db.Database.MigrateAsync();
-    await DbSeeder.SeedAsync(db);
-    await DemoDataSeeder.SeedAsync(db);
+    var db = scope.ServiceProvider
+        .GetRequiredService<ApplicationDbContext>();
+
 }
 
 // OpenAPI + Scalar

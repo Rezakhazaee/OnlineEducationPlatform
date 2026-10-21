@@ -23,7 +23,7 @@ public class PaymentsController : ControllerBase
     // دریافت لیست پرداخت‌ها با اطلاعات دانشجو و دوره
     [Authorize(Roles = "Admin,Support")]
     [HttpGet]
-    public async Task<List<PaymentDetailDto>> Get()
+    public async Task<List<PaymentDetailDto>> Get([FromQuery] string? search = null, [FromQuery] string? status = null, [FromQuery] string? paymentType = null, [FromQuery] decimal? minAmount = null)
     {
         var query = _context.Payments.AsQueryable();
 
@@ -41,6 +41,19 @@ public class PaymentsController : ControllerBase
                 p.Enrollment.Student != null &&
                 p.Enrollment.Student.SupportUserId == supportUserId);
         }
+
+        if (!string.IsNullOrWhiteSpace(search)) {
+            var term = search.Trim();
+            var hasId = int.TryParse(term, out var paymentId);
+            query = query.Where(p =>
+                (p.Enrollment != null && p.Enrollment.Student != null &&
+                 (p.Enrollment.Student.FirstName + " " + p.Enrollment.Student.LastName).Contains(term)) ||
+                (p.Enrollment != null && p.Enrollment.Course != null && p.Enrollment.Course.Title.Contains(term)) ||
+                (hasId && p.Id == paymentId));
+        }
+        if (!string.IsNullOrWhiteSpace(status)) query = query.Where(p => p.Status == status);
+        if (!string.IsNullOrWhiteSpace(paymentType)) query = query.Where(p => p.PaymentType == paymentType);
+        if (minAmount.HasValue) query = query.Where(p => p.Amount >= minAmount.Value);
 
         return await query
             .Select(p => new PaymentDetailDto
@@ -194,6 +207,20 @@ public class PaymentsController : ControllerBase
             {
                 message = "ثبت نام مورد نظر وجود ندارد"
             });
+        }
+
+        if (User.IsInRole("Support"))
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (!int.TryParse(userIdClaim, out var supportUserId) ||
+                enrollment.Student?.SupportUserId != supportUserId)
+            {
+                return NotFound(new
+                {
+                    message = "ثبت نام مورد نظر وجود ندارد"
+                });
+            }
         }
 
         // ----------------------------------------
@@ -577,6 +604,23 @@ if (payment.Enrollment.Status == "Cancelled" ||
             totalAfterPayment
         });
     }
+    if (payment.PaymentType == "FullPayment")
+    {
+        var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
+
+        if (payment.Amount != remainingAmount)
+        {
+            return BadRequest(new
+            {
+                message = "مبلغ پرداخت کامل باید دقیقاً برابر مبلغ باقی‌مانده باشد",
+                coursePrice,
+                totalPaid,
+                remainingAmount,
+                paymentAmount = payment.Amount
+            });
+        }
+    }
+
     // تغییر وضعیت
     payment.Status = "Paid";
 

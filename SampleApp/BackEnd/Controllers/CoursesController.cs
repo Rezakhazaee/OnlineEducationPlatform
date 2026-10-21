@@ -51,8 +51,8 @@ public class CoursesController : ControllerBase
                 Title = c.Title,
                 Description = c.Description,
                 Price = c.Price,
-                InstructorId = c.InstructorId,
                 DeliveryType = c.DeliveryType,
+                InstructorId = c.InstructorId,
                 IsActive = c.IsActive
             })
             .ToListAsync();
@@ -111,8 +111,8 @@ public class CoursesController : ControllerBase
             Title = course.Title,
             Description = course.Description,
             Price = course.Price,
-            InstructorId = course.InstructorId,
             DeliveryType = course.DeliveryType,
+            InstructorId = course.InstructorId,
             IsActive = course.IsActive
         };
 
@@ -172,7 +172,10 @@ public class CoursesController : ControllerBase
         course.Title = dto.Title;
         course.Description = dto.Description;
         course.Price = dto.Price;
-        course.DeliveryType = dto.DeliveryType;
+        if (dto.DeliveryType is not null)
+        {
+            course.DeliveryType = dto.DeliveryType;
+        }
         course.IsActive = dto.IsActive;
 
         await _context.SaveChangesAsync();
@@ -183,8 +186,8 @@ public class CoursesController : ControllerBase
             Title = course.Title,
             Description = course.Description,
             Price = course.Price,
-            InstructorId = course.InstructorId,
             DeliveryType = course.DeliveryType,
+            InstructorId = course.InstructorId,
             IsActive = course.IsActive
         };
 
@@ -252,8 +255,8 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
         Title = course.Title,
         Description = course.Description,
         Price = course.Price,
+        DeliveryType = course.DeliveryType,
         InstructorId = course.InstructorId,
-            DeliveryType = course.DeliveryType,
         IsActive = course.IsActive
     };
 
@@ -339,8 +342,9 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
             Title = dto.Title,
             Description = dto.Description,
             Price = dto.Price,
-            InstructorId = dto.InstructorId,
             DeliveryType = dto.DeliveryType,
+            InstructorId = dto.InstructorId,
+            IsActive = dto.IsActive
         };
 
         _context.Courses.Add(course);
@@ -353,8 +357,8 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
             Title = course.Title,
             Description = course.Description,
             Price = course.Price,
-            InstructorId = course.InstructorId,
             DeliveryType = course.DeliveryType,
+            InstructorId = course.InstructorId,
             IsActive = course.IsActive
         };
 
