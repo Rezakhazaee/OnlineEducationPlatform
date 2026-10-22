@@ -1130,12 +1130,64 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             "Suspended"
         };
 
-        if (!allowedStatuses.Contains(dto.Status))
+        var normalizedStatus = dto.Status?.Trim();
+
+        if (string.IsNullOrWhiteSpace(normalizedStatus) ||
+            !allowedStatuses.Contains(
+                normalizedStatus,
+                StringComparer.OrdinalIgnoreCase))
         {
             return BadRequest(new
             {
                 message = "وضعیت ثبت نام نامعتبر است"
             });
+        }
+
+        normalizedStatus = allowedStatuses.First(s =>
+            string.Equals(s, normalizedStatus,
+                StringComparison.OrdinalIgnoreCase));
+
+        // کنترل ثبت‌نام تکراری و ظرفیت هنگام فعال‌سازی مجدد
+        var isActivating =
+            string.Equals(normalizedStatus, "Active",
+                StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(enrollment.Status, "Active",
+                StringComparison.OrdinalIgnoreCase);
+
+        if (isActivating)
+        {
+            var duplicateEnrollment = await _context.Enrollments
+                .AnyAsync(e =>
+                    e.Id != enrollment.Id &&
+                    e.StudentId == enrollment.StudentId &&
+                    e.CourseId == enrollment.CourseId &&
+                    e.Status == "Active");
+
+            if (duplicateEnrollment)
+            {
+                return BadRequest(new
+                {
+                    message = "این دانشجو قبلاً در این دوره ثبت نام کرده است"
+                });
+            }
+
+            if (enrollment.Course != null &&
+                enrollment.Course.Capacity > 0)
+            {
+                var activeEnrollmentCount = await _context.Enrollments
+                    .CountAsync(e =>
+                        e.Id != enrollment.Id &&
+                        e.CourseId == enrollment.CourseId &&
+                        e.Status == "Active");
+
+                if (activeEnrollmentCount >= enrollment.Course.Capacity)
+                {
+                    return BadRequest(new
+                    {
+                        message = "ظرفیت این دوره تکمیل شده است."
+                    });
+                }
+            }
         }
 
         // بررسی وجود پشتیبان
@@ -1247,7 +1299,7 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         enrollment.SupportUserId = dto.SupportUserId;
         enrollment.InstructorId = dto.InstructorId;
         enrollment.StartDate = dto.StartDate;
-        enrollment.Status = dto.Status;
+        enrollment.Status = normalizedStatus!;
         enrollment.Description =
             string.IsNullOrWhiteSpace(dto.Description)
                 ? null
