@@ -238,6 +238,10 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(s => s.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<Student>()
+            .HasIndex(s => s.UserId)
+            .IsUnique();
+
 
         // =========================
         // Enrollment -> CoursePartnerOrganization

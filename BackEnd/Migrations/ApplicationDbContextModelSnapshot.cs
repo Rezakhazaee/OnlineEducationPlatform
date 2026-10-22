@@ -481,7 +481,8 @@ namespace BackEnd.Migrations
 
                     b.HasIndex("SupportUserId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("Students");
                 });

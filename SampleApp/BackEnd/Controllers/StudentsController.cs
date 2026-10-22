@@ -59,6 +59,11 @@ public class StudentsController : ControllerBase
                 });
             }
 
+            if (user.Role != "Student" || !user.IsActive)
+            {
+                return Forbid();
+            }
+
             var fullName = (user.FullName ?? string.Empty).Trim();
             var parts = fullName.Split(" ", 2, StringSplitOptions.RemoveEmptyEntries);
 
