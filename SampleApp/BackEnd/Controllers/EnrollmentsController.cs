@@ -164,6 +164,12 @@ public async Task<ActionResult<EnrollmentFinancialDto>> GetMyFinancial(int id)
     {
         paymentStatus = "Overpaid";
     }
+    if (enrollment.Status == "Cancelled")
+    {
+        remainingAmount = 0;
+        paymentStatus = "Cancelled";
+    }
+
 
     var result = new EnrollmentFinancialDto
     {
@@ -271,6 +277,12 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetMyFinancialDeta
     {
         paymentStatus = "Overpaid";
     }
+    if (enrollment.Status == "Cancelled")
+    {
+        remainingAmount = 0;
+        paymentStatus = "Cancelled";
+    }
+
 
     var result = new EnrollmentFinancialDetailDto
     {
@@ -667,6 +679,12 @@ public async Task<ActionResult<EnrollmentFinancialDto>> GetFinancial(int id)
     {
         paymentStatus = "Overpaid";
     }
+    if (enrollment.Status == "Cancelled")
+    {
+        remainingAmount = 0;
+        paymentStatus = "Cancelled";
+    }
+
 
     var result = new EnrollmentFinancialDto
     {
@@ -821,6 +839,12 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
     {
         paymentStatus = "Overpaid";
     }
+    if (enrollment.Status == "Cancelled")
+    {
+        remainingAmount = 0;
+        paymentStatus = "Cancelled";
+    }
+
 
     var result = new EnrollmentFinancialDetailDto
     {
@@ -1156,6 +1180,15 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
 
         if (isActivating)
         {
+            if (enrollment.Course != null &&
+                !string.Equals(enrollment.Course.DeliveryType, "InPerson", StringComparison.OrdinalIgnoreCase) &&
+                !await _packageAccess.HasPackageAsync(2))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    message = "فعال‌سازی ثبت‌نام دوره‌های آنلاین و ترکیبی در بسته پایه فعال نیست."
+                });
+            }
             var duplicateEnrollment = await _context.Enrollments
                 .AnyAsync(e =>
                     e.Id != enrollment.Id &&
@@ -1298,12 +1331,23 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         // به روز رسانی اطلاعات ثبت نام
         enrollment.SupportUserId = dto.SupportUserId;
         enrollment.InstructorId = dto.InstructorId;
-        enrollment.StartDate = dto.StartDate;
+        if (dto.StartDate.HasValue) enrollment.StartDate = dto.StartDate.Value;
+
+        if (normalizedStatus == "Cancelled" && enrollment.Status != "Cancelled")
+        {
+            var pendingPayments = await _context.Payments
+                .Where(p => p.EnrollmentId == enrollment.Id && p.Status == "Pending")
+                .ToListAsync();
+            foreach (var payment in pendingPayments) payment.Status = "Cancelled";
+        }
         enrollment.Status = normalizedStatus!;
-        enrollment.Description =
-            string.IsNullOrWhiteSpace(dto.Description)
-                ? null
-                : dto.Description.Trim();
+        if (dto.Description is not null)
+        {
+            enrollment.Description =
+                string.IsNullOrWhiteSpace(dto.Description)
+                    ? null
+                    : dto.Description.Trim();
+        }
 
         await _context.SaveChangesAsync();
 
