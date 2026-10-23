@@ -148,6 +148,13 @@ public class PaymentsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<PaymentDto>> Create(CreatePaymentDto dto)
     {
+        await using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+        // کنترل تاریخ پرداخت: پرداخت آینده مجاز نیست
+        if (dto.PaymentDate > DateTime.Now)
+        {
+            return BadRequest(new { message = "تاریخ پرداخت نمی‌تواند در آینده باشد" });
+        }
+
         // ----------------------------------------
         // 1. بررسی وضعیت پرداخت
         // ----------------------------------------
@@ -159,7 +166,9 @@ public class PaymentsController : ControllerBase
             "Cancelled"
         };
 
-        if (!validStatuses.Contains(dto.Status))
+        var normalizedStatus = validStatuses.FirstOrDefault(
+            s => string.Equals(s, dto.Status?.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (normalizedStatus == null)
         {
             return BadRequest(new
             {
@@ -168,6 +177,7 @@ public class PaymentsController : ControllerBase
             });
         }
 
+        dto.Status = normalizedStatus;
 
         // ----------------------------------------
         // 2. بررسی نوع پرداخت
@@ -181,7 +191,9 @@ public class PaymentsController : ControllerBase
             "FullPayment"
         };
 
-        if (!validPaymentTypes.Contains(dto.PaymentType))
+        var normalizedPaymentType = validPaymentTypes.FirstOrDefault(
+            s => string.Equals(s, dto.PaymentType?.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (normalizedPaymentType == null)
         {
             return BadRequest(new
             {
@@ -190,6 +202,7 @@ public class PaymentsController : ControllerBase
             });
         }
 
+        dto.PaymentType = normalizedPaymentType;
 
         // ----------------------------------------
         // 3. بررسی وجود Enrollment
@@ -427,6 +440,7 @@ if (enrollment.Status == "Cancelled" ||
         _context.Payments.Add(payment);
 
         await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
 
 
         // ----------------------------------------
@@ -460,6 +474,7 @@ if (enrollment.Status == "Cancelled" ||
 [HttpPut("{id}/pay")]
 public async Task<IActionResult> Pay(int id)
 {
+    await using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
     var payment = await _context.Payments
         .Include(p => p.Enrollment)
         .ThenInclude(e => e!.Course)
@@ -474,15 +489,6 @@ public async Task<IActionResult> Pay(int id)
         return NotFound(new
         {
             message = "پرداخت مورد نظر پیدا نشد"
-        });
-    }
-
-    if (payment.Status != "Pending")
-    {
-        return BadRequest(new
-        {
-            message = "فقط پرداخت‌های Pending قابل تأیید هستند",
-            currentStatus = payment.Status
         });
     }
 
@@ -507,6 +513,15 @@ public async Task<IActionResult> Pay(int id)
                 message = "پرداخت مورد نظر پیدا نشد"
             });
         }
+    }
+
+    if (payment.Status != "Pending")
+    {
+        return BadRequest(new
+        {
+            message = "فقط پرداخت‌های Pending قابل تأیید هستند",
+            currentStatus = payment.Status
+        });
     }
 
 if (payment.Enrollment.Status == "Cancelled" ||
@@ -621,10 +636,20 @@ if (payment.Enrollment.Status == "Cancelled" ||
         }
     }
 
+    // کنترل تاریخ پرداخت پیش از تأیید
+    if (payment.PaymentDate > DateTime.Now)
+    {
+        return BadRequest(new
+        {
+            message = "تاریخ پرداخت نمی‌تواند در آینده باشد"
+        });
+    }
+
     // تغییر وضعیت
     payment.Status = "Paid";
 
     await _context.SaveChangesAsync();
+    await transaction.CommitAsync();
 
     return Ok(new
     {
@@ -667,18 +692,30 @@ public async Task<IActionResult> Cancel(int id)
         }
     }
 
-if (payment.Status != "Pending")
+    var affectedRows = await _context.Payments
+        .Where(p => p.Id == id && p.Status == "Pending")
+        .ExecuteUpdateAsync(update => update.SetProperty(p => p.Status, "Cancelled"));
+
+    if (affectedRows == 0)
     {
-        return BadRequest(new
+        var currentStatus = await _context.Payments
+            .Where(p => p.Id == id)
+            .Select(p => p.Status)
+            .FirstOrDefaultAsync();
+
+        if (currentStatus == null)
         {
-            message = "فقط پرداخت‌های Pending قابل لغو هستند",
-            currentStatus = payment.Status
+            return NotFound(new { message = "پرداخت مورد نظر پیدا نشد" });
+        }
+
+        return Conflict(new
+        {
+            message = "وضعیت پرداخت تغییر کرده است؛ صفحه را تازه‌سازی کنید",
+            currentStatus
         });
     }
 
     payment.Status = "Cancelled";
-
-    await _context.SaveChangesAsync();
 
     return Ok(new
     {
