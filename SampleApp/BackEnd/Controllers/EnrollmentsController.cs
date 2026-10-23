@@ -950,6 +950,12 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         }
 
 
+        // بازاریاب اجازه تعیین پشتیبان هنگام ثبت‌نام را ندارد.
+        if (User.IsInRole("Marketer") && dto.SupportUserId.HasValue)
+        {
+            return Forbid();
+        }
+
         // بررسی وجود دوره و محدودیت بسته
         var course = await _context.Courses
             .FirstOrDefaultAsync(c => c.Id == dto.CourseId);
