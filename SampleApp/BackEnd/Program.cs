@@ -85,6 +85,13 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider
         .GetRequiredService<ApplicationDbContext>();
 
+
+    // FIN-06-C: prevent duplicate paid installments in the existing SQLite database.
+    db.Database.ExecuteSqlRaw("""
+        CREATE UNIQUE INDEX IF NOT EXISTS "UX_Payments_PaidInstallment"
+        ON "Payments" ("EnrollmentId", "PaymentType")
+        WHERE "Status" = 'Paid' AND "PaymentType" <> 'FullPayment';
+        """);
 }
 
 // OpenAPI + Scalar
