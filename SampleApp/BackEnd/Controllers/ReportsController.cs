@@ -52,7 +52,9 @@ public class ReportsController : ControllerBase
         [FromQuery] int? courseId,
         [FromQuery] int? instructorId,
         [FromQuery] string? deliveryType,
-        [FromQuery] string? status)
+        [FromQuery] string? status,
+        [FromQuery] int? marketerId,
+        [FromQuery] int? partnerOrganizationId)
     {
         var enrollmentsQuery = _context.Enrollments
             .AsNoTracking()
@@ -80,6 +82,20 @@ public class ReportsController : ControllerBase
         {
             enrollmentsQuery = enrollmentsQuery
                 .Where(e => e.CourseId == courseId.Value);
+        }
+
+        if (marketerId.HasValue)
+        {
+            enrollmentsQuery = enrollmentsQuery
+                .Where(e => e.Student != null &&
+                            e.Student.MarketingUserId == marketerId.Value);
+        }
+
+        if (partnerOrganizationId.HasValue)
+        {
+            enrollmentsQuery = enrollmentsQuery
+                .Where(e => e.CoursePartnerOrganization != null &&
+                            e.CoursePartnerOrganization.PartnerOrganizationId == partnerOrganizationId.Value);
         }
 
         if (instructorId.HasValue)
@@ -366,7 +382,9 @@ public class ReportsController : ControllerBase
                 courseId,
                 instructorId,
                 deliveryType,
-                status
+                status,
+                marketerId,
+                partnerOrganizationId
             },
 
             summary = new

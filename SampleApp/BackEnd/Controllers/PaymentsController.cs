@@ -421,9 +421,39 @@ if (enrollment.Status == "Cancelled" ||
         // 11. ثبت Payment
         // ----------------------------------------
 
+        int? installmentId = null;
+
+        if (dto.PaymentType != "FullPayment")
+        {
+            var installmentNumber = dto.PaymentType switch
+            {
+                "FirstInstallment" => 1,
+                "SecondInstallment" => 2,
+                "ThirdInstallment" => 3,
+                _ => 0
+            };
+            var installment = await _context.Installments.FirstOrDefaultAsync(i => i.EnrollmentId == enrollment.Id && i.InstallmentNumber == installmentNumber);
+            if (installment == null) return BadRequest(new { message = "قسط مربوط به این ثبت‌نام پیدا نشد" });
+            installmentId = installment.Id;
+
+            if (dto.Status == "Paid")
+            {
+                var installmentPaid = await _context.Payments
+                    .Where(p => p.InstallmentId == installment.Id && p.Status == "Paid")
+                    .SumAsync(p => (decimal?)p.Amount) ?? 0;
+
+                if (dto.Amount + installmentPaid > installment.Amount)
+                {
+                    return BadRequest(new { message = "مبلغ پرداخت از مانده قسط بیشتر است" });
+                }
+            }
+        }
+
         var payment = new Payment
         {
             EnrollmentId = dto.EnrollmentId,
+
+            InstallmentId = installmentId,
 
             Amount = dto.Amount,
 
@@ -643,6 +673,59 @@ if (payment.Enrollment.Status == "Cancelled" ||
         {
             message = "تاریخ پرداخت نمی‌تواند در آینده باشد"
         });
+    }
+
+    // اتصال پرداخت قسطی قدیمی به رکورد قسط
+    if (payment.PaymentType != "FullPayment" && !payment.InstallmentId.HasValue)
+    {
+        var installmentNumber = payment.PaymentType switch
+        {
+            "FirstInstallment" => 1,
+            "SecondInstallment" => 2,
+            "ThirdInstallment" => 3,
+            _ => 0
+        };
+
+        var installment = await _context.Installments.FirstOrDefaultAsync(i =>
+            i.EnrollmentId == payment.EnrollmentId &&
+            i.InstallmentNumber == installmentNumber);
+
+        if (installment == null)
+        {
+            return BadRequest(new { message = "قسط مربوط به این پرداخت پیدا نشد" });
+        }
+
+        payment.InstallmentId = installment.Id;
+    }
+
+    // کنترل سقف مبلغ قسط هنگام تأیید
+    if (payment.PaymentType != "FullPayment" && payment.InstallmentId.HasValue)
+    {
+        var installment = await _context.Installments.FirstOrDefaultAsync(i =>
+            i.Id == payment.InstallmentId.Value &&
+            i.EnrollmentId == payment.EnrollmentId);
+
+        if (installment == null)
+            return BadRequest(new { message = "قسط مربوط به این پرداخت پیدا نشد" });
+
+        var expectedInstallmentNumber = payment.PaymentType switch
+        {
+            "FirstInstallment" => 1,
+            "SecondInstallment" => 2,
+            "ThirdInstallment" => 3,
+            _ => 0
+        };
+
+        if (installment.InstallmentNumber != expectedInstallmentNumber)
+            return BadRequest(new { message = "نوع پرداخت با قسط انتخاب‌شده سازگار نیست" });
+
+        var installmentPaid = await _context.Payments
+            .Where(p => p.InstallmentId == installment.Id &&
+                        p.Id != payment.Id && p.Status == "Paid")
+            .SumAsync(p => (decimal?)p.Amount) ?? 0;
+
+        if (installmentPaid + payment.Amount > installment.Amount)
+            return BadRequest(new { message = "مبلغ پرداخت از مانده قسط بیشتر است" });
     }
 
     // تغییر وضعیت

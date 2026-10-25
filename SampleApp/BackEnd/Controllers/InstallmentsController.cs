@@ -48,9 +48,7 @@ public class InstallmentsController : ControllerBase
                 CalculatedStatus =
                     i.Status == "Cancelled"
                         ? "Cancelled"
-                        : (i.Status == "Paid" ||
-                           i.Payments.Any(p => p.Status == "Paid" &&
-                                                p.Amount >= i.Amount))
+                        : ((i.Payments.Where(p => p.Status == "Paid").Sum(p => (decimal?)p.Amount) ?? 0) >= i.Amount)
                             ? "Paid"
                             : i.DueDate.Date < today
                                 ? "Overdue"
