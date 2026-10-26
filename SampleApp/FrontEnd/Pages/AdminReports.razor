@@ -89,6 +89,25 @@
         </button>
     </div>
 
+    <section class="report-section" aria-label="فیلترهای گزارش">
+        <div class="enrollment-filters" style="margin-bottom:20px;">
+            <label>بازاریاب <select @bind="MarketerFilter"><option value="0">همهٔ بازاریاب‌ها</option>
+                @foreach (var marketer in Marketers)
+                {
+                    <option value="@marketer.Id">@marketer.FullName</option>
+                }
+            </select></label>
+            <label>سازمان همکار <select @bind="PartnerOrganizationFilter"><option value="0">همهٔ سازمان‌های همکار</option>
+                @foreach (var organization in PartnerOrganizations)
+                {
+                    <option value="@organization.Id">@organization.Name</option>
+                }
+            </select></label>
+            <button class="refresh-btn" @onclick="LoadReport">اعمال فیلترها</button>
+            <button class="refresh-btn" @onclick="ClearReportFilters">پاک‌کردن فیلترها</button>
+        </div>
+    </section>
+
     <nav class="reports-jump-nav" aria-label="دسترسی سریع به گزارش‌ها">
         <a href="/admin/reports#registration-summary">ثبت‌نام‌ها</a>
         <a href="/admin/reports#registration-details">جزئیات ثبت‌نام</a>
@@ -1687,6 +1706,277 @@
         }
     }
 
+    /* FIN-10 visual refresh: presentation only */
+
+    .reports-page {
+        background: linear-gradient(145deg, #f2f7f9 0%, #f8fafc 55%, #edf4f7 100%);
+        border-radius: 24px;
+    }
+
+    .reports-header {
+        padding: 26px 28px;
+        border: 1px solid #dce9ee;
+        border-radius: 20px;
+        background: linear-gradient(115deg, #ffffff 0%, #edf6f9 65%, #e3f0f5 100%);
+        box-shadow: 0 10px 28px rgba(38, 61, 74, .08);
+    }
+
+    .reports-header h1 {
+        color: #263d4a;
+        letter-spacing: -.4px;
+    }
+
+    .reports-header h1::before {
+        content: "";
+        display: inline-block;
+        width: 5px;
+        height: 27px;
+        margin-left: 12px;
+        vertical-align: -5px;
+        border-radius: 8px;
+        background: #568fa8;
+    }
+
+    .report-section {
+        border-color: #e1eaee;
+        box-shadow: 0 7px 24px rgba(38, 61, 74, .055);
+        transition: box-shadow .22s ease, border-color .22s ease;
+    }
+
+    .report-section:hover {
+        border-color: #d3e3e9;
+        box-shadow: 0 10px 28px rgba(38, 61, 74, .085);
+    }
+
+    .section-title {
+        padding-bottom: 14px;
+        border-bottom: 1px solid #edf2f4;
+    }
+
+    .section-title h2 {
+        color: #263d4a;
+    }
+
+    .stats-grid {
+        gap: 16px;
+    }
+
+    .stat-card,
+    .money-card,
+    .breakdown-card,
+    .learning-summary-card {
+        position: relative;
+        overflow: hidden;
+        border-color: #e4edf1;
+        box-shadow: 0 4px 12px rgba(38, 61, 74, .035);
+        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+
+    .stat-card:hover,
+    .money-card:hover,
+    .breakdown-card:hover,
+    .learning-summary-card:hover {
+        transform: translateY(-3px);
+        border-color: #cbdfe7;
+        box-shadow: 0 9px 20px rgba(38, 61, 74, .09);
+    }
+
+    .stat-card {
+        background: linear-gradient(145deg, #ffffff, #f5f9fb);
+    }
+
+    .stat-icon {
+        box-shadow: inset 0 0 0 1px rgba(86, 143, 168, .08);
+    }
+
+    .stat-card strong,
+    .money-card strong {
+        color: #263d4a;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .stat-card.active {
+        background: linear-gradient(145deg, #ffffff, #f0faf4);
+    }
+
+    .stat-card.cancelled {
+        background: linear-gradient(145deg, #ffffff, #fff5f5);
+    }
+
+    .stat-card.students {
+        background: linear-gradient(145deg, #ffffff, #f6f3ff);
+    }
+
+    .stat-card.courses {
+        background: linear-gradient(145deg, #ffffff, #fff8ec);
+    }
+
+    .money-card.expected {
+        background: linear-gradient(145deg, #ffffff, #edf6fa);
+    }
+
+    .money-card.paid {
+        background: linear-gradient(145deg, #ffffff, #eff9f3);
+    }
+
+    .money-card.remaining {
+        background: linear-gradient(145deg, #ffffff, #fff7e9);
+    }
+
+    .money-card.percentage {
+        background: linear-gradient(145deg, #ffffff, #f0f4fc);
+    }
+
+    .refresh-btn {
+        box-shadow: 0 4px 10px rgba(86, 143, 168, .18);
+        font-weight: 700;
+        transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    .refresh-btn:hover {
+        background: #427d96;
+        box-shadow: 0 7px 15px rgba(86, 143, 168, .25);
+        opacity: 1;
+    }
+
+    .enrollment-filters {
+        align-items: end;
+        gap: 14px;
+        padding: 16px;
+        border: 1px solid #e4edf1;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #f9fcfd, #f0f6f8);
+    }
+
+    .enrollment-filters label {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        color: #405967;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .enrollment-filters input,
+    .enrollment-filters select {
+        box-sizing: border-box;
+        min-height: 42px;
+        padding: 9px 12px;
+        border: 1px solid #d6e3e9;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #263d4a;
+        font: inherit;
+        outline: none;
+        transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .enrollment-filters input:focus,
+    .enrollment-filters select:focus {
+        border-color: #568fa8;
+        box-shadow: 0 0 0 3px rgba(86, 143, 168, .14);
+    }
+
+    .reports-jump-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-bottom: 22px;
+    }
+
+    .reports-jump-nav a {
+        padding: 9px 13px;
+        border: 1px solid #dce8ed;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #405967;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background .2s ease, color .2s ease, border-color .2s ease;
+    }
+
+    .reports-jump-nav a:hover {
+        border-color: #568fa8;
+        background: #eaf4f7;
+        color: #263d4a;
+    }
+
+    .reports-table {
+        border-spacing: 0;
+    }
+
+    .reports-table th {
+        background: linear-gradient(180deg, #edf4f7, #e7f0f4);
+        color: #344f5d;
+        border-bottom: 1px solid #dce8ed;
+    }
+
+    .reports-table th:first-child {
+        border-radius: 0 10px 0 0;
+    }
+
+    .reports-table th:last-child {
+        border-radius: 10px 0 0 0;
+    }
+
+    .reports-table tbody tr {
+        transition: background .15s ease;
+    }
+
+    .reports-table tbody tr:hover {
+        background: #f2f8fa;
+    }
+
+    .reports-table td {
+        border-bottom-color: #e8eff2;
+    }
+
+    .delivery-badge,
+    .collection-badge {
+        border: 1px solid #dcebf0;
+        font-weight: 700;
+    }
+
+    .progress-track,
+    .mini-progress {
+        background: #e2ebef;
+    }
+
+    .progress-value,
+    .mini-progress div {
+        background: linear-gradient(90deg, #568fa8, #78b2c5);
+    }
+
+    .registration-status-panel,
+    .collection-box {
+        border: 1px solid #e3edf1;
+        border-radius: 16px;
+        background: linear-gradient(145deg, #ffffff, #f6fafb);
+    }
+
+    .report-state {
+        border: 1px dashed #d5e4ea;
+        color: #637983;
+        background: #f8fbfc;
+    }
+
+    .report-error {
+        border: 1px solid #f0d7d7;
+        background: #fff7f7;
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .report-section,
+        .stat-card,
+        .money-card,
+        .breakdown-card,
+        .learning-summary-card,
+        .refresh-btn,
+        .reports-table tbody tr {
+            transition: none;
+        }
+    }
 </style>
 
 @code {
@@ -1702,6 +1992,10 @@
     private int EnrollmentCourseFilter { get; set; }
     private int EnrollmentInstructorFilter { get; set; }
     private string? Error;
+    private int MarketerFilter { get; set; }
+    private int PartnerOrganizationFilter { get; set; }
+    private List<MarketerOption> Marketers { get; set; } = new();
+    private List<PartnerOrganizationOption> PartnerOrganizations { get; set; } = new();
 
     private IEnumerable<EnrollmentRow> FilteredEnrollmentRows =>
         EnrollmentRows.Where(e =>
@@ -1729,6 +2023,31 @@
             return;
         }
 
+        await LoadFilterOptions();
+        await LoadReport();
+    }
+
+    private async Task LoadFilterOptions()
+    {
+        var client = Auth.CreateAuthenticatedClient();
+        try
+        {
+            var users = await client.GetFromJsonAsync<List<MarketerOption>>("api/Users") ?? new();
+            Marketers = users.Where(u => u.IsActive && u.Role == "Marketer" && !string.IsNullOrWhiteSpace(u.FullName)).ToList();
+        }
+        catch { Marketers = new(); }
+        try
+        {
+            var organizations = await client.GetFromJsonAsync<List<PartnerOrganizationOption>>("api/PartnerOrganizations") ?? new();
+            PartnerOrganizations = organizations.Where(o => o.IsActive).ToList();
+        }
+        catch { PartnerOrganizations = new(); }
+    }
+
+    private async Task ClearReportFilters()
+    {
+        MarketerFilter = 0;
+        PartnerOrganizationFilter = 0;
         await LoadReport();
     }
 
@@ -1739,7 +2058,11 @@
         try
         {
             var client = Auth.CreateAuthenticatedClient();
-            var json = await client.GetStringAsync("api/Reports/dashboard");
+            var query = new List<string>();
+            if (MarketerFilter > 0) query.Add("marketerId=" + MarketerFilter);
+            if (PartnerOrganizationFilter > 0) query.Add("partnerOrganizationId=" + PartnerOrganizationFilter);
+            var reportUrl = "api/Reports/dashboard" + (query.Count > 0 ? "?" + string.Join("&", query) : string.Empty);
+            var json = await client.GetStringAsync(reportUrl);
             using var document = System.Text.Json.JsonDocument.Parse(json);
             var root = document.RootElement;
             var summary = root.TryGetProperty("summary", out var summaryElement) ? summaryElement : root;
@@ -1862,6 +2185,21 @@
         public decimal ProgressPercent { get; set; }
         public string ActivityStatus { get; set; } = "";
         public string EnrollmentStatus { get; set; } = "";
+    }
+
+    public class MarketerOption
+    {
+        public int Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+    }
+
+    public class PartnerOrganizationOption
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
     }
 
     public class InstructorReport
