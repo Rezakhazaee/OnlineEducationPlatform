@@ -36,7 +36,7 @@ public class CertificatesController : ControllerBase
                 e.Student != null &&
                 e.Student.UserId == userId);
 
-        if (enrollment == null || enrollment.Status == "Cancelled")
+        if (enrollment == null || enrollment.Status == "Cancelled" || enrollment.Status == "Suspended")
             return NotFound(new { message = "ثبت‌نام مورد نظر پیدا نشد." });
 
         var existing = await _context.Certificates
@@ -115,6 +115,8 @@ public class CertificatesController : ControllerBase
             .FirstOrDefaultAsync(c =>
                 c.EnrollmentId == enrollmentId &&
                 c.Enrollment != null &&
+                c.Enrollment.Status != "Cancelled" &&
+                c.Enrollment.Status != "Suspended" &&
                 c.Enrollment.Student != null &&
                 c.Enrollment.Student.UserId == userId);
 
