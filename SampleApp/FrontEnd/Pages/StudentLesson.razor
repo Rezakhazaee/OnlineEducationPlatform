@@ -289,7 +289,7 @@
             var enrollment =
                 enrollments.FirstOrDefault(x =>
                     x.CourseId == CourseId &&
-                    x.Status == "Active");
+                    string.Equals(x.Status?.Trim(), "Active", StringComparison.OrdinalIgnoreCase));
 
             if (enrollment == null)
             {
@@ -349,8 +349,14 @@
                     allLessons[lessonIndex + 1];
             }
         }
-        catch
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
         {
+            Console.Error.WriteLine($"EDU-05 access denied: {ex}");
+            ErrorMessage = "دسترسی به محتوای آنلاین در پکیج پایه فعال نیست.";
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"EDU-05 LoadData error: {ex}");
             ErrorMessage =
                 "دریافت اطلاعات درس با خطا مواجه شد.";
         }

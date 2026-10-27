@@ -64,7 +64,8 @@ public class StudentCourseContentController : ControllerBase
             await _context.Enrollments.AnyAsync(e =>
                 e.StudentId == student.Id &&
                 e.CourseId == courseId &&
-                e.Status != "Cancelled");
+                e.Status != "Cancelled" &&
+                e.Status != "Suspended");
 
         if (!enrollmentExists)
         {

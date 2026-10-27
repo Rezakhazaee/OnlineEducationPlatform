@@ -40,7 +40,8 @@ public class LessonProgressController : ControllerBase
                 e.Student.UserId == userId);
 
         if (enrollment == null ||
-            enrollment.Status == "Cancelled")
+            enrollment.Status == "Cancelled" ||
+            enrollment.Status == "Suspended")
         {
             return NotFound(new
             {
@@ -131,7 +132,8 @@ public class LessonProgressController : ControllerBase
                 e.Student.UserId == userId);
 
         if (enrollment == null ||
-            enrollment.Status == "Cancelled")
+            enrollment.Status == "Cancelled" ||
+            enrollment.Status == "Suspended")
         {
             return NotFound(new
             {
