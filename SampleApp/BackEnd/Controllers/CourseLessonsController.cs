@@ -15,6 +15,15 @@ public class CourseLessonsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly PackageAccessService _packageAccess;
+
+    private static string? ValidateLessonContent(string contentType, string? content, string? contentUrl)
+    {
+        if (contentType == "Video" && string.IsNullOrWhiteSpace(contentUrl))
+            return "برای درس ویدئویی، آدرس ویدئو الزامی است.";
+        if (contentType == "Text" && string.IsNullOrWhiteSpace(content))
+            return "برای درس متنی، متن درس الزامی است.";
+        return null;
+    }
 public CourseLessonsController(
         ApplicationDbContext context,
         PackageAccessService packageAccess)
@@ -118,6 +127,10 @@ public CourseLessonsController(
     public async Task<ActionResult<CourseLessonDto>> Create(
         CreateCourseLessonDto dto)
     {
+        var contentError = ValidateLessonContent(dto.ContentType, dto.Content, dto.ContentUrl);
+        if (contentError != null)
+            return BadRequest(new { message = contentError });
+
         var module = await GetModule(dto.CourseModuleId);
 
         if (module == null)
@@ -176,6 +189,10 @@ public CourseLessonsController(
         int id,
         UpdateCourseLessonDto dto)
     {
+        var contentError = ValidateLessonContent(dto.ContentType, dto.Content, dto.ContentUrl);
+        if (contentError != null)
+            return BadRequest(new { message = contentError });
+
         var lesson = await _context.CourseLessons
             .Include(l => l.CourseModule)
             .FirstOrDefaultAsync(l => l.Id == id);
