@@ -114,6 +114,9 @@ private async Task<bool> CanManageCourse(int courseId)
     public async Task<ActionResult<CourseModuleDto>> Create(
         CreateCourseModuleDto dto)
     {
+        dto.Title = dto.Title?.Trim() ?? string.Empty;
+        if (dto.Title.Length < 2) return BadRequest(new { message = "عنوان سرفصل باید حداقل ۲ کاراکتر باشد" });
+
         if (!await CanManageCourse(dto.CourseId))
         {
             return NotFound(new
@@ -170,6 +173,9 @@ private async Task<bool> CanManageCourse(int courseId)
             });
         }
 
+        dto.Title = dto.Title?.Trim() ?? string.Empty;
+        if (dto.Title.Length < 2) return BadRequest(new { message = "عنوان سرفصل باید حداقل ۲ کاراکتر باشد" });
+
         module.Title = dto.Title.Trim();
         module.SortOrder = dto.SortOrder;
         module.IsActive = dto.IsActive;
@@ -217,7 +223,9 @@ private async Task<bool> CanManageCourse(int courseId)
             .AnyAsync(p => p.CourseLesson != null &&
                            p.CourseLesson.CourseModuleId == id);
 
-        if (hasProgress)
+        var hasLessons = await _context.CourseLessons.AnyAsync(l => l.CourseModuleId == id);
+
+        if (hasProgress || hasLessons)
         {
             module.IsActive = false;
         }
