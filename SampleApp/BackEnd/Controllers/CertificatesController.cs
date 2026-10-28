@@ -96,7 +96,20 @@ public class CertificatesController : ControllerBase
         };
 
         _context.Certificates.Add(certificate);
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            _context.Entry(certificate).State = EntityState.Detached;
+            var concurrentlyIssued = await _context.Certificates
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.EnrollmentId == enrollmentId);
+            if (concurrentlyIssued == null)
+                throw;
+            return Ok(ToDto(concurrentlyIssued));
+        }
 
         return Ok(ToDto(certificate));
     }

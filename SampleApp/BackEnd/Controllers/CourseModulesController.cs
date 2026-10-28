@@ -213,7 +213,18 @@ private async Task<bool> CanManageCourse(int courseId)
             });
         }
 
-        _context.CourseModules.Remove(module);
+        var hasProgress = await _context.LessonProgresses
+            .AnyAsync(p => p.CourseLesson != null &&
+                           p.CourseLesson.CourseModuleId == id);
+
+        if (hasProgress)
+        {
+            module.IsActive = false;
+        }
+        else
+        {
+            _context.CourseModules.Remove(module);
+        }
 
         await _context.SaveChangesAsync();
 

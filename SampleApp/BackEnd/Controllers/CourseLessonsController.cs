@@ -248,7 +248,17 @@ public CourseLessonsController(
             });
         }
 
-        _context.CourseLessons.Remove(lesson);
+        var hasProgress = await _context.LessonProgresses
+            .AnyAsync(p => p.CourseLessonId == id);
+
+        if (hasProgress)
+        {
+            lesson.IsActive = false;
+        }
+        else
+        {
+            _context.CourseLessons.Remove(lesson);
+        }
 
         await _context.SaveChangesAsync();
 

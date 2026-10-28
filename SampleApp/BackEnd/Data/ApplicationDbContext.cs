@@ -64,13 +64,13 @@ public class ApplicationDbContext : DbContext
             .HasOne(p => p.Enrollment)
             .WithMany()
             .HasForeignKey(p => p.EnrollmentId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<LessonProgress>()
             .HasOne(p => p.CourseLesson)
             .WithMany()
             .HasForeignKey(p => p.CourseLessonId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<LessonProgress>()
             .HasIndex(p => new { p.EnrollmentId, p.CourseLessonId })

@@ -676,13 +676,13 @@ namespace BackEnd.Migrations
                     b.HasOne("BackEnd.Models.CourseLesson", "CourseLesson")
                         .WithMany()
                         .HasForeignKey("CourseLessonId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("BackEnd.Models.Enrollment", "Enrollment")
                         .WithMany()
                         .HasForeignKey("EnrollmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("CourseLesson");
