@@ -28,22 +28,21 @@ public class OrganizationSettingsController : ControllerBase
     public async Task<ActionResult<OrganizationSettings>> GetSettings()
     {
         var settings = await _context.OrganizationSettings
+            .OrderBy(s => s.Id)
             .FirstOrDefaultAsync();
 
         if (settings == null)
         {
-            settings = new OrganizationSettings
+            return Ok(new OrganizationSettings
             {
                 Name = "سازمان",
                 Description = null,
                 IsActive = true,
                 PrimaryColor = "#568fa8",
                 SecondaryColor = "#263d4a",
-                ThemeIsActive = true
-            };
-
-            _context.OrganizationSettings.Add(settings);
-            await _context.SaveChangesAsync();
+                ThemeIsActive = true,
+                PackageLevel = 1
+            });
         }
 
         return Ok(settings);
@@ -60,6 +59,7 @@ public class OrganizationSettingsController : ControllerBase
         [FromBody] UpdateOrganizationSettingsDto request)
     {
         var settings = await _context.OrganizationSettings
+            .OrderBy(s => s.Id)
             .FirstOrDefaultAsync();
 
         if (settings == null)

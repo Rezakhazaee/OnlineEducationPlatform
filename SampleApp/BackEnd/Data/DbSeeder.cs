@@ -131,6 +131,7 @@ public static class DbSeeder
         // ==========================================
 
         var settings = await db.OrganizationSettings
+            .OrderBy(s => s.Id)
             .FirstOrDefaultAsync();
 
         if (settings == null)

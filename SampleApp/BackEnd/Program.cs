@@ -92,9 +92,20 @@ using (var scope = app.Services.CreateScope())
         ON "Payments" ("EnrollmentId", "PaymentType")
         WHERE "Status" = 'Paid' AND "PaymentType" <> 'FullPayment';
         """);
+
+    // DB-ORG-01-A: allow at most one organization settings row.
+    db.Database.ExecuteSqlRaw("""
+        CREATE TRIGGER IF NOT EXISTS "TR_OrganizationSettings_OnlyOne"
+        BEFORE INSERT ON "OrganizationSettings"
+        WHEN EXISTS (SELECT 1 FROM "OrganizationSettings")
+        BEGIN
+            SELECT RAISE(ABORT, 'Only one OrganizationSettings row is allowed.');
+        END;
+        """);
 }
 
 // OpenAPI + Scalar
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();

@@ -6,6 +6,7 @@ public class OrganizationSettings
 
     public string Name { get; set; } = string.Empty;
 
+    [System.ComponentModel.DataAnnotations.StringLength(1000, ErrorMessage = "توضیحات سازمان باید حداکثر ۱۰۰۰ نویسه باشد.")]
     public string? Description { get; set; }
 
     public bool IsActive { get; set; } = true;

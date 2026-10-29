@@ -15,6 +15,7 @@ public class PackageAccessService
     public async Task<int> GetPackageLevelAsync()
     {
         return await _context.OrganizationSettings
+            .OrderBy(x => x.Id)
             .Select(x => (int?)x.PackageLevel)
             .FirstOrDefaultAsync() ?? 1;
     }
