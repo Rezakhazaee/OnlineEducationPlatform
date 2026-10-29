@@ -31,7 +31,10 @@ public class ThemeService
             );
 
             if (settings == null)
+            {
+                ResetToDefaultTheme();
                 return;
+            }
 
             var primary = NormalizeColor(settings.PrimaryColor, "#568fa8");
             var secondary = NormalizeColor(settings.SecondaryColor, "#263d4a");
@@ -55,9 +58,17 @@ public class ThemeService
         }
         catch
         {
-            // در صورت در دسترس نبودن Backend،
-            // رنگ‌های پیش‌فرض استفاده می‌شوند.
+            ResetToDefaultTheme();
         }
+    }
+
+    private void ResetToDefaultTheme()
+    {
+        PrimaryColor = "#568fa8";
+        SecondaryColor = "#263d4a";
+        PrimaryLight = "#70abc0";
+        PrimaryDark = "#477f99";
+        IsActive = true;
     }
 
     private static string NormalizeColor(string? color, string fallback)
