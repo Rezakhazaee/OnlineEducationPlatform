@@ -4717,3 +4717,36 @@ textarea {
 .dashboard-shortcuts b{color:#568fa8}
 @media(max-width:1050px){.dashboard-overview-grid,.dashboard-financial-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.dashboard-welcome{align-items:flex-start;flex-direction:column;padding:20px}.dashboard-section{padding:17px}.dashboard-overview-grid,.dashboard-financial-grid,.dashboard-detail-grid,.dashboard-shortcuts{grid-template-columns:minmax(0,1fr)}.dashboard-delivery-grid{grid-template-columns:1fr}.dashboard-learning-summary{grid-template-columns:1fr}.dashboard-progress-footer{flex-direction:column;align-items:flex-start}}
+.dashboard-welcome{background:linear-gradient(120deg,#edf5fa,#f1edff);border-color:#dce7ee;box-shadow:0 5px 18px rgba(38,61,74,.06)}
+.dashboard-section{background:linear-gradient(145deg,#fff,#f8fbfd);border-color:#dce7ee;box-shadow:0 5px 20px rgba(38,61,74,.07)}
+.dashboard-metric.blue{background:linear-gradient(135deg,#edf5fa,#fff);border-color:#dce7ee}
+.dashboard-metric.purple{background:linear-gradient(135deg,#f1edff,#fff);border-color:#dfd8fa}
+.dashboard-metric.green{background:linear-gradient(135deg,#eaf6f1,#fff);border-color:#cce8dc}
+.dashboard-metric.orange{background:linear-gradient(135deg,#fff4e9,#fff);border-color:#f3dfc8}
+.dashboard-detail-card{background:linear-gradient(135deg,#edf5fa,#fff);border-color:#dce7ee}
+.dashboard-delivery-card.online{background:linear-gradient(135deg,#edf5fa,#fff)}
+.dashboard-delivery-card.inperson{background:linear-gradient(135deg,#eaf6f1,#fff)}
+.dashboard-delivery-card.hybrid{background:linear-gradient(135deg,#f1edff,#fff)}
+.dashboard-money-card.expected{background:linear-gradient(135deg,#e9f3fc,#fff)}
+.dashboard-money-card.paid{background:linear-gradient(135deg,#e5f8ed,#fff)}
+.dashboard-money-card.remaining{background:linear-gradient(135deg,#fff4e3,#fff)}
+.dashboard-money-card.percent{background:linear-gradient(135deg,#f1ebff,#fff)}
+.dashboard-progress-panel,.dashboard-learning-card{background:linear-gradient(135deg,#edf5fa,#fff);border-color:#dce7ee}
+.dashboard-shortcuts a{background:linear-gradient(135deg,#edf5fa,#fff);border-color:#dce7ee}
+/* DASHBOARD COLOR OVERRIDE FINAL */
+.admin-page .dashboard-welcome{background:linear-gradient(120deg,#edf5fa,#f1edff)!important;border-color:#dce7ee!important;box-shadow:0 5px 18px rgba(38,61,74,.06)!important}
+.admin-page .dashboard-section{background:linear-gradient(145deg,#fff,#f8fbfd)!important;border-color:#dce7ee!important;box-shadow:0 5px 20px rgba(38,61,74,.07)!important}
+.admin-page .dashboard-metric.blue{background:linear-gradient(135deg,#edf5fa,#fff)!important;border-color:#dce7ee!important}
+.admin-page .dashboard-metric.purple{background:linear-gradient(135deg,#f1edff,#fff)!important;border-color:#dfd8fa!important}
+.admin-page .dashboard-metric.green{background:linear-gradient(135deg,#eaf6f1,#fff)!important;border-color:#cce8dc!important}
+.admin-page .dashboard-metric.orange{background:linear-gradient(135deg,#fff4e9,#fff)!important;border-color:#f3dfc8!important}
+.admin-page .dashboard-detail-card{background:linear-gradient(135deg,#edf5fa,#fff)!important;border-color:#dce7ee!important}
+.admin-page .dashboard-delivery-card.online{background:linear-gradient(135deg,#edf5fa,#fff)!important}
+.admin-page .dashboard-delivery-card.inperson{background:linear-gradient(135deg,#eaf6f1,#fff)!important}
+.admin-page .dashboard-delivery-card.hybrid{background:linear-gradient(135deg,#f1edff,#fff)!important}
+.admin-page .dashboard-money-card.expected{background:linear-gradient(135deg,#e9f3fc,#fff)!important}
+.admin-page .dashboard-money-card.paid{background:linear-gradient(135deg,#e5f8ed,#fff)!important}
+.admin-page .dashboard-money-card.remaining{background:linear-gradient(135deg,#fff4e3,#fff)!important}
+.admin-page .dashboard-money-card.percent{background:linear-gradient(135deg,#f1ebff,#fff)!important}
+.admin-page .dashboard-progress-panel,.admin-page .dashboard-learning-card{background:linear-gradient(135deg,#edf5fa,#fff)!important;border-color:#dce7ee!important}
+.admin-page .dashboard-shortcuts a{background:linear-gradient(135deg,#edf5fa,#fff)!important;border-color:#dce7ee!important}
