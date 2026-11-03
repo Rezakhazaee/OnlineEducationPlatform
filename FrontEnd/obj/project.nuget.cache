@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "h1B+4IMWzkw=",
+  "dgSpecHash": "kdG+1HqY/UE=",
   "success": true,
-  "projectFilePath": "/workspaces/OnlineEducationPlatform/SampleApp/FrontEnd/FrontEnd.csproj",
+  "projectFilePath": "C:\\Users\\khazaei\\Documents\\OnlineEducationPlatform\\FrontEnd\\FrontEnd.csproj",
   "expectedPackageFiles": [
-    "/root/.nuget/packages/microsoft.aspnetcore.app.internal.assets/10.0.12/microsoft.aspnetcore.app.internal.assets.10.0.12.nupkg.sha512"
+    "C:\\Users\\khazaei\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.14\\microsoft.aspnetcore.app.internal.assets.10.0.14.nupkg.sha512"
   ],
   "logs": []
 }

@@ -1,4 +1,4 @@
-@inject Microsoft.JSInterop.IJSRuntime JS
+﻿@inject Microsoft.JSInterop.IJSRuntime JS
 @page "/admin/enrollments"
 
 @using System.Net.Http.Json
@@ -404,7 +404,9 @@
                         </div>
 
 
-                        <div class="form-group">
+                        @if (IsEditMode)
+                        {
+                            <div class="form-group">
 
                             <label>
                                 وضعیت ثبت‌نام
@@ -431,6 +433,7 @@
                             </select>
 
                         </div>
+                        }
 
 
                         <div class="form-group course-description-group">
@@ -813,7 +816,7 @@ else
     }
 
 
-    private string FormStatus { get; set; } = "Active";
+    private string FormStatus { get; set; } = "Pending";
 
     private string FormDescription { get; set; } = string.Empty;
 
@@ -1085,9 +1088,6 @@ private async Task SaveEnrollment()
                 InstructorId = int.TryParse(FormInstructorId, out var instructorId) ? instructorId : null,
 
                 StartDate = parsedStartDate,
-
-                Status = FormStatus,
-
                 Description =
                     string.IsNullOrWhiteSpace(FormDescription)
                         ? null
@@ -1135,7 +1135,7 @@ private async Task SaveEnrollment()
         FormInstructorId = string.Empty;
         FormCoursePartnerOrganizationId = string.Empty;
         FormStartDateText = ToPersianDate(DateTime.Today);
-        FormStatus = "Active";
+        FormStatus = "Pending";
         FormDescription = string.Empty;
         CoursePartnerOrganizations.Clear();
         FormError = null;
@@ -1267,9 +1267,6 @@ private async Task SaveEnrollment()
         public int? InstructorId { get; set; }
 
         public DateTime StartDate { get; set; }
-
-        public string Status { get; set; } = "Active";
-
         public string? Description { get; set; }
     }
 

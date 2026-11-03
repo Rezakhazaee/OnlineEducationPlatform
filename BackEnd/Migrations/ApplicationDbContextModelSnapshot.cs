@@ -213,6 +213,9 @@ namespace BackEnd.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal?>("FinalAmount")
+                        .HasColumnType("TEXT");
+
                     b.Property<int?>("InstructorId")
                         .HasColumnType("INTEGER");
 
@@ -311,6 +314,7 @@ namespace BackEnd.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
+                        .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")

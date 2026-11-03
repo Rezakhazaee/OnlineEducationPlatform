@@ -1,4 +1,4 @@
-using BackEnd.Data;
+﻿using BackEnd.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -56,9 +56,7 @@ public class CourseReportsController : ControllerBase
             {
                 var rows = group.ToList();
 
-                var expectedAmount = rows.Sum(e =>
-                    e.CoursePartnerOrganization?.AgreedPrice
-                    ?? e.Course!.Price);
+                var expectedAmount = rows.Sum(e => (e.Status == "Cancelled" || e.Status == "Suspended") ? 0m : (e.FinalAmount ?? 0m));
 
                 var totalPaid = rows.Sum(e =>
                     paidByEnrollment.TryGetValue(

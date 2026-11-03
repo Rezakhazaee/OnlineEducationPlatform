@@ -45,6 +45,40 @@
         </button>
     </div>
 
+    <section class="report-section" aria-label="فیلترهای گزارش">
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-bottom:20px;">
+            <label>بازاریاب
+                <select @bind="MarketerFilter">
+                    <option value="0">همهٔ بازاریاب‌ها</option>
+                    @foreach (var marketer in Marketers)
+                    {
+                        <option value="@marketer.Id">@marketer.FullName</option>
+                    }
+                </select>
+            </label>
+            <label>سازمان همکار
+                <select @bind="PartnerOrganizationFilter">
+                    <option value="0">همهٔ سازمان‌های همکار</option>
+                    @foreach (var organization in PartnerOrganizations)
+                    {
+                        <option value="@organization.Id">@organization.Name</option>
+                    }
+                </select>
+            </label>
+            <button class="refresh-btn" @onclick="LoadReport">اعمال فیلترها</button>
+            <button class="refresh-btn" @onclick="ClearReportFilters">پاک‌کردن فیلترها</button>
+        </div>
+    </section>
+    <nav class="report-navigation" aria-label="پیمایش گزارش‌ها" style="display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 24px;">
+        <a href="#registration-summary">&#1582;&#1604;&#1575;&#1589;&#1607; &#1579;&#1576;&#1578;&#8204;&#1606;&#1575;&#1605;</a>
+        <a href="#registration-breakdown">&#1578;&#1601;&#1705;&#1740;&#1705; &#1579;&#1576;&#1578;&#8204;&#1606;&#1575;&#1605;</a>
+        <a href="/admin/reports/enrollments">&#1580;&#1583;&#1608;&#1604; &#1579;&#1576;&#1578;&#8204;&#1606;&#1575;&#1605;&#8204;&#1607;&#1575;</a>
+        <a href="#financial-summary">&#1608;&#1590;&#1593;&#1740;&#1578; &#1605;&#1575;&#1604;&#1740;</a>
+        <a href="#course-finance">&#1605;&#1575;&#1604;&#1740; &#1583;&#1608;&#1585;&#1607;&#8204;&#1607;&#1575;</a>
+        <a href="#course-performance">&#1593;&#1605;&#1604;&#1705;&#1585;&#1583; &#1583;&#1608;&#1585;&#1607;&#8204;&#1607;&#1575;</a>
+        <a href="#instructor-performance">&#1593;&#1605;&#1604;&#1705;&#1585;&#1583; &#1605;&#1583;&#1585;&#1587;&#1575;&#1606;</a>
+        <a href="#learning-progress">&#1662;&#1740;&#1588;&#1585;&#1601;&#1578; &#1570;&#1605;&#1608;&#1586;&#1588;&#1740;</a>
+    </nav>
     @if (Loading)
     {
         <div class="report-state">در حال دریافت اطلاعات...</div>
@@ -64,7 +98,7 @@
                 </div>
             </div>
 
-            <div class="stats-grid registration-grid">
+            <div id="registration-summary" class="stats-grid registration-grid">
 
                 <div class="stat-card">
                     <div class="stat-icon">◎</div>
@@ -109,7 +143,7 @@
             </div>
         </section>
 
-        <section class="registration-breakdown">
+        <section id="registration-breakdown" class="registration-breakdown">
             <div class="breakdown-header">
                 <div>
                     <span>جزئیات ثبت‌نام</span>
@@ -211,7 +245,7 @@
         </section>
 
         <!-- مالی -->
-        <section class="report-section financial-section">
+        <section id="financial-summary" class="report-section financial-section">
             <div class="section-title">
                 <div>
                     <h2>وضعیت مالی</h2>
@@ -272,7 +306,7 @@
         </section>
 
         <!-- جدول دوره ها -->
-        <section class="report-section course-section">
+        <section id="course-finance" class="report-section course-section">
             <div class="section-title">
                 <div>
                     <h2>وضعیت مالی دوره‌ها</h2>
@@ -324,7 +358,7 @@
         </section>
 
         <!-- گزارش عملکرد دوره‌ها -->
-        <section class="report-section performance-section">
+        <section id="course-performance" class="report-section performance-section">
             <div class="section-title">
                 <div>
                     <h2>گزارش عملکرد دوره‌ها</h2>
@@ -391,7 +425,7 @@
     }
 </div>
 <!-- گزارش عملکرد مدرس -->
-<section class="report-section instructor-performance-section">
+<section id="instructor-performance" class="report-section instructor-performance-section">
     <div class="section-title">
         <div>
             <h2>گزارش عملکرد مدرس</h2>
@@ -473,7 +507,7 @@
     </div>
 </section>
 
-    <section class="report-section learning-progress-section">
+    <section id="learning-progress" class="report-section learning-progress-section">
         <div class="section-title">
             <div>
                 <h2>گزارش پیشرفت آموزشی</h2>
@@ -1339,6 +1373,137 @@
     background: #fafcfd;
 }
 
+/* REPORTS-VISUAL-REPAIR-20261103 */
+.reports-page .registration-breakdown-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;align-items:stretch}
+.reports-page .breakdown-card{position:relative;overflow:hidden;min-width:0;min-height:145px;padding:20px 17px;border:1px solid #e2eaf0;border-radius:17px;box-shadow:0 5px 18px rgba(38,61,74,.07);transition:transform .2s ease,box-shadow .2s ease}
+.reports-page .breakdown-card:hover{transform:translateY(-3px);box-shadow:0 9px 24px rgba(38,61,74,.12)}
+.reports-page .breakdown-card.today{background:#edf5fa;border-top:4px solid #568fa8}
+.reports-page .breakdown-card.month{background:#f1f0fa;border-top:4px solid #8580b8}
+.reports-page .breakdown-card.online{background:#eaf6f1;border-top:4px solid #55a58a}
+.reports-page .breakdown-card.inperson{background:#fff4e9;border-top:4px solid #d69a58}
+.reports-page .breakdown-card.hybrid{background:#f9eef2;border-top:4px solid #bd8298}
+.reports-page .breakdown-card strong{margin:8px 0 3px;font-size:clamp(25px,2vw,34px);line-height:1.3;font-weight:800}
+.reports-page .breakdown-label{color:#344f5d;font-size:13px}
+.reports-page .breakdown-card small{color:#71828b;font-size:11px}
+.reports-page .report-section[aria-label]{padding:20px;border:1px solid #e5edf1;border-radius:17px;background:#fff;box-shadow:0 5px 20px rgba(38,61,74,.06)}
+.reports-page .report-section[aria-label]>div{display:flex!important;flex-wrap:wrap;align-items:end;gap:14px!important;margin-bottom:0!important}
+.reports-page .report-section[aria-label] label{display:flex;flex:1 1 230px;flex-direction:column;gap:8px;min-width:190px;color:#344f5d;font-size:13px;font-weight:700}
+.reports-page .report-section[aria-label] select{width:100%;min-height:45px;padding:8px 12px;border:1px solid #d5e0e6;border-radius:10px;background:#f9fbfc;color:#263d4a;font:inherit;outline:none;transition:border-color .2s,box-shadow .2s}
+.reports-page .report-section[aria-label] select:focus{border-color:#568fa8;box-shadow:0 0 0 3px rgba(86,143,168,.15)}
+.reports-page .report-section[aria-label] button{min-height:44px;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700}
+.reports-page .report-section[aria-label] button:first-of-type{background:#568fa8;box-shadow:0 4px 10px rgba(86,143,168,.2)}
+.reports-page .report-section[aria-label] button:last-of-type{background:#edf2f5;color:#425966;border:1px solid #dce5e9}
+@@media(max-width:1100px){.reports-page .registration-breakdown-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@@media(max-width:700px){.reports-page .registration-breakdown-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.reports-page .report-section[aria-label]{padding:14px}}
+@@media(max-width:420px){.reports-page .registration-breakdown-grid{grid-template-columns:1fr}.reports-page .report-section[aria-label]>div{flex-direction:column;align-items:stretch}.reports-page .report-section[aria-label] label{min-width:0;width:100%}.reports-page .report-section[aria-label] button{width:100%}}
+
+/* REPORTS-COMPACT-SCROLL-20261103 */
+.reports-page { padding-bottom: 12px !important; }
+.reports-page .report-section {
+    margin-block: 10px !important;
+    padding-block: 14px !important;
+}
+.reports-page .report-section > * + * { margin-top: 10px !important; }
+.reports-page .report-section h2,
+.reports-page .report-section h3 {
+    margin-block: 8px !important;
+    line-height: 1.35;
+}
+.reports-page .registration-breakdown-grid {
+    gap: 12px !important;
+    margin-top: 12px !important;
+}
+.reports-page .breakdown-card {
+    min-height: 118px !important;
+    padding: 14px 15px !important;
+    gap: 4px !important;
+}
+.reports-page .breakdown-card strong { margin-block: 4px 2px !important; }
+.reports-page table th,
+.reports-page table td { padding: 8px 10px !important; }
+
+/* REPORTS-TABLE-INTERNAL-SCROLL-20261103 */ .reports-page .table-wrapper{max-height:360px;overflow-y:auto;overflow-x:auto;overscroll-behavior:contain;scrollbar-gutter:stable;position:relative}
+/* REPORTS-INSTRUCTOR-LEARNING-FIX-20261103 */ .reports-page .table-wrapper:has(> table.instructor-performance-table),.reports-page .table-wrapper:has(> table.learning-progress-table){display:block!important;height:360px!important;max-height:360px!important;overflow-y:auto!important;overflow-x:auto!important;overscroll-behavior:contain;scrollbar-gutter:stable;box-sizing:border-box}
+.instructor-performance-section .table-wrapper,.learning-progress-table{height:360px!important;max-height:360px!important;overflow-y:auto!important;overflow-x:auto!important;display:block!important;box-sizing:border-box!important}
+/* REPORTS-LOWER-TABLES-FIX */
+
+/* DASHBOARD COLOR GRADIENT REDESIGN */
+.reports-page .stat-card,
+.reports-page .money-card,
+.reports-page .learning-summary-card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.8);
+    border-radius: 18px;
+    box-shadow: 0 8px 22px rgba(38,61,74,.09);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.reports-page .stat-card:hover,
+.reports-page .money-card:hover,
+.reports-page .learning-summary-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 13px 28px rgba(38,61,74,.14);
+}
+.reports-page .stat-card { background: linear-gradient(135deg,#edf6fb,#dcecf5); }
+.reports-page .stat-card.active { background: linear-gradient(135deg,#e8f8ef,#cceedd); }
+.reports-page .stat-card.cancelled { background: linear-gradient(135deg,#fff0f0,#f8dede); }
+.reports-page .stat-card.students { background: linear-gradient(135deg,#f1edff,#e1dafa); }
+.reports-page .stat-card.courses { background: linear-gradient(135deg,#fff5e5,#f8e4bd); }
+.reports-page .stat-card .stat-icon {
+    border-radius: 13px;
+    box-shadow: 0 4px 10px rgba(38,61,74,.08);
+}
+.reports-page .stat-card strong { color: #263d4a; }
+
+.reports-page .money-card.expected { background: linear-gradient(135deg,#e9f3fc,#d5e6fa); }
+.reports-page .money-card.paid { background: linear-gradient(135deg,#e5f8ed,#c9eed9); }
+.reports-page .money-card.remaining { background: linear-gradient(135deg,#fff4e3,#ffe2b8); }
+.reports-page .money-card.percentage { background: linear-gradient(135deg,#f1ebff,#dfd5fa); }
+.reports-page .money-card span { color: #526b79; font-weight: 700; }
+.reports-page .money-card strong { color: #263d4a; }
+
+.reports-page .learning-summary-card.active { background: linear-gradient(135deg,#e9f5fb,#d5eaf5); }
+.reports-page .learning-summary-card.completed { background: linear-gradient(135deg,#e8f8ef,#cceedd); }
+.reports-page .learning-summary-card.average { background: linear-gradient(135deg,#f1edff,#dfd8fa); }
+.reports-page .learning-summary-card.inactive { background: linear-gradient(135deg,#fff0f0,#f7dddd); }
+.reports-page .learning-summary-card.high { background: linear-gradient(135deg,#fff6e5,#f9e5bd); }
+.reports-page .learning-summary-card strong { color: #263d4a; }
+
+.reports-page .collection-badge {
+    background: linear-gradient(120deg,#d9f3e5,#cce8f5);
+    border: 1px solid #c5e5dc;
+    border-radius: 12px;
+}
+.reports-page .progress-track {
+    background: #e8eef2;
+    border-radius: 99px;
+    overflow: hidden;
+}
+.reports-page .progress-value {
+    background: linear-gradient(90deg,#568fa8,#55a58a,#8b76b5);
+    border-radius: 99px;
+}
+.reports-page .report-navigation a {
+    background: linear-gradient(120deg,#edf5fa,#f1edff);
+    border: 1px solid #dce7ee;
+    border-radius: 12px;
+    padding: 9px 14px;
+    color: #344f5d;
+    text-decoration: none;
+    font-weight: 700;
+    transition: .2s ease;
+}
+.reports-page .report-navigation a:hover {
+    background: linear-gradient(120deg,#568fa8,#8580b8);
+    color: white;
+    transform: translateY(-2px);
+}
+@@media(max-width:900px) {
+    .reports-page .learning-summary-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@@media(max-width:560px) {
+    .reports-page .learning-summary-grid { grid-template-columns: 1fr; }
+}
 </style>
 
 @code {
@@ -1348,15 +1513,44 @@
     private List<InstructorReport> InstructorReports { get; set; } = new();
     private LearningProgressReport? LearningProgress { get; set; }
     private string? Error;
+    private int MarketerFilter { get; set; }
+    private int PartnerOrganizationFilter { get; set; }
+    private List<MarketerOption> Marketers { get; set; } = new();
+    private List<PartnerOrganizationOption> PartnerOrganizations { get; set; } = new();
 
     private double CollectionWidth =>
         Math.Clamp((double)(Report?.Summary.CollectionPercent ?? 0), 0, 100);
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadFilterOptions();
         await LoadReport();
     }
 
+    private async Task LoadFilterOptions()
+    {
+        var client = Auth.CreateAuthenticatedClient();
+        try
+        {
+            var users = await client.GetFromJsonAsync<List<MarketerOption>>("api/Users") ?? new();
+            Marketers = users.Where(u => u.IsActive && u.Role == "Marketer" && !string.IsNullOrWhiteSpace(u.FullName)).ToList();
+        }
+        catch { Marketers = new(); }
+
+        try
+        {
+            var organizations = await client.GetFromJsonAsync<List<PartnerOrganizationOption>>("api/PartnerOrganizations") ?? new();
+            PartnerOrganizations = organizations.Where(o => o.IsActive).ToList();
+        }
+        catch { PartnerOrganizations = new(); }
+    }
+
+    private async Task ClearReportFilters()
+    {
+        MarketerFilter = 0;
+        PartnerOrganizationFilter = 0;
+        await LoadReport();
+    }
     private async Task LoadReport()
     {
         Loading = true;
@@ -1366,14 +1560,18 @@
         {
             var client = Auth.CreateAuthenticatedClient();
 
-            Report = await client.GetFromJsonAsync<DashboardReport>(
-                "api/Reports/dashboard");
+            var query = new List<string>();
+            if (MarketerFilter > 0) query.Add("marketerId=" + MarketerFilter);
+            if (PartnerOrganizationFilter > 0) query.Add("partnerOrganizationId=" + PartnerOrganizationFilter);
+            var reportUrl = "api/Reports/dashboard" + (query.Count > 0 ? "?" + string.Join("&", query) : string.Empty);
+
+            Report = await client.GetFromJsonAsync<DashboardReport>(reportUrl);
 
             InstructorReports = await client.GetFromJsonAsync<List<InstructorReport>>(
-                "api/ManagementReports/instructors") ?? new();
+                "api/ManagementReports/instructors" + (query.Count > 0 ? "?" + string.Join("&", query) : string.Empty)) ?? new();
 
             LearningProgress = await client.GetFromJsonAsync<LearningProgressReport>(
-                "api/ManagementReports/learning-progress");
+                "api/ManagementReports/learning-progress" + (query.Count > 0 ? "?" + string.Join("&", query) : string.Empty));
         }
         catch (Exception ex)
         {
@@ -1428,6 +1626,20 @@
         };
     }
 
+    public class MarketerOption
+    {
+        public int Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+    }
+
+    public class PartnerOrganizationOption
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+    }
     public class LearningProgressReport
     {
         public LearningProgressSummary Summary { get; set; } = new();

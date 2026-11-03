@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using BackEnd.Data;
 using BackEnd.DTOs;
 using BackEnd.Models;
@@ -143,7 +143,7 @@ public async Task<ActionResult<EnrollmentFinancialDto>> GetMyFinancial(int id)
             p.Status == "Paid")
         .SumAsync(p => (decimal?)p.Amount) ?? 0;
 
-    var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
+    var coursePrice = ((enrollment.Status == "Cancelled" || enrollment.Status == "Suspended") ? 0m : (enrollment.FinalAmount ?? 0m));
     var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
 
     string paymentStatus;
@@ -249,7 +249,7 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetMyFinancialDeta
         .Where(p => p.Status == "Paid")
         .Sum(p => p.Amount);
 
-    var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
+    var coursePrice = ((enrollment.Status == "Cancelled" || enrollment.Status == "Suspended") ? 0m : (enrollment.FinalAmount ?? 0m));
 
     var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
 
@@ -646,7 +646,7 @@ public async Task<ActionResult<EnrollmentFinancialDto>> GetFinancial(int id)
             p.Status == "Paid")
         .SumAsync(p => (decimal?)p.Amount) ?? 0;
 
-    var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
+    var coursePrice = ((enrollment.Status == "Cancelled" || enrollment.Status == "Suspended") ? 0m : (enrollment.FinalAmount ?? 0m));
     var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
 
     string paymentStatus;
@@ -800,7 +800,7 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         .Where(p => p.Status == "Paid")
         .Sum(p => p.Amount);
 
-    var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
+    var coursePrice = ((enrollment.Status == "Cancelled" || enrollment.Status == "Suspended") ? 0m : (enrollment.FinalAmount ?? 0m));
     var remainingAmount = Math.Max(coursePrice - totalPaid, 0);
 
     string paymentStatus;
@@ -845,23 +845,6 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
     public async Task<ActionResult<EnrollmentDto>> Create(CreateEnrollmentDto dto)
     {
         // اعتبارسنجی وضعیت ثبت‌نام
-        var allowedStatuses = new[]
-        {
-            "Active",
-            "Completed",
-            "Cancelled",
-            "Suspended"
-        };
-
-        if (string.IsNullOrWhiteSpace(dto.Status) ||
-            !allowedStatuses.Contains(dto.Status))
-        {
-            return BadRequest(new
-            {
-                message = "وضعیت ثبت نام نامعتبر است"
-            });
-        }
-
         // بررسی شناسه کاربر از JWT
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -1026,7 +1009,7 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             SupportUserId = dto.SupportUserId,
             InstructorId = dto.InstructorId,
             StartDate = dto.StartDate,
-            Status = dto.Status,
+            Status = "Pending",
             Description = dto.Description
         };
 
@@ -1104,7 +1087,10 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
             "Suspended"
         };
 
-        if (!allowedStatuses.Contains(dto.Status))
+        var normalizedStatus = dto.Status?.Trim();
+
+        if (string.IsNullOrWhiteSpace(normalizedStatus) ||
+            !allowedStatuses.Contains(normalizedStatus, StringComparer.OrdinalIgnoreCase))
         {
             return BadRequest(new
             {
@@ -1113,6 +1099,47 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         }
 
         // بررسی وجود پشتیبان
+        normalizedStatus = allowedStatuses.First(s =>
+            string.Equals(s, normalizedStatus, StringComparison.OrdinalIgnoreCase));
+
+        var isActivating =
+            string.Equals(normalizedStatus, "Active", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(enrollment.Status, "Active", StringComparison.OrdinalIgnoreCase);
+
+        if (isActivating)
+        {
+            var duplicateEnrollment = await _context.Enrollments
+                .AnyAsync(e =>
+                    e.Id != enrollment.Id &&
+                    e.StudentId == enrollment.StudentId &&
+                    e.CourseId == enrollment.CourseId &&
+                    e.Status == "Active");
+
+            if (duplicateEnrollment)
+            {
+                return BadRequest(new
+                {
+                    message = "این دانشجو قبلاً در این دوره ثبت‌نام فعال دارد."
+                });
+            }
+
+            if (enrollment.Course != null && enrollment.Course.Capacity > 0)
+            {
+                var activeEnrollmentCount = await _context.Enrollments
+                    .CountAsync(e =>
+                        e.Id != enrollment.Id &&
+                        e.CourseId == enrollment.CourseId &&
+                        e.Status == "Active");
+
+                if (activeEnrollmentCount >= enrollment.Course.Capacity)
+                {
+                    return BadRequest(new
+                    {
+                        message = "ظرفیت این دوره تکمیل شده است."
+                    });
+                }
+            }
+        }
         if (dto.SupportUserId.HasValue)
 {
     var supportExists = await _context.Users
@@ -1220,12 +1247,79 @@ public async Task<ActionResult<EnrollmentFinancialDetailDto>> GetFinancialDetail
         // به روز رسانی اطلاعات ثبت نام
         enrollment.SupportUserId = dto.SupportUserId;
         enrollment.InstructorId = dto.InstructorId;
+
         enrollment.StartDate = dto.StartDate;
-        enrollment.Status = dto.Status;
-        enrollment.Description =
-            string.IsNullOrWhiteSpace(dto.Description)
-                ? null
-                : dto.Description.Trim();
+
+        if ((normalizedStatus == "Cancelled" || normalizedStatus == "Suspended") &&
+            enrollment.Status != normalizedStatus)
+        {
+            var pendingPayments = await _context.Payments
+                .Where(p => p.EnrollmentId == enrollment.Id && p.Status == "Pending")
+                .ToListAsync();
+
+            foreach (var payment in pendingPayments)
+                payment.Status = "Cancelled";
+        }
+
+        // ثبت مبلغ نهایی در اولین فعال‌سازی؛ مبلغ پس از آن ثابت می‌ماند
+        if (isActivating && !enrollment.FinalAmount.HasValue)
+        {
+            decimal finalAmount;
+
+            if (enrollment.CoursePartnerOrganizationId.HasValue)
+            {
+                var contract = await _context.CoursePartnerOrganizations
+                    .FirstOrDefaultAsync(x =>
+                        x.Id == enrollment.CoursePartnerOrganizationId.Value);
+
+                if (contract == null ||
+                    contract.CourseId != enrollment.CourseId ||
+                    !contract.IsActive ||
+                    !contract.AgreedPrice.HasValue)
+                {
+                    return BadRequest(new
+                    {
+                        message = "قرارداد سازمانی معتبر یا دارای قیمت توافقی نیست."
+                    });
+                }
+
+                finalAmount = contract.AgreedPrice.Value;
+            }
+            else
+            {
+                var course = await _context.Courses
+                    .FirstOrDefaultAsync(x => x.Id == enrollment.CourseId);
+
+                if (course == null)
+                {
+                    return BadRequest(new
+                    {
+                        message = "دوره ثبت‌نام پیدا نشد."
+                    });
+                }
+
+                finalAmount = course.Price;
+            }
+
+            if (finalAmount < 0)
+            {
+                return BadRequest(new
+                {
+                    message = "مبلغ نهایی ثبت‌نام نمی‌تواند منفی باشد."
+                });
+            }
+
+            enrollment.FinalAmount = finalAmount;
+        }
+        enrollment.Status = normalizedStatus!;
+
+        if (dto.Description is not null)
+        {
+            enrollment.Description =
+                string.IsNullOrWhiteSpace(dto.Description)
+                    ? null
+                    : dto.Description.Trim();
+        }
 
         await _context.SaveChangesAsync();
 

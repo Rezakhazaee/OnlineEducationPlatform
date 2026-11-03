@@ -1,4 +1,4 @@
-using BackEnd.Data;
+﻿using BackEnd.Data;
 using BackEnd.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -52,13 +52,16 @@ public class ReportsController : ControllerBase
         [FromQuery] int? courseId,
         [FromQuery] int? instructorId,
         [FromQuery] string? deliveryType,
-        [FromQuery] string? status)
+        [FromQuery] string? status,
+        [FromQuery] int? marketerId,
+        [FromQuery] int? partnerOrganizationId)
     {
         var enrollmentsQuery = _context.Enrollments
             .AsNoTracking()
             .Include(e => e.Course)
             .Include(e => e.Student)
             .Include(e => e.Instructor)
+            .Include(e => e.CoursePartnerOrganization)
             .Where(e => e.Course != null);
 
         if (from.HasValue)
@@ -79,6 +82,20 @@ public class ReportsController : ControllerBase
         {
             enrollmentsQuery = enrollmentsQuery
                 .Where(e => e.CourseId == courseId.Value);
+        }
+
+        if (marketerId.HasValue)
+        {
+            enrollmentsQuery = enrollmentsQuery
+                .Where(e => e.Student != null &&
+                            e.Student.MarketingUserId == marketerId.Value);
+        }
+
+        if (partnerOrganizationId.HasValue)
+        {
+            enrollmentsQuery = enrollmentsQuery
+                .Where(e => e.CoursePartnerOrganization != null &&
+                            e.CoursePartnerOrganization.PartnerOrganizationId == partnerOrganizationId.Value);
         }
 
         if (instructorId.HasValue)
@@ -111,12 +128,20 @@ public class ReportsController : ControllerBase
             .Select(e => e.CourseId)
             .Distinct()
             .ToList();
+        var eligibleEnrollmentIds = enrollments
+            .Where(e => e.Status != "Cancelled" && e.Status != "Suspended")
+            .Select(e => e.Id)
+            .ToList();
+
+        var expectedByEnrollment = enrollments.ToDictionary(
+            e => e.Id,
+            e => (e.Status == "Cancelled" || e.Status == "Suspended")
+                ? 0m
+                : (e.FinalAmount ?? e.CoursePartnerOrganization?.AgreedPrice ?? e.Course!.Price));
 
         var paidByEnrollment = await _context.Payments
             .AsNoTracking()
-            .Where(p =>
-                enrollmentIds.Contains(p.EnrollmentId) &&
-                p.Status == "Paid")
+            .Where(p => eligibleEnrollmentIds.Contains(p.EnrollmentId) && p.Status == "Paid")
             .GroupBy(p => p.EnrollmentId)
             .Select(g => new
             {
@@ -127,10 +152,7 @@ public class ReportsController : ControllerBase
                 x => x.EnrollmentId,
                 x => x.TotalPaid);
 
-        var expectedAmount = enrollments.Sum(e =>
-            e.CoursePartnerOrganization != null
-                ? e.CoursePartnerOrganization.AgreedPrice ?? e.Course!.Price
-                : e.Course!.Price);
+        var expectedAmount = expectedByEnrollment.Values.Sum();
 
         var totalPaid = enrollments.Sum(e =>
             paidByEnrollment.TryGetValue(
@@ -191,20 +213,26 @@ public class ReportsController : ControllerBase
                 x => x.CourseId,
                 x => x.TotalLessons);
 
-        var completedCounts = await _context.LessonProgresses
-            .AsNoTracking()
-            .Where(p =>
-                p.IsCompleted &&
-                enrollmentIds.Contains(p.EnrollmentId))
-            .GroupBy(p => p.EnrollmentId)
-            .Select(g => new
+        var completedCounts = await (
+            from p in _context.LessonProgresses.AsNoTracking()
+            join e in _context.Enrollments.AsNoTracking()
+                on p.EnrollmentId equals e.Id
+            join l in _context.CourseLessons.AsNoTracking()
+                on p.CourseLessonId equals l.Id
+            join m in _context.CourseModules.AsNoTracking()
+                on l.CourseModuleId equals m.Id
+            where p.IsCompleted &&
+                  enrollmentIds.Contains(p.EnrollmentId) &&
+                  l.IsActive &&
+                  m.IsActive &&
+                  m.CourseId == e.CourseId
+            group p by p.EnrollmentId into g
+            select new
             {
                 EnrollmentId = g.Key,
                 CompletedLessons = g.Count()
             })
-            .ToDictionaryAsync(
-                x => x.EnrollmentId,
-                x => x.CompletedLessons);
+            .ToDictionaryAsync(x => x.EnrollmentId, x => x.CompletedLessons);
 
         var totalLessons = 0;
         var completedLessons = 0;
@@ -252,10 +280,7 @@ public class ReportsController : ControllerBase
             {
                 var rows = g.ToList();
 
-                var expected = rows.Sum(e =>
-                    e.CoursePartnerOrganization != null
-                        ? e.CoursePartnerOrganization.AgreedPrice ?? e.Course!.Price
-                        : e.Course!.Price);
+                var expected = rows.Sum(e => expectedByEnrollment[e.Id]);
 
                 var paid = rows.Sum(e =>
                     paidByEnrollment.TryGetValue(
@@ -301,9 +326,7 @@ public class ReportsController : ControllerBase
                     e.Id,
                     out var completed);
 
-                var expected = e.CoursePartnerOrganization != null
-                    ? e.CoursePartnerOrganization.AgreedPrice ?? e.Course!.Price
-                    : e.Course!.Price;
+                var expected = expectedByEnrollment[e.Id];
 
                 var paid = paidByEnrollment.TryGetValue(
                     e.Id,
@@ -365,7 +388,9 @@ public class ReportsController : ControllerBase
                 courseId,
                 instructorId,
                 deliveryType,
-                status
+                status,
+                marketerId,
+                partnerOrganizationId
             },
 
             summary = new

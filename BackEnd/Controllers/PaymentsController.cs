@@ -1,4 +1,4 @@
-using BackEnd.Data;
+﻿using BackEnd.Data;
 using BackEnd.DTOs;
 using BackEnd.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -209,7 +209,23 @@ public class PaymentsController : ControllerBase
             });
         }
 
-        if (User.IsInRole("Support"))
+                if (enrollment.Status != "Active" && enrollment.Status != "Completed")
+        {
+            return BadRequest(new
+            {
+                message = "برای ثبت‌نام غیرفعال امکان ایجاد پرداخت وجود ندارد.",
+                enrollmentStatus = enrollment.Status
+            });
+        }
+
+        if (!enrollment.FinalAmount.HasValue)
+        {
+            return BadRequest(new
+            {
+                message = "مبلغ نهایی ثبت‌نام هنوز هنگام فعال‌سازی ثبت نشده است."
+            });
+        }
+if (User.IsInRole("Support"))
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -342,7 +358,7 @@ if (enrollment.Status == "Cancelled" ||
             .SumAsync(p => (decimal?)p.Amount) ?? 0;
 
 
-        var coursePrice = enrollment.CoursePartnerOrganization?.AgreedPrice ?? enrollment.Course.Price;
+        var coursePrice = enrollment.FinalAmount.Value;
 
         var totalAfterPayment = totalPaid + dto.Amount;
 
@@ -509,8 +525,14 @@ public async Task<IActionResult> Pay(int id)
         }
     }
 
-if (payment.Enrollment.Status == "Cancelled" ||
-    payment.Enrollment.Status == "Suspended")
+    if (!payment.Enrollment.FinalAmount.HasValue)
+    {
+        return BadRequest(new
+        {
+            message = "مبلغ نهایی ثبت‌نام هنوز هنگام فعال‌سازی ثبت نشده است."
+        });
+    }
+if (payment.Enrollment.Status != "Active" && payment.Enrollment.Status != "Completed")
 {
     return BadRequest(new
     {
@@ -588,7 +610,7 @@ if (payment.Enrollment.Status == "Cancelled" ||
             p.Status == "Paid")
         .SumAsync(p => (decimal?)p.Amount) ?? 0;
 
-    var coursePrice = payment.Enrollment.CoursePartnerOrganization?.AgreedPrice ?? payment.Enrollment.Course.Price;
+    var coursePrice = payment.Enrollment.FinalAmount.Value;
 
     var totalAfterPayment = totalPaid + payment.Amount;
 

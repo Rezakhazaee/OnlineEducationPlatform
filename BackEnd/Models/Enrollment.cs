@@ -1,4 +1,4 @@
-namespace BackEnd.Models;
+﻿namespace BackEnd.Models;
 
 public class Enrollment
 {
@@ -26,7 +26,9 @@ public class Enrollment
 
     public DateTime StartDate { get; set; }
 
-    public string Status { get; set; } = "Active";
+    public decimal? FinalAmount { get; set; }
+
+    public string Status { get; set; } = "Pending";
 
     // توضیحات مربوط به ثبت‌نام دانشجو در دوره
     public string? Description { get; set; }

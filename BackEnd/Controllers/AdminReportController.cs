@@ -1,4 +1,4 @@
-using BackEnd.Data;
+﻿using BackEnd.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -129,10 +129,7 @@ public class AdminReportController : ControllerBase
 
         foreach (var enrollment in enrollments)
         {
-            var expected =
-                enrollment.CoursePartnerOrganization?.AgreedPrice
-                ?? enrollment.Course?.Price
-                ?? 0;
+            var expected = ((enrollment.Status == "Cancelled" || enrollment.Status == "Suspended") ? 0m : (enrollment.FinalAmount ?? 0m));
 
             expectedAmount += expected;
 
@@ -233,9 +230,7 @@ public class AdminReportController : ControllerBase
             {
                 var rows = group.ToList();
 
-                var expected = rows.Sum(e =>
-                    e.CoursePartnerOrganization?.AgreedPrice
-                    ?? e.Course!.Price);
+                var expected = rows.Sum(e => (e.Status == "Cancelled" || e.Status == "Suspended") ? 0m : (e.FinalAmount ?? 0m));
 
                 var paid = rows.Sum(e =>
                     paidByEnrollment.TryGetValue(
@@ -322,10 +317,7 @@ public class AdminReportController : ControllerBase
                         completedLessons * 100m / totalLessons,
                         2);
 
-                var expected =
-                    e.CoursePartnerOrganization?.AgreedPrice
-                    ?? e.Course?.Price
-                    ?? 0;
+                var expected = ((e.Status == "Cancelled" || e.Status == "Suspended") ? 0m : (e.FinalAmount ?? 0m));
 
                 var paid = paidByEnrollment.TryGetValue(
                     e.Id,

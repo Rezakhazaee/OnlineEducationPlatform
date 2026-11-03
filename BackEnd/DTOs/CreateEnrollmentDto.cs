@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace BackEnd.DTOs;
 
@@ -19,7 +19,6 @@ public class CreateEnrollmentDto
 
     public DateTime StartDate { get; set; }
 
-    public string Status { get; set; } = "Active";
 
     // توضیحات ثبت‌نام
     public string? Description { get; set; }

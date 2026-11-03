@@ -1,4 +1,8 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+@inject FrontEnd.Services.AuthService Auth
+
+@if (_authReady)
+{
+    <Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
@@ -9,4 +13,23 @@
             <p role="alert">Sorry, there's nothing at this address.</p>
         </LayoutView>
     </NotFound>
-</Router>
+    </Router>
+}
+else
+{
+    <p>در حال آماده‌سازی نشست کاربری...</p>
+}
+
+@code {
+    private bool _authReady;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Auth.RestoreAsync();
+            _authReady = true;
+            StateHasChanged();
+        }
+    }
+}

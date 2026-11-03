@@ -1,4 +1,4 @@
-using BackEnd.Data;
+﻿using BackEnd.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -78,8 +78,7 @@ public class ManagementReportsController : ControllerBase
                 x => x.EnrollmentId,
                 x => x.Amount);
 
-        var expectedAmount = enrollments.Sum(e =>
-            e.Course?.Price ?? 0);
+        var expectedAmount = enrollments.Sum(e => (e.Status == "Cancelled" || e.Status == "Suspended") ? 0m : (e.FinalAmount ?? 0m));
 
         var totalPaid = enrollments.Sum(e =>
             paidByEnrollment.TryGetValue(e.Id, out var paid)
@@ -172,8 +171,7 @@ public class ManagementReportsController : ControllerBase
             {
                 var rows = g.ToList();
 
-                var expected = rows.Sum(e =>
-                    e.Course!.Price);
+                var expected = rows.Sum(e => (e.Status == "Cancelled" || e.Status == "Suspended") ? 0m : (e.FinalAmount ?? 0m));
 
                 var paid = rows.Sum(e =>
                     paidByEnrollment.TryGetValue(
@@ -254,16 +252,29 @@ public class ManagementReportsController : ControllerBase
     }
 
     [HttpGet("instructors")]
-    public async Task<IActionResult> GetInstructors()
+    public async Task<IActionResult> GetInstructors([FromQuery] int? marketerId, [FromQuery] int? partnerOrganizationId)
     {
-        var enrollments = await _context.Enrollments
+        var enrollmentsQuery = _context.Enrollments
             .AsNoTracking()
             .Include(e => e.Course)
             .Include(e => e.Instructor)
-            .Where(e =>
-                e.Course != null &&
-                e.Instructor != null)
-            .ToListAsync();
+            .Include(e => e.Student)
+            .Include(e => e.CoursePartnerOrganization)
+            .Where(e => e.Course != null && e.Instructor != null);
+
+        if (marketerId.HasValue)
+        {
+            enrollmentsQuery = enrollmentsQuery
+                .Where(e => e.Student != null && e.Student.MarketingUserId == marketerId.Value);
+        }
+
+        if (partnerOrganizationId.HasValue)
+        {
+            enrollmentsQuery = enrollmentsQuery
+                .Where(e => e.CoursePartnerOrganization != null && e.CoursePartnerOrganization.PartnerOrganizationId == partnerOrganizationId.Value);
+        }
+
+        var enrollments = await enrollmentsQuery.ToListAsync();
 
         var enrollmentIds = enrollments
             .Select(e => e.Id)
@@ -470,7 +481,7 @@ public class ManagementReportsController : ControllerBase
             completedCounts.TryGetValue(e.Id, out var completedLessons);
             payments.TryGetValue(e.Id, out var paid);
 
-            var expected = e.Course?.Price ?? 0;
+            var expected = (e.Status == "Cancelled" || e.Status == "Suspended") ? 0m : (e.FinalAmount ?? 0m);
             var remaining = Math.Max(expected - paid, 0);
 
             return new
@@ -519,14 +530,28 @@ public class ManagementReportsController : ControllerBase
     }
 
     [HttpGet("learning-progress")]
-    public async Task<IActionResult> GetLearningProgress()
+    public async Task<IActionResult> GetLearningProgress([FromQuery] int? marketerId, [FromQuery] int? partnerOrganizationId)
     {
-        var enrollments = await _context.Enrollments
+        var enrollmentsQuery = _context.Enrollments
             .AsNoTracking()
             .Include(e => e.Student)
             .Include(e => e.Course)
-            .Where(e => e.Course != null)
-            .ToListAsync();
+            .Include(e => e.CoursePartnerOrganization)
+            .Where(e => e.Course != null);
+
+        if (marketerId.HasValue)
+        {
+            enrollmentsQuery = enrollmentsQuery
+                .Where(e => e.Student != null && e.Student.MarketingUserId == marketerId.Value);
+        }
+
+        if (partnerOrganizationId.HasValue)
+        {
+            enrollmentsQuery = enrollmentsQuery
+                .Where(e => e.CoursePartnerOrganization != null && e.CoursePartnerOrganization.PartnerOrganizationId == partnerOrganizationId.Value);
+        }
+
+        var enrollments = await enrollmentsQuery.ToListAsync();
 
         var enrollmentIds = enrollments
             .Select(e => e.Id)
