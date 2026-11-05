@@ -62,19 +62,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.MapGet("/certificate-pdf/{certificateNumber}", async (string certificateNumber, IHttpClientFactory httpClientFactory) =>
-{
-    var client = httpClientFactory.CreateClient("Backend");
-    var response = await client.GetAsync($"api/CertificateVerification/{Uri.EscapeDataString(certificateNumber)}/pdf");
-
-    if (!response.IsSuccessStatusCode)
-    {
-        return Results.StatusCode((int)response.StatusCode);
-    }
-
-    var bytes = await response.Content.ReadAsByteArrayAsync();
-    return Results.File(bytes, "application/pdf", $"{certificateNumber}.pdf");
-});
+app.MapGet("/certificate-pdf/{certificateNumber}", async (string certificateNumber, IHttpClientFactory httpClientFactory, HttpContext context) => {     try     {         var client = httpClientFactory.CreateClient("Backend");         var response = await client.GetAsync("api/CertificateVerification/" + Uri.EscapeDataString(certificateNumber) + "/pdf");          if (!response.IsSuccessStatusCode)             return Results.StatusCode((int)response.StatusCode);          var bytes = await response.Content.ReadAsByteArrayAsync();         return Results.File(bytes, "application/pdf", certificateNumber + ".pdf");     }     catch (HttpRequestException)     {         return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "سرویس صدور گواهی در دسترس نیست.", detail: "لطفاً کمی بعد دوباره تلاش کنید.");     }     catch (TaskCanceledException) when (!context.RequestAborted.IsCancellationRequested)     {         return Results.Problem(statusCode: StatusCodes.Status504GatewayTimeout, title: "مهلت دریافت گواهی به پایان رسید.", detail: "لطفاً دوباره تلاش کنید.");     } });
 
 app.MapBlazorHub();
 

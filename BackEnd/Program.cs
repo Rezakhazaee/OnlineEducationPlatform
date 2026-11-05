@@ -103,6 +103,22 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
+{
+    var feature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+    if (feature?.Error is Exception exception)
+        context.RequestServices.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("GlobalExceptionHandler")
+            .LogError(exception, "Unhandled backend exception for {Path}", context.Request.Path);
+
+    if (context.Response.HasStarted) return;
+    context.Response.Clear();
+    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+    context.Response.ContentType = "application/json; charset=utf-8";
+    await context.Response.WriteAsJsonAsync(new { message = "Internal server error." });
+}));
+
+
 // SEC-08: create the audit table in the existing SQLite database only.
 using (var auditScope = app.Services.CreateScope())
 {
