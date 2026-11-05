@@ -519,6 +519,9 @@ namespace BackEnd.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("PartnerOrganizationId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("SupportUserId")
                         .HasColumnType("INTEGER");
 
@@ -530,6 +533,8 @@ namespace BackEnd.Migrations
                     b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("MarketingUserId");
+
+                    b.HasIndex("PartnerOrganizationId");
 
                     b.HasIndex("SupportUserId");
 
@@ -771,6 +776,11 @@ namespace BackEnd.Migrations
                         .HasForeignKey("MarketingUserId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("BackEnd.Models.PartnerOrganization", "PartnerOrganization")
+                        .WithMany()
+                        .HasForeignKey("PartnerOrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("BackEnd.Models.User", "SupportUser")
                         .WithMany()
                         .HasForeignKey("SupportUserId")
@@ -784,6 +794,8 @@ namespace BackEnd.Migrations
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("MarketingUser");
+
+                    b.Navigation("PartnerOrganization");
 
                     b.Navigation("SupportUser");
 

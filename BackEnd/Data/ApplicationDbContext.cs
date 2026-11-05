@@ -242,6 +242,12 @@ public class ApplicationDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Student>()
+            .HasOne(s => s.PartnerOrganization)
+            .WithMany()
+            .HasForeignKey(s => s.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Student>()
             .HasIndex(s => s.UserId)
             .IsUnique();
 

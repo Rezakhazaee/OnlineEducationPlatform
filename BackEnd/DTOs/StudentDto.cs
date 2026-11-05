@@ -24,5 +24,8 @@ public class StudentDto
 
     public int? SupportUserId { get; set; }
 
+    public int? PartnerOrganizationId { get; set; }
+    public string? PartnerOrganizationName { get; set; }
+
     public DateTime CreatedDate { get; set; }
 }

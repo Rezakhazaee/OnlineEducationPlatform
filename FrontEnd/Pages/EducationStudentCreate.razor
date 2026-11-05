@@ -124,6 +124,17 @@
                             <InputText @bind-Value="Model.Address" />
                         </div>
 
+                        <div class="education-form-field education-form-field-full">
+                            <label>سازمان همکار</label>
+                            <InputSelect @bind-Value="Model.PartnerOrganizationId">
+                                <option value="">بدون سازمان همکار</option>
+                                @foreach (var partner in PartnerOrganizations)
+                                {
+                                    <option value="@partner.Id">@partner.Name</option>
+                                }
+                            </InputSelect>
+                        </div>
+
                     </div>
 
                     <div style="display:flex;gap:10px;margin-top:24px;">
@@ -155,6 +166,7 @@
     private string? SuccessMessage { get; set; }
 
     private List<StudentUserDto> StudentUsers { get; set; } = new();
+    private List<PartnerOrganizationOption> PartnerOrganizations { get; set; } = new();
 
     private StudentCreateModel Model { get; set; } = new();
 
@@ -172,6 +184,7 @@
         }
 
         await LoadStudentUsers();
+        await LoadPartnerOrganizations();
 
         StateHasChanged();
     }
@@ -194,6 +207,20 @@
         finally
         {
             IsLoading = false;
+        }
+    }
+
+    private async Task LoadPartnerOrganizations()
+    {
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+            var endpoint = System.Text.Encoding.ASCII.GetString(new byte[] { 97,112,105,47,83,116,117,100,101,110,116,115,47,97,99,116,105,118,101,45,112,97,114,116,110,101,114,45,111,114,103,97,110,105,122,97,116,105,111,110,115 });
+            PartnerOrganizations = await client.GetFromJsonAsync<List<PartnerOrganizationOption>>(endpoint) ?? new();
+        }
+        catch
+        {
+            ErrorMessage = string.Empty;
         }
     }
 
@@ -250,6 +277,12 @@
         public string? Mobile { get; set; }
     }
 
+    public class PartnerOrganizationOption
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+    }
+
     public class StudentCreateModel
     {
         public int UserId { get; set; }
@@ -273,5 +306,7 @@
         public int? MarketingUserId { get; set; }
 
         public int? SupportUserId { get; set; }
+
+        public int? PartnerOrganizationId { get; set; }
     }
 }

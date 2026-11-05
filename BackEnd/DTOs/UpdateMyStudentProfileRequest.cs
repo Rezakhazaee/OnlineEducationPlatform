@@ -17,4 +17,6 @@ public class UpdateMyStudentProfileRequest
     public string? GuardianName { get; set; }
 
     public string? GuardianMobile { get; set; }
+
+    public int? PartnerOrganizationId { get; set; }
 }

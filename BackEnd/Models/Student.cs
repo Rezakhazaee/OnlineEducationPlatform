@@ -44,6 +44,9 @@ public class Student
 
     public User? SupportUser { get; set; }
 
+    public int? PartnerOrganizationId { get; set; }
+    public PartnerOrganization? PartnerOrganization { get; set; }
+
 
     public DateTime CreatedDate { get; set; } = DateTime.Now;
 }

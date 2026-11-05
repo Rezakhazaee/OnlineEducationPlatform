@@ -21,7 +21,7 @@ public class StudentsController : ControllerBase
 
 
     // Student - مشاهده پروفایل خودش
-    [Authorize(Roles = "Student")]
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support")]     [HttpGet("active-partner-organizations")]     public async Task<IActionResult> GetActivePartnerOrganizations()     {         var organizations = await _context.PartnerOrganizations             .AsNoTracking()             .Where(p => p.IsActive)             .OrderBy(p => p.Name)             .Select(p => new { p.Id, p.Name })             .ToListAsync();          return Ok(organizations);     }     [Authorize(Roles = "Student")]
     [HttpGet("me")]
     public async Task<ActionResult<StudentDto>> GetMyProfile()
     {
@@ -44,6 +44,7 @@ public class StudentsController : ControllerBase
         }
 
         var student = await _context.Students
+            .Include(s => s.PartnerOrganization)
             .FirstOrDefaultAsync(s => s.UserId == userId);
 
         if (student == null)
@@ -95,6 +96,8 @@ public class StudentsController : ControllerBase
             GuardianMobile = student.GuardianMobile,
             MarketingUserId = student.MarketingUserId,
             SupportUserId = student.SupportUserId,
+            PartnerOrganizationId = student.PartnerOrganizationId,
+            PartnerOrganizationName = student.PartnerOrganization?.Name,
             CreatedDate = student.CreatedDate
         };
 
@@ -168,6 +171,8 @@ public class StudentsController : ControllerBase
                 GuardianMobile = s.GuardianMobile,
                 MarketingUserId = s.MarketingUserId,
                 SupportUserId = s.SupportUserId,
+                PartnerOrganizationId = s.PartnerOrganizationId,
+                PartnerOrganizationName = s.PartnerOrganization != null ? s.PartnerOrganization.Name : null,
                 CreatedDate = s.CreatedDate
             })
             .ToListAsync();
@@ -274,6 +279,13 @@ public class StudentsController : ControllerBase
             }
         }
 
+        if (dto.PartnerOrganizationId.HasValue)
+        {
+            var partnerExists = await _context.PartnerOrganizations.AnyAsync(p => p.Id == dto.PartnerOrganizationId.Value && p.IsActive);
+            if (!partnerExists)
+                return BadRequest(new { message = "سازمان همکار معتبر و فعال پیدا نشد." });
+ }
+
         var student = new Student
         {
             UserId = dto.UserId,
@@ -285,6 +297,7 @@ public class StudentsController : ControllerBase
             Address = dto.Address,
             GuardianName = dto.GuardianName,
             GuardianMobile = dto.GuardianMobile,
+ PartnerOrganizationId = dto.PartnerOrganizationId,
             MarketingUserId = currentUser.Role == "Marketer" ? currentUser.Id : dto.MarketingUserId,
             SupportUserId = currentUser.Role == "Marketer" ? null : dto.SupportUserId
         };
@@ -306,6 +319,8 @@ public class StudentsController : ControllerBase
             GuardianMobile = student.GuardianMobile,
             MarketingUserId = student.MarketingUserId,
             SupportUserId = student.SupportUserId,
+            PartnerOrganizationId = student.PartnerOrganizationId,
+            PartnerOrganizationName = student.PartnerOrganization?.Name,
             CreatedDate = student.CreatedDate
         };
 
@@ -319,6 +334,7 @@ public class StudentsController : ControllerBase
         UpdateMyStudentProfileRequest dto)
     {
         var student = await _context.Students
+            .Include(s => s.PartnerOrganization)
             .FirstOrDefaultAsync(s => s.Id == studentId);
 
         if (student == null)
@@ -345,6 +361,13 @@ public class StudentsController : ControllerBase
             });
         }
 
+        if (dto.PartnerOrganizationId.HasValue)
+        {
+            var partnerExists = await _context.PartnerOrganizations.AnyAsync(p => p.Id == dto.PartnerOrganizationId.Value && p.IsActive);
+            if (!partnerExists)
+                return BadRequest(new { message = "سازمان همکار معتبر و فعال پیدا نشد." });
+        }
+
         student.FirstName = dto.FirstName.Trim();
         student.LastName = dto.LastName.Trim();
         student.NationalCode = dto.NationalCode.Trim();
@@ -359,6 +382,7 @@ public class StudentsController : ControllerBase
         student.GuardianMobile = string.IsNullOrWhiteSpace(dto.GuardianMobile)
             ? null
             : dto.GuardianMobile.Trim();
+        student.PartnerOrganizationId = dto.PartnerOrganizationId;
 
         await _context.SaveChangesAsync();
 
@@ -375,6 +399,8 @@ public class StudentsController : ControllerBase
             GuardianMobile = student.GuardianMobile,
             MarketingUserId = student.MarketingUserId,
             SupportUserId = student.SupportUserId,
+            PartnerOrganizationId = student.PartnerOrganizationId,
+            PartnerOrganizationName = student.PartnerOrganization?.Name,
             CreatedDate = student.CreatedDate
         });
     }
@@ -385,6 +411,7 @@ public class StudentsController : ControllerBase
     public async Task<ActionResult<StudentDto>> GetStudentById(int studentId)
     {
         var student = await _context.Students
+            .Include(s => s.PartnerOrganization)
             .FirstOrDefaultAsync(s => s.Id == studentId);
 
         if (student == null)
@@ -408,6 +435,8 @@ public class StudentsController : ControllerBase
             GuardianMobile = student.GuardianMobile,
             MarketingUserId = student.MarketingUserId,
             SupportUserId = student.SupportUserId,
+            PartnerOrganizationId = student.PartnerOrganizationId,
+            PartnerOrganizationName = student.PartnerOrganization?.Name,
             CreatedDate = student.CreatedDate
         });
     }
@@ -428,6 +457,7 @@ public class StudentsController : ControllerBase
         }
 
         var student = await _context.Students
+            .Include(s => s.PartnerOrganization)
             .FirstOrDefaultAsync(s => s.UserId == userId);
 
         if (student == null)
@@ -479,6 +509,8 @@ public class StudentsController : ControllerBase
             GuardianMobile = student.GuardianMobile,
             MarketingUserId = student.MarketingUserId,
             SupportUserId = student.SupportUserId,
+            PartnerOrganizationId = student.PartnerOrganizationId,
+            PartnerOrganizationName = student.PartnerOrganization?.Name,
             CreatedDate = student.CreatedDate
         });
     }
@@ -491,6 +523,7 @@ public class StudentsController : ControllerBase
         AssignSupportDto dto)
     {
         var student = await _context.Students
+            .Include(s => s.PartnerOrganization)
             .FirstOrDefaultAsync(s => s.Id == studentId);
 
         if (student == null)
