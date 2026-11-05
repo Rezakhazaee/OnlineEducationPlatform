@@ -11,6 +11,7 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
+    public DbSet<BackEnd.Models.AuditLog> AuditLogs { get; set; }
 
     public DbSet<Student> Students { get; set; }
 
@@ -55,6 +56,8 @@ public class ApplicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<BackEnd.Models.AuditLog>().HasIndex(x => x.CreatedAt);
+        modelBuilder.Entity<BackEnd.Models.AuditLog>().HasIndex(x => x.UserId);
         ConfigureCertificates(modelBuilder);
 
 

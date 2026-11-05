@@ -66,6 +66,33 @@ builder.Services
 
                 ClockSkew = TimeSpan.Zero
             };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var userIdValue = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+                if (!int.TryParse(userIdValue, out var userId))
+                {
+                    context.Fail("Invalid user identity.");
+                    return;
+                }
+
+                var db = context.HttpContext.RequestServices.GetService(typeof(ApplicationDbContext)) as ApplicationDbContext;
+
+                if (db == null)
+                {
+                    context.Fail("User database is unavailable.");
+                    return;
+                }
+
+                var isActive = await db.Users.AsNoTracking().AnyAsync(u => u.Id == userId && u.IsActive);
+
+                if (!isActive)
+                    context.Fail("User is inactive or does not exist.");
+            }
+        };
     });
 
 // Authorization
@@ -75,6 +102,29 @@ builder.Services.AddAuthorization();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// SEC-08: create the audit table in the existing SQLite database only.
+using (var auditScope = app.Services.CreateScope())
+{
+    var auditDb = auditScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await auditDb.Database.ExecuteSqlRawAsync("""
+        CREATE TABLE IF NOT EXISTS "AuditLogs" (
+            "Id" INTEGER NOT NULL CONSTRAINT "PK_AuditLogs" PRIMARY KEY AUTOINCREMENT,
+            "UserId" INTEGER NULL,
+            "Username" TEXT NULL,
+            "Role" TEXT NULL,
+            "Action" TEXT NOT NULL,
+            "Entity" TEXT NULL,
+            "HttpMethod" TEXT NOT NULL,
+            "Path" TEXT NOT NULL,
+            "StatusCode" INTEGER NOT NULL,
+            "IpAddress" TEXT NULL,
+            "CreatedAt" TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS "IX_AuditLogs_CreatedAt" ON "AuditLogs" ("CreatedAt");
+        CREATE INDEX IF NOT EXISTS "IX_AuditLogs_UserId" ON "AuditLogs" ("UserId");
+        """);
+}
 
 
 // OpenAPI + Scalar
@@ -89,6 +139,7 @@ app.UseHttpsRedirection();
 
 // Authentication & Authorization
 app.UseAuthentication();
+app.UseMiddleware<BackEnd.Middleware.AuditMiddleware>();
 app.UseAuthorization();
 
 // Controllers
