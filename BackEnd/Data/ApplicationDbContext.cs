@@ -56,6 +56,16 @@ public class ApplicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.PartnerOrganization)
+            .WithOne()
+            .HasForeignKey<User>(u => u.PartnerOrganizationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.PartnerOrganizationId)
+            .IsUnique();
         modelBuilder.Entity<BackEnd.Models.AuditLog>().HasIndex(x => x.CreatedAt);
         modelBuilder.Entity<BackEnd.Models.AuditLog>().HasIndex(x => x.UserId);
         ConfigureCertificates(modelBuilder);

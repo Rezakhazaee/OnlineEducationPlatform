@@ -2305,3 +2305,13 @@
 .student-nav a:hover span {
     color: #ffffff !important;
 }
+
+/* STUDENT SIDEBAR COLOR RESTORE 2026 */
+.student-sidebar {
+    background: linear-gradient(180deg, #263d4a, #203742);
+    color: #fff;
+}
+.student-brand-text strong,
+.student-user-info strong {
+    color: #fff;
+}

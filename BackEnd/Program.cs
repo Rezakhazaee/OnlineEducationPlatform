@@ -87,7 +87,12 @@ builder.Services
                     return;
                 }
 
-                var isActive = await db.Users.AsNoTracking().AnyAsync(u => u.Id == userId && u.IsActive);
+                var isActive = await db.Users.AsNoTracking().AnyAsync(u =>
+                    u.Id == userId && u.IsActive &&
+                    (u.Role != nameof(BackEnd.Models.PartnerOrganization) ||
+                     (u.PartnerOrganizationId.HasValue &&
+                      db.PartnerOrganizations.Any(org =>
+                          org.Id == u.PartnerOrganizationId.Value && org.IsActive))));
 
                 if (!isActive)
                     context.Fail("User is inactive or does not exist.");

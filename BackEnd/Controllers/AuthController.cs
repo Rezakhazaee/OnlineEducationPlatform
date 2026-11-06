@@ -131,6 +131,7 @@ public class AuthController : ControllerBase
             });
         }
 
+        if (user.Role == "PartnerOrganization" && (!user.PartnerOrganizationId.HasValue || !await _context.PartnerOrganizations.AsNoTracking().AnyAsync(org => org.Id == user.PartnerOrganizationId.Value && org.IsActive))) { return Unauthorized(new { message = "سازمان همکار این حساب غیرفعال است یا معتبر نیست" }); }
         // ساخت JWT Token
         var token = GenerateJwtToken(user);
 
@@ -197,6 +198,7 @@ public class AuthController : ControllerBase
             )
         };
 
+        if (user.Role == "PartnerOrganization" && user.PartnerOrganizationId.HasValue) { claims.Add(new Claim("PartnerOrganizationId", user.PartnerOrganizationId.Value.ToString())); }
         // Security Key
         var securityKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(key)

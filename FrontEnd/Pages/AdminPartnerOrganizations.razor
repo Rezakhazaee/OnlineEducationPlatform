@@ -193,6 +193,21 @@
             </section>
         }
 
+        @if (CreatingAccountForId.HasValue)
+        {
+            <section class='partner-account-create'>
+                <div class='partner-account-heading'><span class='partner-account-mark'>✦</span><div><h2>ایجاد حساب اختصاصی سازمان</h2><p>دسترسی امن و اختصاصی برای مشاهده گزارش‌های سازمان</p></div></div>
+                <div class='partner-account-org'>سازمان انتخاب‌شده: <strong>@CreatingAccountName</strong></div>
+                <div class='partner-account-grid'>
+                    <div><label>نام و نام خانوادگی مسئول حساب *</label><input class='partner-account-input' @bind='AccountForm.FullName' placeholder='نام مسئول گزارش‌گیری' /></div>
+                    <div><label>شماره موبایل *</label><input class='partner-account-input' @bind='AccountForm.Mobile' placeholder='09xxxxxxxxx' /></div>
+                    <div><label>نام کاربری *</label><input class='partner-account-input' @bind='AccountForm.Username' placeholder='نام کاربری ورود' /></div>
+                    <div><label>رمز عبور *</label><input class='partner-account-input' type='password' @bind='AccountForm.Password' placeholder='حداقل ۸ کاراکتر' /></div>
+                </div>
+                <div class='partner-account-note'>این حساب فقط به گزارش‌های همین سازمان دسترسی دارد و امکان ویرایش اطلاعات یا ثبت‌نام ندارد.</div>
+                <div class='partner-account-actions'><button class='partner-account-submit' @onclick='CreatePartnerAccount' disabled='@IsCreatingAccount'>ایجاد حساب امن</button><button class='admin-secondary-btn' @onclick='CancelAccountForm' disabled='@IsCreatingAccount'>انصراف</button></div>
+            </section>
+        }
         <section class="admin-table-card">
 
             <div class="admin-table-header">
@@ -326,6 +341,10 @@
                                                 ویرایش
                                             </button>
 
+                                            @if (organization.IsActive && !organization.HasAccount)
+                                            {
+                                                <button class='partner-account-btn' @onclick='() => OpenAccountForm(organization)'>ساخت حساب گزارش‌گیری</button>
+                                            }
                                             <button class="admin-action-btn danger"
                                                     @onclick="() => DeleteOrganization(organization)">
                                                 حذف
@@ -351,9 +370,15 @@
 
 </div>
 
+<style>
+.partner-account-create{position:relative;overflow:hidden;margin:0 0 24px;padding:28px;border:1px solid rgba(107,190,211,.38);border-radius:24px;background:radial-gradient(circle at 8% 0%,rgba(125,220,231,.23),transparent 35%),linear-gradient(135deg,#102b3b 0%,#1d5265 52%,#18394b 100%);box-shadow:0 18px 45px rgba(16,43,59,.20);color:#f4fbff}
+.partner-account-heading{display:flex;align-items:center;gap:16px}.partner-account-heading h2{margin:0 0 7px;color:#fff;font-size:21px}.partner-account-heading p{margin:0;color:#c4e3eb}.partner-account-mark{display:grid;place-items:center;width:52px;height:52px;border:1px solid rgba(255,255,255,.4);border-radius:16px;background:linear-gradient(145deg,#d9f7f5,#7ac8d5);color:#164052;font-size:27px;box-shadow:inset 0 1px 2px #fff,0 8px 20px #071e2b66}
+.partner-account-org{margin:22px 0;padding:12px 16px;border:1px solid #ffffff30;border-radius:12px;background:#ffffff12;color:#d9edf2}.partner-account-org strong{color:#fff}
+.partner-account-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}.partner-account-grid label{display:block;margin-bottom:8px;color:#d8edf2;font-size:13px}.partner-account-input{box-sizing:border-box;width:100%;padding:12px 14px;border:1px solid #a9d7df77;border-radius:11px;outline:none;background:#f5fbfc;color:#173747}.partner-account-input:focus{border-color:#8ee4e2;box-shadow:0 0 0 3px #8ee4e233}.partner-account-note{margin-top:18px;padding:12px 14px;border-right:3px solid #8edbd7;border-radius:8px;background:#ffffff12;color:#d6edf0;font-size:13px}.partner-account-actions{display:flex;gap:12px;margin-top:22px}.partner-account-submit,.partner-account-btn{border:0;border-radius:10px;padding:11px 18px;background:linear-gradient(135deg,#c9f3ec,#78c9cb);color:#153c4b;font-weight:700;cursor:pointer;box-shadow:0 7px 18px #061d2a40}.partner-account-submit:disabled{opacity:.6;cursor:not-allowed}.partner-account-btn{padding:8px 12px;font-size:12px}.partner-account-btn:hover,.partner-account-submit:hover{filter:brightness(1.06)}@@media(max-width:700px){.partner-account-create{padding:19px}.partner-account-grid{grid-template-columns:1fr}.partner-account-actions{flex-wrap:wrap}}
+</style>
 @code {
 
-    private HttpClient Client => HttpClientFactory.CreateClient("Backend");
+    private HttpClient Client => Auth.CreateAuthenticatedClient();
 
     private List<PartnerOrganizationDto> Organizations = new();
 
@@ -363,6 +388,10 @@
     private bool IsSaving = false;
     private bool ShowForm = false;
 
+    private int? CreatingAccountForId;
+    private bool IsCreatingAccount;
+    private PartnerAccountForm AccountForm = new();
+    private string CreatingAccountName => Organizations.FirstOrDefault(x => x.Id == CreatingAccountForId)?.Name ?? string.Empty;
     private int? EditingId;
 
     private string? ErrorMessage;
@@ -402,7 +431,7 @@
         }
         catch
         {
-            ErrorMessage = "ارتباط با سرور برقرار نشد.";
+            ErrorMessage = "\u062e\u0637\u0627 \u062f\u0631 \u062f\u0631\u06cc\u0627\u0641\u062a \u0641\u0647\u0631\u0633\u062a \u0633\u0627\u0632\u0645\u0627\u0646\u200c\u0647\u0627.";
         }
         finally
         {
@@ -562,6 +591,86 @@
         }
     }
 
+    private void OpenAccountForm(PartnerOrganizationDto organization)
+    {
+        ErrorMessage = null;
+        SuccessMessage = null;
+        CreatingAccountForId = organization.Id;
+        AccountForm = new PartnerAccountForm();
+    }
+
+    private void CancelAccountForm()
+    {
+        CreatingAccountForId = null;
+        AccountForm = new PartnerAccountForm();
+    }
+
+    private async Task CreatePartnerAccount()
+    {
+        ErrorMessage = null;
+        SuccessMessage = null;
+
+        if (!CreatingAccountForId.HasValue ||
+            string.IsNullOrWhiteSpace(AccountForm.FullName) ||
+            string.IsNullOrWhiteSpace(AccountForm.Mobile) ||
+            string.IsNullOrWhiteSpace(AccountForm.Username) ||
+            string.IsNullOrWhiteSpace(AccountForm.Password))
+        {
+            ErrorMessage = "همه فیلدهای حساب را تکمیل کنید.";
+            return;
+        }
+
+        if (AccountForm.Password.Length < 8)
+        {
+            ErrorMessage = "رمز عبور باید حداقل ۸ کاراکتر باشد.";
+            return;
+        }
+
+        IsCreatingAccount = true;
+        try
+        {
+            var response = await Client.PostAsJsonAsync(
+                $"api/PartnerOrganizations/{CreatingAccountForId.Value}/account",
+                AccountForm);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized ||
+                response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await response.Content.ReadAsStringAsync();
+                ErrorMessage = string.IsNullOrWhiteSpace(message)
+                    ? "ایجاد حساب با خطا مواجه شد."
+                    : message;
+                return;
+            }
+
+            CreatingAccountForId = null;
+            AccountForm = new PartnerAccountForm();
+            SuccessMessage = "حساب گزارش‌گیری سازمان با موفقیت ایجاد شد.";
+            await LoadOrganizations();
+        }
+        catch
+        {
+            ErrorMessage = "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            IsCreatingAccount = false;
+        }
+    }
+
+    private class PartnerAccountForm
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string Mobile { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
     private class PartnerOrganizationDto
     {
         public int Id { get; set; }
@@ -583,6 +692,9 @@
         public string? Description { get; set; }
 
         public DateTime CreatedDate { get; set; }
+        public bool HasAccount { get; set; }
+        public string? AccountUsername { get; set; }
+        public bool? AccountIsActive { get; set; }
     }
 
     private class PartnerOrganizationForm

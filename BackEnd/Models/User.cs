@@ -15,5 +15,8 @@ public class User
     public string Role { get; set; } = string.Empty;
 
     public bool IsActive { get; set; } = true;
+
+    public int? PartnerOrganizationId { get; set; }
+    public PartnerOrganization? PartnerOrganization { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

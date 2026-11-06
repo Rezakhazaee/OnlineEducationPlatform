@@ -598,6 +598,9 @@ namespace BackEnd.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("PartnerOrganizationId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -611,6 +614,9 @@ namespace BackEnd.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PartnerOrganizationId")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -819,6 +825,16 @@ namespace BackEnd.Migrations
                     b.Navigation("Student");
 
                     b.Navigation("SupportUser");
+                });
+
+            modelBuilder.Entity("BackEnd.Models.User", b =>
+                {
+                    b.HasOne("BackEnd.Models.PartnerOrganization", "PartnerOrganization")
+                        .WithOne()
+                        .HasForeignKey("BackEnd.Models.User", "PartnerOrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("PartnerOrganization");
                 });
 
             modelBuilder.Entity("BackEnd.Models.CourseModule", b =>

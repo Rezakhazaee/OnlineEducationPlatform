@@ -201,6 +201,11 @@
                 return;
             }
 
+            if (Auth.Role == "PartnerOrganization") {
+                Navigation.NavigateTo("/partner/reports");
+                return;
+            }
+
             if (Auth.IsStudent)
             {
                 Navigation.NavigateTo(GetReturnUrl());
