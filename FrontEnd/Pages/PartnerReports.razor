@@ -151,6 +151,63 @@
                     </div>
                 }
             </section>
+            <section class="students-section">
+                <div class="section-heading">
+                    <div>
+                        <span class="eyebrow">جزئیات فراگیران</span>
+                        <h2>فهرست دانشجویان و وضعیت دوره‌ها</h2>
+                    </div>
+                    <span class="read-only-label">فقط مشاهده</span>
+                </div>
+
+                @if (EnrollmentsLoading)
+                {
+                    <div class="empty-status">در حال دریافت فهرست دانشجویان...</div>
+                }
+                else if (!string.IsNullOrWhiteSpace(EnrollmentsError))
+                {
+                    <div class="empty-status">@EnrollmentsError</div>
+                }
+                else if (Enrollments.Count == 0)
+                {
+                    <div class="empty-status">ثبت‌نامی برای نمایش وجود ندارد.</div>
+                }
+                else
+                {
+                    <div class="enrollment-table-wrap">
+                        <table class="enrollment-table">
+                            <thead>
+                                <tr>
+                                    <th>نام دانشجو</th>
+                                    <th>شماره همراه</th>
+                                    <th>عنوان دوره</th>
+                                    <th>تاریخ ثبت‌نام</th>
+                                    <th>وضعیت</th>
+                                    <th>مبلغ ثبت‌نام</th>
+                                    <th>پرداخت‌شده</th>
+                                    <th>مانده</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Enrollments)
+                                {
+                                    <tr @key="item.Id">
+                                        <td>@item.StudentName</td>
+                                        <td dir="ltr">@item.StudentMobile</td>
+                                        <td>@item.CourseTitle</td>
+                                        <td>@item.StartDate.ToString("yyyy/MM/dd", PersianCulture)</td>
+                                        <td><span class="@StatusDot(item.Status)"></span> @StatusTitle(item.Status)</td>
+                                        <td>@Money(item.ExpectedAmount)</td>
+                                        <td class="paid-cell">@Money(item.PaidAmount)</td>
+                                        <td class="balance-cell">@Money(item.RemainingAmount)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-count">تعداد ثبت‌نام‌ها: @Number(Enrollments.Count)</div>
+                }
+            </section>
             <footer class="portal-footer">
                 <span>آموزش‌یار <b>·</b> درگاه گزارش‌گیری سازمان همکار</span>
                 <span>اطلاعات این صفحه فقط برای مشاهده است.</span>
@@ -196,6 +253,112 @@
     .status-list{display:grid;gap:17px}.status-row{display:grid;grid-template-columns:145px minmax(80px,1fr) 42px;align-items:center;gap:15px}.status-name{display:flex;align-items:center;gap:9px;font-size:12px;color:#d8e6f1}.status-dot{width:8px;height:8px;border-radius:50%;background:#83dce0;box-shadow:0 0 9px currentColor}.dot-active{background:#70d9b9}.dot-completed{background:#80b9ed}.dot-cancelled{background:#e99aab}.dot-suspended{background:#e9c47e}
     .status-bar{height:7px;border-radius:20px;background:#e5f2fa12;overflow:hidden}.status-bar span{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,#4c9fc6,#83dce0)}.bar-active{background:linear-gradient(90deg,#319b83,#70d9b9)!important}.bar-completed{background:linear-gradient(90deg,#548ac1,#80b9ed)!important}.bar-cancelled{background:linear-gradient(90deg,#b86b83,#e99aab)!important}.bar-suspended{background:linear-gradient(90deg,#b58d4d,#e9c47e)!important}
     .status-count{text-align:left;font-size:12px;color:#e3f1fa;font-variant-numeric:tabular-nums}.empty-status{padding:22px;text-align:center;color:#9fb6c9;font-size:12px;background:#ffffff08;border-radius:12px}
+    .students-section{
+        margin-top:22px;
+        padding:24px;
+        border:1px solid #d7e9f021;
+        border-radius:20px;
+        background:linear-gradient(145deg,#ffffff0e,#ffffff04);
+        box-shadow:0 15px 40px #030b1828;
+        backdrop-filter:blur(12px);
+        min-width:0;
+    }
+    .enrollment-table-wrap{
+        width:100%;
+        overflow-x:auto;
+        border:1px solid #d7e9f022;
+        border-radius:14px;
+        background:#09172b70;
+        scrollbar-width:thin;
+        scrollbar-color:#548ba5 #14243d;
+    }
+    .enrollment-table{
+        width:100%;
+        min-width:1120px;
+        border-collapse:separate;
+        border-spacing:0;
+        text-align:right;
+        font-size:12px;
+        color:#dceaf5;
+        font-variant-numeric:tabular-nums;
+    }
+    .enrollment-table thead th{
+        position:sticky;
+        top:0;
+        z-index:1;
+        padding:16px 14px;
+        background:linear-gradient(110deg,#244763,#1b3b55);
+        color:#91e1e2;
+        font-weight:750;
+        white-space:nowrap;
+        border-bottom:1px solid #83dce044;
+    }
+    .enrollment-table tbody td{
+        padding:15px 14px;
+        border-bottom:1px solid #d7e9f014;
+        white-space:nowrap;
+        vertical-align:middle;
+    }
+    .enrollment-table tbody tr{
+        transition:background .2s;
+    }
+    .enrollment-table tbody tr:nth-child(even){
+        background:#ffffff06;
+    }
+    .enrollment-table tbody tr:hover{
+        background:#70d9df12;
+    }
+    .enrollment-table tbody tr:last-child td{
+        border-bottom:0;
+    }
+    .enrollment-table th:first-child,
+    .enrollment-table td:first-child{
+        padding-right:20px;
+        min-width:150px;
+        font-weight:700;
+        color:#f0f7ff;
+    }
+    .enrollment-table th:nth-child(2),
+    .enrollment-table td:nth-child(2){
+        text-align:center;
+        direction:ltr;
+    }
+    .enrollment-table th:nth-child(3),
+    .enrollment-table td:nth-child(3){
+        min-width:180px;
+    }
+    .enrollment-table th:nth-child(n+6),
+    .enrollment-table td:nth-child(n+6){
+        text-align:left;
+    }
+    .enrollment-table .status-dot{
+        display:inline-block;
+        vertical-align:middle;
+        margin-left:5px;
+    }
+    .paid-cell{
+        color:#7de0c5;
+        font-weight:700;
+    }
+    .balance-cell{
+        color:#83dce0;
+        font-weight:700;
+    }
+    .table-count{
+        margin-top:14px;
+        text-align:left;
+        color:#9bb8cb;
+        font-size:11px;
+    }
+    @@media(max-width:620px){
+        .students-section{
+            padding:15px;
+            margin-top:16px;
+        }
+        .enrollment-table{
+            min-width:1050px;
+        }
+    }
     .portal-footer{display:flex;justify-content:space-between;gap:12px;padding:22px 4px 0;color:#829bb1;font-size:10px}.portal-footer b{color:#6fd5d9;margin:0 5px}
     .state-panel{min-height:250px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border:1px solid #d7e9f021;border-radius:20px;background:#ffffff09;color:#eaf5ff;text-align:center;padding:25px}.state-panel strong{font-size:15px}.state-panel small{font-size:11px;color:#9eb5c9}.loader{width:32px;height:32px;border:3px solid #ffffff20;border-top-color:#78dce0;border-radius:50%;animation:spin .8s linear infinite}@@keyframes spin{to{transform:rotate(360deg)}}.state-symbol{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#e99aab22;color:#f1a6b4;font-size:20px}.error-panel small{max-width:600px}.retry-button{margin-top:4px}
     @@media(max-width:950px){.metrics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.metric-value.money{font-size:25px}}
@@ -206,6 +369,9 @@
     private PartnerDashboardDto? Dashboard { get; set; }
     private bool IsLoading { get; set; } = true;
     private string? ErrorMessage { get; set; }
+private List<PartnerEnrollmentDto> Enrollments { get; set; } = new();
+private bool EnrollmentsLoading { get; set; }
+private string? EnrollmentsError { get; set; }
 
     private static readonly CultureInfo PersianCulture = CultureInfo.GetCultureInfo("fa-IR");
 
@@ -246,9 +412,16 @@
                 return;
             }
 
-            Dashboard = await response.Content.ReadFromJsonAsync<PartnerDashboardDto>();
-            if (Dashboard is null)
-                ErrorMessage = "اطلاعات گزارش از سرویس دریافت نشد.";
+           Dashboard = await response.Content.ReadFromJsonAsync<PartnerDashboardDto>();
+
+if (Dashboard is null)
+{
+    ErrorMessage = "اطلاعات گزارش از سرویس دریافت نشد.";
+}
+else
+{
+    await LoadEnrollmentsAsync();
+}
         }
         catch (HttpRequestException)
         {
@@ -267,6 +440,49 @@
             IsLoading = false;
         }
     }
+private async Task LoadEnrollmentsAsync()
+{
+    EnrollmentsLoading = true;
+    EnrollmentsError = null;
+
+    try
+    {
+        using var client = Auth.CreateAuthenticatedClient();
+        using var response = await client.GetAsync("api/PartnerOrganizationReports/enrollments");
+
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
+            response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        {
+            await Auth.LogoutAsync();
+            Navigation.NavigateTo("/login", true);
+            return;
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            EnrollmentsError = $"دریافت فهرست دانشجویان ناموفق بود (کد {(int)response.StatusCode}).";
+            return;
+        }
+
+        Enrollments = await response.Content.ReadFromJsonAsync<List<PartnerEnrollmentDto>>() ?? new();
+    }
+    catch (HttpRequestException)
+    {
+        EnrollmentsError = "ارتباط با سرور برای دریافت فهرست دانشجویان برقرار نشد.";
+    }
+    catch (TaskCanceledException)
+    {
+        EnrollmentsError = "زمان انتظار برای دریافت فهرست دانشجویان به پایان رسید.";
+    }
+    catch (Exception)
+    {
+        EnrollmentsError = "در دریافت فهرست دانشجویان خطایی رخ داد.";
+    }
+    finally
+    {
+        EnrollmentsLoading = false;
+    }
+}
 
     private async Task LogoutAsync()
     {
@@ -335,4 +551,16 @@
         public string? Status { get; set; }
         public int Count { get; set; }
     }
+private sealed class PartnerEnrollmentDto
+{
+    public int Id { get; set; }
+    public string StudentName { get; set; } = string.Empty;
+    public string StudentMobile { get; set; } = string.Empty;
+    public string CourseTitle { get; set; } = string.Empty;
+    public DateTime StartDate { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public decimal ExpectedAmount { get; set; }
+    public decimal PaidAmount { get; set; }
+    public decimal RemainingAmount { get; set; }
+}
 }

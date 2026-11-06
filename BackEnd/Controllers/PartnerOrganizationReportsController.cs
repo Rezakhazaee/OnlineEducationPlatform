@@ -18,14 +18,14 @@ public class PartnerOrganizationReportsController : ControllerBase
         _context = context;
     }
 
-    [HttpGet("dashboard")]
-    public async Task<IActionResult> GetDashboard()
+    private async Task<int?> GetPartnerOrganizationIdAsync()
     {
         var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!int.TryParse(userIdValue, out var userId))
-            return Unauthorized();
 
-        var partnerOrganizationId = await _context.Users
+        if (!int.TryParse(userIdValue, out var userId))
+            return null;
+
+        return await _context.Users
             .AsNoTracking()
             .Where(u => u.Id == userId &&
                         u.Role == "PartnerOrganization" &&
@@ -34,6 +34,12 @@ public class PartnerOrganizationReportsController : ControllerBase
                         u.PartnerOrganization.IsActive)
             .Select(u => u.PartnerOrganizationId)
             .SingleOrDefaultAsync();
+    }
+
+    [HttpGet("dashboard")]
+    public async Task<IActionResult> GetDashboard()
+    {
+        var partnerOrganizationId = await GetPartnerOrganizationIdAsync();
 
         if (!partnerOrganizationId.HasValue)
             return Unauthorized();
@@ -44,6 +50,7 @@ public class PartnerOrganizationReportsController : ControllerBase
                         e.CoursePartnerOrganization.PartnerOrganizationId == partnerOrganizationId.Value);
 
         var enrollmentIds = enrollments.Select(e => e.Id);
+
         var totalEnrollments = await enrollments.CountAsync();
         var totalStudents = await enrollments.Select(e => e.StudentId).Distinct().CountAsync();
         var totalCourses = await enrollments.Select(e => e.CourseId).Distinct().CountAsync();
@@ -69,5 +76,51 @@ public class PartnerOrganizationReportsController : ControllerBase
             RemainingAmount = expectedAmount - totalPaid,
             Statuses = statuses
         });
+    }
+
+    [HttpGet("enrollments")]
+    public async Task<IActionResult> GetEnrollments()
+    {
+        var partnerOrganizationId = await GetPartnerOrganizationIdAsync();
+
+        if (!partnerOrganizationId.HasValue)
+            return Unauthorized();
+
+        var enrollments = _context.Enrollments
+            .AsNoTracking()
+            .Where(e => e.CoursePartnerOrganization != null &&
+                        e.CoursePartnerOrganization.PartnerOrganizationId == partnerOrganizationId.Value);
+
+        var result = await enrollments
+            .OrderByDescending(e => e.StartDate)
+            .Select(e => new
+            {
+                e.Id,
+                StudentName = e.Student != null
+                    ? (e.Student.FirstName + " " + e.Student.LastName).Trim()
+                    : "",
+                StudentMobile = e.Student != null ? e.Student.Mobile : "",
+                CourseTitle = e.Course != null ? e.Course.Title : "",
+                e.StartDate,
+                e.Status,
+                ExpectedAmount = e.FinalAmount ?? 0m,
+                PaidAmount = _context.Payments
+                    .Where(p => p.EnrollmentId == e.Id && p.Status == "Paid")
+                    .Sum(p => (decimal?)p.Amount) ?? 0m
+            })
+            .ToListAsync();
+
+        return Ok(result.Select(e => new
+        {
+            e.Id,
+            e.StudentName,
+            e.StudentMobile,
+            e.CourseTitle,
+            e.StartDate,
+            e.Status,
+            e.ExpectedAmount,
+            e.PaidAmount,
+            RemainingAmount = e.ExpectedAmount - e.PaidAmount
+        }));
     }
 }
