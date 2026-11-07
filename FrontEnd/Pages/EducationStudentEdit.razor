@@ -14,8 +14,8 @@
 .education-form-group { display:flex; flex-direction:column; gap:8px; }
 .education-form-group-full { grid-column:1/-1; }
 .education-form-group label { font-size:14px; font-weight:600; color:#263d4a; }
-.education-form-group input,.education-form-group textarea { width:100%; box-sizing:border-box; padding:12px 14px; border:1px solid #d9e1e6; border-radius:10px; background:#fdfefe; color:#263d4a; font-family:inherit; font-size:14px; transition:.2s; }
-.education-form-group input:focus,.education-form-group textarea:focus { outline:none; border-color:#568fa8; box-shadow:0 0 0 3px rgba(86,143,168,.14); }
+.education-form-group input,.education-form-group select,.education-form-group textarea { width:100%; box-sizing:border-box; padding:12px 14px; border:1px solid #d9e1e6; border-radius:10px; background:#fdfefe; color:#263d4a; font-family:inherit; font-size:14px; transition:.2s; }
+.education-form-group input:focus,.education-form-group select:focus,.education-form-group textarea:focus { outline:none; border-color:#568fa8; box-shadow:0 0 0 3px rgba(86,143,168,.14); }
 .education-form-group textarea { resize:vertical; min-height:110px; }
 .education-form-actions { display:flex; gap:12px; margin-top:28px; padding-top:22px; border-top:1px solid #edf0f2; }
 .education-btn { display:inline-flex; align-items:center; justify-content:center; min-width:120px; padding:11px 20px; border:0; border-radius:10px; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; text-decoration:none; transition:.2s; }
@@ -98,6 +98,17 @@
                         <textarea rows="4" @bind="Model.Address"></textarea>
                     </div>
 
+                    <div class="education-form-group education-form-group-full">
+                            <label>&#1587;&#1575;&#1586;&#1605;&#1575;&#1606; &#1607;&#1605;&#1705;&#1575;&#1585;</label>
+                            <select @bind="Model.PartnerOrganizationId">
+                                <option value="">&#1576;&#1583;&#1608;&#1606; &#1587;&#1575;&#1586;&#1605;&#1575;&#1606; &#1607;&#1605;&#1705;&#1575;&#1585;</option>
+                                @foreach (var partner in PartnerOrganizations)
+                                {
+                                    <option value="@partner.Id">@partner.Name</option>
+                                }
+                            </select>
+                        </div>
+
                 </div>
 
                 @if (!string.IsNullOrWhiteSpace(SuccessMessage))
@@ -135,6 +146,7 @@
     public int StudentId { get; set; }
 
     private StudentEditModel Model { get; set; } = new();
+    private List<PartnerOrganizationOption> PartnerOrganizations { get; set; } = new();
 
     private bool IsLoading { get; set; } = true;
     private bool IsSaving { get; set; }
@@ -154,9 +166,25 @@
             return;
         }
 
+        await LoadPartnerOrganizations();
         await LoadStudent();
     }
 
+    private async Task LoadPartnerOrganizations()
+    {
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+            PartnerOrganizations =
+                await client.GetFromJsonAsync<List<PartnerOrganizationOption>>(
+                    "api/Students/active-partner-organizations"
+                ) ?? new();
+        }
+        catch
+        {
+            PartnerOrganizations = new();
+        }
+    }
     private async Task LoadStudent()
     {
         IsLoading = true;
@@ -249,9 +277,16 @@
         Navigation.NavigateTo("/education");
     }
 
+    public class PartnerOrganizationOption
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+    }
+
     public class StudentEditModel
     {
         public int Id { get; set; }
+        public int? PartnerOrganizationId { get; set; }
 
         public string FirstName { get; set; } = "";
         public string LastName { get; set; } = "";
