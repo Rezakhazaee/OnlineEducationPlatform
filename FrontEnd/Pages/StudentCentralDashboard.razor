@@ -1,0 +1,565 @@
+@page "/student/central"
+@layout StudentLayout
+@using System.Net.Http.Json
+@using FrontEnd.Services
+@inject AuthService Auth
+@inject NavigationManager Navigation
+
+<PageTitle>داشبورد مرکزی دانشجو</PageTitle>
+
+<div class="student-central-page" dir="rtl">
+    <div class="dashboard-shell">
+
+        <header class="welcome-panel glass">
+            <div class="welcome-copy">
+                <span class="eyebrow">پنل اختصاصی دانشجو</span>
+                <h1>داشبورد مرکزی من</h1>
+                <p>نمایی یکپارچه از وضعیت آموزشی و مالی شما</p>
+            </div>
+            <div class="welcome-side">
+                <span class="today">@DateTime.Now.ToString("yyyy/MM/dd")</span>
+                <a class="profile-link" href="/student/profile">پروفایل من <span>←</span></a>
+            </div>
+        </header>
+
+        @if (IsLoading)
+        {
+            <div class="loading-panel glass">
+                <span class="loader"></span>
+                <span>در حال دریافت اطلاعات داشبورد...</span>
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(LoadError))
+        {
+            <div class="notice-panel glass">
+                <span>دریافت اطلاعات با مشکل مواجه شد.</span>
+                <button type="button" @onclick="LoadData">تلاش مجدد</button>
+            </div>
+        }
+        else
+        {
+            <section class="summary-grid">
+                <article class="summary-card glass">
+                    <span class="summary-icon">▤</span>
+                    <div>
+                        <span class="summary-label">دوره‌های من</span>
+                        <strong>@Enrollments.Count</strong>
+                        <small>مجموع ثبت‌نام‌ها</small>
+                    </div>
+                </article>
+                <article class="summary-card glass">
+                    <span class="summary-icon">✓</span>
+                    <div>
+                        <span class="summary-label">دوره‌های فعال</span>
+                        <strong>@ActiveCount</strong>
+                        <small>در حال پیگیری</small>
+                    </div>
+                </article>
+                <article class="summary-card glass">
+                    <span class="summary-icon">₮</span>
+                    <div>
+                        <span class="summary-label">مجموع پرداخت</span>
+                        <strong class="money-value">@Money(TotalPaid)</strong>
+                        <small>بر اساس اطلاعات مالی ثبت‌شده</small>
+                    </div>
+                </article>
+                <article class="summary-card glass">
+                    <span class="summary-icon">◷</span>
+                    <div>
+                        <span class="summary-label">مانده قابل پرداخت</span>
+                        <strong class="money-value">@Money(TotalRemaining)</strong>
+                        <small>مجموع مانده دوره‌ها</small>
+                    </div>
+                </article>
+            </section>
+
+            <section class="main-grid">
+                <article class="panel glass finance-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="eyebrow">گزارش مالی</span>
+                            <h2>وضعیت پرداخت‌ها</h2>
+                        </div>
+                        <a href="/student/payments">جزئیات مالی ←</a>
+                    </div>
+
+                    <div class="finance-content">
+                        <div class="donut-wrap">
+                            <div class="donut" style="@DonutStyle">
+                                <div class="donut-center">
+                                    <strong>@PaidPercent.ToString("0")٪</strong>
+                                    <span>پرداخت‌شده</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="finance-legend">
+                            <div class="legend-item">
+                                <span class="legend-dot paid-dot"></span>
+                                <div><small>پرداخت‌شده</small><strong>@Money(TotalPaid)</strong></div>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot remain-dot"></span>
+                                <div><small>مانده</small><strong>@Money(TotalRemaining)</strong></div>
+                            </div>
+                            <div class="finance-total">
+                                <small>مجموع شهریه دوره‌ها</small>
+                                <strong>@Money(TotalCoursePrice)</strong>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="panel glass learning-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="eyebrow">نمای کلی آموزش</span>
+                            <h2>مسیر آموزشی من</h2>
+                        </div>
+                        <a href="/student/courses">دوره‌های من ←</a>
+                    </div>
+                    <div class="learning-summary">
+                        <div class="learning-number">
+                            <strong>@Enrollments.Count</strong>
+                            <span>ثبت‌نام</span>
+                        </div>
+                        <div class="learning-track">
+                            <div class="track-line">
+                                <span style="width:@LearningPercent%"></span>
+                            </div>
+                            <div class="track-labels">
+                                <span>شروع مسیر</span>
+                                <strong>@ActiveCount دوره فعال</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="learning-foot">
+                        <span class="status-mark"></span>
+                        وضعیت ثبت‌نام‌ها از سامانه دریافت شده است
+                    </div>
+                    <div class="compact-course-list">
+                        @foreach (var item in Enrollments.Where(x => !IsCancelled(x.Status)).Take(2))
+                        {
+                            <div class="compact-course">
+                                <span class="course-mini-icon">▸</span>
+                                <span class="course-name">@item.CourseTitle</span>
+                                <span class="course-status">@StatusText(item.Status)</span>
+                            </div>
+                        }
+                        @if (!Enrollments.Any(x => !IsCancelled(x.Status)))
+                        {
+                            <div class="empty-inline">هنوز دوره فعالی برای نمایش وجود ندارد.</div>
+                        }
+                        @if (Enrollments.Count(x => !IsCancelled(x.Status)) > 2)
+                        {
+                            <a class="more-courses" href="/student/courses">مشاهده همه دوره‌ها</a>
+                        }
+                    </div>
+                </article>
+            </section>
+
+            <section class="lower-grid">
+                <article class="panel glass chart-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="eyebrow">روند مالی</span>
+                            <h2>پرداخت‌های شش ماه اخیر</h2>
+                        </div>
+                        <span class="chart-unit">تومان</span>
+                    </div>
+                    <div class="bar-chart">
+                        @foreach (var month in MonthlyPayments)
+                        {
+                            <div class="bar-column">
+                                <div class="bar-value">@ShortMoney(month.Amount)</div>
+                                <div class="bar-track">
+                                    <div class="bar-fill" style="height:@BarHeight(month.Amount)%"></div>
+                                </div>
+                                <span class="bar-label">@month.Label</span>
+                            </div>
+                        }
+                    </div>
+                </article>
+
+                <article class="panel glass recent-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="eyebrow">تراکنش‌ها</span>
+                            <h2>آخرین پرداخت‌ها</h2>
+                        </div>
+                        <a href="/student/payments">همه پرداخت‌ها ←</a>
+                    </div>
+                    @if (RecentPayments.Count == 0)
+                    {
+                        <div class="empty-state">هنوز پرداختی برای نمایش ثبت نشده است.</div>
+                    }
+                    else
+                    {
+                        <div class="recent-list">
+                            @foreach (var payment in RecentPayments)
+                            {
+                                <div class="recent-item">
+                                    <span class="payment-symbol">✓</span>
+                                    <div class="payment-info">
+                                        <strong>@(string.IsNullOrWhiteSpace(payment.Description) ? "پرداخت شهریه" : payment.Description)</strong>
+                                        <small>@payment.PaymentDate.ToString("yyyy/MM/dd")</small>
+                                    </div>
+                                    <strong class="payment-amount">@Money(payment.Amount)</strong>
+                                </div>
+                            }
+                        </div>
+                    }
+                </article>
+            </section>
+
+            <section class="quick-row">
+                <a href="/student/courses" class="quick-link glass"><span>▤</span> دوره‌های من</a>
+                <a href="/student/payments" class="quick-link glass"><span>₮</span> پرداخت‌ها</a>
+                <a href="/student/profile" class="quick-link glass"><span>◉</span> اطلاعات حساب</a>
+                <div class="quick-link glass upcoming"><span>◷</span> برنامه هفتگی <small>به‌زودی</small></div>
+                <div class="quick-link glass upcoming"><span>◌</span> ساعات مطالعه <small>به‌زودی</small></div>
+            </section>
+        }
+
+        <footer class="dashboard-footer">
+            <span>آموزش‌یار</span>
+            <span>داشبورد یکپارچه دانشجو</span>
+        </footer>
+    </div>
+</div>
+
+<style>
+.student-app:has(.student-central-page) .student-main {
+    background-image:
+        linear-gradient(135deg, rgba(9, 25, 38, .24), rgba(12, 35, 48, .30)),
+        url("/images/student-dashboard-bg.png") !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+}
+.student-central-page {
+    min-height: calc(100vh - 90px);
+    padding: 12px 16px 8px;
+    color: #f8fcff;
+    font-family: inherit;
+}
+.dashboard-shell { max-width: 1500px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.glass {
+    background: linear-gradient(135deg, rgba(255,255,255,.27), rgba(225,245,255,.12));
+    border: 1px solid rgba(255,255,255,.38);
+    box-shadow: 0 12px 34px rgba(5,20,32,.16), inset 0 1px 0 rgba(255,255,255,.28);
+    backdrop-filter: blur(22px) saturate(145%);
+    -webkit-backdrop-filter: blur(22px) saturate(145%);
+}
+.welcome-panel { min-height: 94px; border-radius: 22px; padding: 15px 22px; display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+.eyebrow { color: #d8f3ff; font-size: .72rem; font-weight: 800; letter-spacing: .4px; }
+.welcome-copy h1 { margin: 3px 0 2px; font-size: clamp(1.2rem, 2vw, 1.7rem); font-weight: 900; color: #fff; }
+.welcome-copy p { margin: 0; color: rgba(255,255,255,.84); font-size: .82rem; }
+.welcome-side { display: flex; align-items: center; gap: 18px; }
+.today { color: #f2fbff; font-size: .8rem; direction: ltr; }
+.profile-link, .panel-heading a { color: #fff; text-decoration: none; font-size: .78rem; font-weight: 800; white-space: nowrap; }
+.profile-link { border: 1px solid rgba(255,255,255,.42); padding: 9px 13px; border-radius: 12px; background: rgba(255,255,255,.12); }
+.summary-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; }
+.summary-card { min-height: 90px; border-radius: 18px; padding: 13px 15px; display: flex; align-items: center; gap: 12px; }
+.summary-icon { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.3); font-size: 1.3rem; color: #fff; flex-shrink: 0; }
+.summary-card > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.summary-label { color: rgba(255,255,255,.88); font-size: .75rem; }
+.summary-card strong { color: #fff; font-size: 1.25rem; font-weight: 900; line-height: 1.3; }
+.summary-card small { color: rgba(255,255,255,.72); font-size: .66rem; }
+.summary-card .money-value { font-size: clamp(.88rem,1.2vw,1.13rem); direction: rtl; }
+.main-grid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 12px; }
+.panel { border-radius: 20px; padding: 15px 17px; min-width: 0; }
+.panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.panel-heading h2 { color: #fff; font-size: .98rem; font-weight: 900; margin: 2px 0 0; }
+.panel-heading a { font-size: .7rem; color: #e1f6ff; }
+.finance-content { display: flex; align-items: center; justify-content: space-evenly; gap: 15px; min-height: 145px; }
+.donut-wrap { width: 142px; height: 142px; flex: 0 0 142px; display: grid; place-items: center; }
+.donut { width: 138px; height: 138px; border-radius: 50%; display: grid; place-items: center; position: relative; box-shadow: 0 8px 22px rgba(0,0,0,.18); }
+.donut::before { content: ""; position: absolute; inset: 15px; border-radius: 50%; background: rgba(21,48,62,.88); border: 1px solid rgba(255,255,255,.24); }
+.donut-center { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
+.donut-center strong { color: #fff; font-size: 1.45rem; font-weight: 900; }
+.donut-center span { color: #d9f1fb; font-size: .68rem; }
+.finance-legend { flex: 1; display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.legend-item { display: flex; align-items: center; gap: 8px; }
+.legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.paid-dot { background: #62e0c0; } .remain-dot { background: #ffca78; }
+.legend-item div { display: flex; flex-direction: column; gap: 1px; }
+.legend-item small, .finance-total small { color: rgba(255,255,255,.75); font-size: .67rem; }
+.legend-item strong, .finance-total strong { color: #fff; font-size: .83rem; }
+.finance-total { border-top: 1px solid rgba(255,255,255,.2); padding-top: 7px; display: flex; flex-direction: column; gap: 2px; }
+.learning-summary { display: flex; align-items: center; gap: 18px; padding: 6px 2px 12px; }
+.learning-number { display: flex; flex-direction: column; align-items: center; min-width: 58px; }
+.learning-number strong { font-size: 2rem; color: #fff; line-height: 1.1; }
+.learning-number span { color: rgba(255,255,255,.75); font-size: .7rem; }
+.learning-track { flex: 1; min-width: 0; }
+.track-line { height: 9px; border-radius: 20px; background: rgba(255,255,255,.2); overflow: hidden; }
+.track-line span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#65e0c0,#b4f1df); }
+.track-labels { display: flex; justify-content: space-between; gap: 8px; margin-top: 7px; color: rgba(255,255,255,.75); font-size: .67rem; }
+.track-labels strong { color: #fff; }
+.learning-foot { border-top: 1px solid rgba(255,255,255,.18); padding: 8px 0; color: rgba(255,255,255,.78); font-size: .68rem; display: flex; align-items: center; gap: 7px; }
+.status-mark { width: 7px; height: 7px; border-radius: 50%; background: #72e2c0; box-shadow: 0 0 9px #72e2c0; }
+.compact-course-list { display: flex; flex-direction: column; gap: 6px; }
+.compact-course { display: flex; align-items: center; gap: 8px; min-width: 0; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.14); border-radius: 10px; padding: 6px 9px; }
+.course-mini-icon { color: #b7f4e2; }
+.course-name { color: #fff; font-size: .72rem; font-weight: 700; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.course-status { color: #e0f6ff; font-size: .65rem; white-space: nowrap; }
+.more-courses { color: #d9f5ff; font-size: .68rem; text-decoration: none; align-self: flex-start; }
+.lower-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.chart-panel, .recent-panel { min-height: 180px; }
+.chart-unit { color: rgba(255,255,255,.65); font-size: .65rem; }
+.bar-chart { height: 116px; display: flex; align-items: stretch; justify-content: space-around; gap: 10px; padding: 0 8px; }
+.bar-column { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 0; gap: 4px; }
+.bar-value { color: rgba(255,255,255,.75); font-size: .58rem; white-space: nowrap; }
+.bar-track { height: 76px; width: min(27px,75%); display: flex; align-items: flex-end; background: rgba(255,255,255,.10); border-radius: 8px 8px 4px 4px; overflow: hidden; }
+.bar-fill { width: 100%; min-height: 3px; background: linear-gradient(180deg,#b7f3e1,#56c9bb); border-radius: 7px 7px 3px 3px; box-shadow: 0 0 12px rgba(105,231,204,.24); }
+.bar-label { color: rgba(255,255,255,.76); font-size: .63rem; }
+.recent-list { display: flex; flex-direction: column; gap: 5px; }
+.recent-item { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.13); min-width: 0; }
+.payment-symbol { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 9px; background: rgba(91,221,185,.18); color: #a9f5dc; flex-shrink: 0; }
+.payment-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.payment-info strong { color: #fff; font-size: .69rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.payment-info small { color: rgba(255,255,255,.65); font-size: .61rem; }
+.payment-amount { color: #c8f7e9; font-size: .7rem; white-space: nowrap; }
+.quick-row { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 9px; }
+.quick-link { min-height: 48px; border-radius: 14px; padding: 8px 10px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; text-decoration: none; font-size: .73rem; font-weight: 800; position: relative; }
+.quick-link > span { font-size: 1.05rem; color: #c9f5e9; }
+.quick-link.upcoming { color: rgba(255,255,255,.76); }
+.quick-link small { font-size: .57rem; color: #d8f3ff; border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: 2px 5px; }
+.empty-state, .empty-inline { color: rgba(255,255,255,.72); font-size: .72rem; padding: 12px 4px; }
+.notice-panel, .loading-panel { border-radius: 16px; padding: 18px; display: flex; align-items: center; justify-content: center; gap: 12px; color: #fff; }
+.notice-panel button { border: 1px solid rgba(255,255,255,.4); border-radius: 9px; padding: 7px 12px; color: #fff; background: rgba(255,255,255,.15); }
+.loader { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; }
+@@keyframes spin { to { transform: rotate(360deg); } }
+.dashboard-footer { display: flex; justify-content: space-between; color: rgba(255,255,255,.68); font-size: .63rem; padding: 0 5px; }
+@@media (min-width: 1100px) and (min-height: 760px) {
+    .dashboard-shell { gap: 10px; }
+    .student-central-page { padding-top: 10px; }
+}
+@@media (max-width: 900px) {
+    .summary-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .main-grid { grid-template-columns: 1fr 1fr; }
+    .quick-row { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}
+@@media (max-width: 650px) {
+    .student-central-page { padding: 9px 8px 14px; }
+    .dashboard-shell { gap: 9px; }
+    .welcome-panel { padding: 13px; min-height: auto; align-items: flex-start; }
+    .welcome-side { flex-direction: column; align-items: flex-end; gap: 7px; }
+    .welcome-copy p { font-size: .72rem; }
+    .today { font-size: .68rem; }
+    .profile-link { font-size: .68rem; padding: 7px 9px; }
+    .summary-grid { gap: 7px; }
+    .summary-card { min-height: 78px; padding: 9px; gap: 8px; border-radius: 14px; }
+    .summary-icon { width: 34px; height: 34px; border-radius: 11px; font-size: 1rem; }
+    .summary-card strong { font-size: 1.05rem; }
+    .summary-card .money-value { font-size: .78rem; }
+    .summary-card small { font-size: .59rem; }
+    .main-grid, .lower-grid { grid-template-columns: 1fr; gap: 9px; }
+    .panel { padding: 12px; border-radius: 16px; }
+    .finance-content { min-height: 130px; }
+    .donut-wrap { width: 116px; height: 116px; flex-basis: 116px; }
+    .donut { width: 112px; height: 112px; }
+    .donut::before { inset: 12px; }
+    .donut-center strong { font-size: 1.2rem; }
+    .quick-row { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+    .quick-link { min-height: 43px; font-size: .67rem; }
+    .dashboard-footer { padding-top: 3px; }
+}
+</style>
+
+@code {
+    private bool IsLoading = true;
+    private string LoadError = "";
+    private List<EnrollmentItem> Enrollments = new();
+    private List<PaymentItem> AllPayments = new();
+    private List<PaymentItem> RecentPayments = new();
+    private List<MonthPayment> MonthlyPayments = new();
+
+    private decimal TotalPaid => FinancialDetails.Sum(x => x.TotalPaid);
+    private decimal TotalRemaining => FinancialDetails.Sum(x => Math.Max(0, x.RemainingAmount));
+    private decimal TotalCoursePrice => FinancialDetails.Sum(x => x.CoursePrice);
+    private int ActiveCount => Enrollments.Count(x => IsActive(x.Status));
+    private int LearningPercent => Enrollments.Count == 0 ? 0 : (int)Math.Round(ActiveCount * 100d / Enrollments.Count);
+    private decimal PaidPercent => TotalPaid + TotalRemaining <= 0 ? 0 : Math.Clamp(TotalPaid * 100m / (TotalPaid + TotalRemaining), 0, 100);
+    private string DonutStyle => $"background:conic-gradient(#62e0c0 0% {PaidPercent.ToString(System.Globalization.CultureInfo.InvariantCulture)}%, #ffca78 {PaidPercent.ToString(System.Globalization.CultureInfo.InvariantCulture)}% 100%)";
+
+    private List<FinancialApi> FinancialDetails = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        await Auth.RestoreAsync();
+
+        if (!Auth.IsLoggedIn || !Auth.IsStudent)
+        {
+            Navigation.NavigateTo("/login?returnUrl=/student/central", false);
+            return;
+        }
+
+        await LoadData();
+        StateHasChanged();
+    }
+
+    private async Task LoadData()
+    {
+        IsLoading = true;
+        LoadError = "";
+        StateHasChanged();
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+            Enrollments = await client.GetFromJsonAsync<List<EnrollmentItem>>("api/Enrollments/my") ?? new();
+
+            FinancialDetails.Clear();
+            AllPayments.Clear();
+
+            foreach (var enrollment in Enrollments.Where(x => !IsCancelled(x.Status)))
+            {
+                try
+                {
+                    var detail = await client.GetFromJsonAsync<FinancialApi>(
+                        $"api/Enrollments/my/{enrollment.Id}/financial-details");
+
+                    if (detail != null)
+                    {
+                        FinancialDetails.Add(detail);
+                        if (detail.Payments != null)
+                            AllPayments.AddRange(detail.Payments.Where(IsSuccessfulPayment));
+                    }
+                }
+                catch
+                {
+                    // خطای یک ثبت‌نام نباید مانع نمایش سایر اطلاعات داشبورد شود.
+                }
+            }
+
+            RecentPayments = AllPayments
+                .Where(x => x.PaymentDate != default)
+                .OrderByDescending(x => x.PaymentDate)
+                .Take(3)
+                .ToList();
+
+            BuildMonthlyPayments();
+        }
+        catch
+        {
+            LoadError = "ارتباط با سرویس اطلاعات دانشجو برقرار نشد. اتصال و ورود خود را بررسی کنید.";
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void BuildMonthlyPayments()
+    {
+        MonthlyPayments.Clear();
+        var now = DateTime.Now;
+        var months = Enumerable.Range(0, 6)
+            .Select(i => new DateTime(now.Year, now.Month, 1).AddMonths(i - 5))
+            .ToList();
+
+        foreach (var month in months)
+        {
+            var next = month.AddMonths(1);
+            var amount = AllPayments
+                .Where(p => p.PaymentDate >= month && p.PaymentDate < next)
+                .Sum(p => p.Amount);
+
+            MonthlyPayments.Add(new MonthPayment
+            {
+                Label = month.ToString("MM"),
+                Amount = amount
+            });
+        }
+    }
+
+    private decimal MaxMonthlyAmount => MonthlyPayments.Count == 0
+        ? 0
+        : MonthlyPayments.Max(x => x.Amount);
+
+    private int BarHeight(decimal amount)
+    {
+        if (MaxMonthlyAmount <= 0 || amount <= 0) return 3;
+        return Math.Max(5, (int)Math.Round(amount * 100m / MaxMonthlyAmount));
+    }
+
+    private static bool IsSuccessfulPayment(PaymentItem payment)
+    {
+        if (string.IsNullOrWhiteSpace(payment.Status)) return true;
+        var status = payment.Status.Trim();
+        return status.Equals("Success", StringComparison.OrdinalIgnoreCase)
+            || status.Equals("Successful", StringComparison.OrdinalIgnoreCase)
+            || status.Equals("Completed", StringComparison.OrdinalIgnoreCase)
+            || status.Equals("Paid", StringComparison.OrdinalIgnoreCase)
+            || status.Contains("موفق")
+            || status.Contains("تایید")
+            || status.Contains("پرداخت شده");
+    }
+
+    private static bool IsActive(string? status) =>
+        string.Equals(status, "Active", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, "فعال", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsCancelled(string? status) =>
+        string.Equals(status, "Cancelled", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, "Canceled", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, "لغوشده", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, "لغو شده", StringComparison.OrdinalIgnoreCase);
+
+    private static string StatusText(string? status)
+    {
+        if (IsActive(status)) return "فعال";
+        if (IsCancelled(status)) return "لغوشده";
+        if (string.Equals(status, "Completed", StringComparison.OrdinalIgnoreCase)) return "تکمیل‌شده";
+        return string.IsNullOrWhiteSpace(status) ? "در انتظار" : status;
+    }
+
+    private static string Money(decimal value) => $"{value:N0} تومان";
+    private static string ShortMoney(decimal value)
+    {
+        if (value <= 0) return "۰";
+        if (value >= 1000000000m) return $"{value / 1000000000m:0.#}B";
+        if (value >= 1000000m) return $"{value / 1000000m:0.#}M";
+        if (value >= 1000m) return $"{value / 1000m:0.#}K";
+        return value.ToString("N0");
+    }
+
+    private sealed class EnrollmentItem
+    {
+        public int Id { get; set; }
+        public int CourseId { get; set; }
+        public string CourseTitle { get; set; } = "";
+        public DateTime? StartDate { get; set; }
+        public string Status { get; set; } = "";
+    }
+
+    private sealed class FinancialApi
+    {
+        public int EnrollmentId { get; set; }
+        public string CourseTitle { get; set; } = "";
+        public decimal CoursePrice { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal RemainingAmount { get; set; }
+        public string PaymentStatus { get; set; } = "";
+        public List<PaymentItem> Payments { get; set; } = new();
+    }
+
+    private sealed class PaymentItem
+    {
+        public decimal Amount { get; set; }
+        public DateTime PaymentDate { get; set; }
+        public string PaymentType { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string Status { get; set; } = "";
+    }
+
+    private sealed class MonthPayment
+    {
+        public string Label { get; set; } = "";
+        public decimal Amount { get; set; }
+    }
+}
