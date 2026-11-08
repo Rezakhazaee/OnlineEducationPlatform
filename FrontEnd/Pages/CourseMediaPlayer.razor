@@ -1,0 +1,104 @@
+@inject Microsoft.JSInterop.IJSRuntime JS
+
+<div class="course-player-shell" dir="ltr">
+    <div class="course-player-heading">
+        <span class="course-player-live-dot"></span>
+        <span>COURSE PLAYER</span>
+        <strong>@Title</strong>
+    </div>
+
+    @if (IsDirectVideo)
+    {
+        <video id="@PlayerId" class="course-player-video"
+               controls playsinline preload="metadata">
+            <source src="@Url" type="@VideoMimeType" />
+            مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.
+        </video>
+
+        <div class="course-player-toolbar">
+            <button type="button" title="۱۰ ثانیه عقب" @onclick="() => Seek(-10)">↶ 10</button>
+            <button type="button" title="۱۰ ثانیه جلو" @onclick="() => Seek(10)">10 ↷</button>
+
+            <label for="@($"{PlayerId}-speed")">سرعت</label>
+            <select id="@($"{PlayerId}-speed")" value="1" @onchange="ChangeSpeed">
+                <option value="0.5">0.5×</option>
+                <option value="0.75">0.75×</option>
+                <option value="1">1×</option>
+                <option value="1.25">1.25×</option>
+                <option value="1.5">1.5×</option>
+                <option value="1.75">1.75×</option>
+                <option value="2">2×</option>
+            </select>
+
+            <button type="button" title="بی‌صدا" @onclick="ToggleMute">صدا</button>
+            <button type="button" title="تصویر در تصویر" @onclick="PictureInPicture">▣</button>
+            <button type="button" title="تمام صفحه" @onclick="Fullscreen">⛶</button>
+        </div>
+    }
+    else
+    {
+        <iframe class="course-player-embed"
+                src="@Url"
+                title="@Title"
+                allow="autoplay; fullscreen; picture-in-picture"
+                allowfullscreen
+                loading="lazy">
+        </iframe>
+    }
+</div>
+
+@code {
+    [Microsoft.AspNetCore.Components.Parameter]
+    [Microsoft.AspNetCore.Components.EditorRequired]
+    public string Url { get; set; } = string.Empty;
+
+    [Microsoft.AspNetCore.Components.Parameter]
+    public string Title { get; set; } = "درس آموزشی";
+
+    private string PlayerId { get; } = $"course-video-{Guid.NewGuid():N}";
+
+    private bool IsDirectVideo
+    {
+        get
+        {
+            if (!Uri.TryCreate(Url, UriKind.Absolute, out var uri))
+                return false;
+
+            var extension = System.IO.Path.GetExtension(uri.AbsolutePath);
+            return new[] { ".mp4", ".webm", ".ogg", ".ogv", ".m4v" }
+                .Contains(extension, StringComparer.OrdinalIgnoreCase);
+        }
+    }
+
+    private string VideoMimeType
+    {
+        get
+        {
+            var extension = Uri.TryCreate(Url, UriKind.Absolute, out var uri)
+                ? System.IO.Path.GetExtension(uri.AbsolutePath).ToLowerInvariant()
+                : string.Empty;
+
+            return extension switch
+            {
+                ".webm" => "video/webm",
+                ".ogg" or ".ogv" => "video/ogg",
+                _ => "video/mp4"
+            };
+        }
+    }
+
+    private Task Seek(int seconds) =>
+        JS.InvokeVoidAsync("coursePlayer.seek", PlayerId, seconds).AsTask();
+
+    private Task ToggleMute() =>
+        JS.InvokeVoidAsync("coursePlayer.toggleMute", PlayerId).AsTask();
+
+    private Task Fullscreen() =>
+        JS.InvokeVoidAsync("coursePlayer.fullscreen", PlayerId).AsTask();
+
+    private Task PictureInPicture() =>
+        JS.InvokeVoidAsync("coursePlayer.pip", PlayerId).AsTask();
+
+    private Task ChangeSpeed(Microsoft.AspNetCore.Components.ChangeEventArgs e) =>
+        JS.InvokeVoidAsync("coursePlayer.setSpeed", PlayerId, e.Value?.ToString() ?? "1").AsTask();
+}

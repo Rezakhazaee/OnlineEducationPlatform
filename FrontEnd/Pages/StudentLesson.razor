@@ -119,28 +119,7 @@
             {
                 <div style="margin-top:25px;">
 
-                    <iframe
-                        src="@Lesson.ContentUrl"
-                        title="@Lesson.Title"
-                        width="100%"
-                        height="500"
-                        style="border:0; border-radius:12px;"
-                        allowfullscreen>
-                    </iframe>
-
-                    <div style="margin-top:12px;">
-
-                        <a
-                            href="@Lesson.ContentUrl"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="student-course-details-btn">
-
-                            باز کردن ویدئو در صفحه جدید
-
-                        </a>
-
-                    </div>
+                    <CourseMediaPlayer Url="@Lesson.ContentUrl" Title="@Lesson.Title" />
 
                 </div>
             }
