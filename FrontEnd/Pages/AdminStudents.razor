@@ -1,0 +1,888 @@
+@page "/admin/students"
+
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Forms
+@using FrontEnd.Services
+
+@inject AuthService Auth
+
+<PageTitle>مدیریت دانشجویان | آموزش‌یار</PageTitle>
+
+<div class="admin-page admin-students-page">
+    <aside class="admin-sidebar">
+        <div class="admin-brand">
+            <div class="admin-brand-mark">آ</div>
+            <div>
+                <strong>آموزش‌یار</strong>
+                <small>پنل مدیریت</small>
+            </div>
+        </div>
+
+        <nav class="admin-menu">
+            <a href="/admin"><span>⌂</span> داشبورد</a>
+            <a href="/admin/courses"><span>▣</span> دوره‌ها</a>
+            <a href="/admin/users"><span>♙</span> کاربران</a>
+            <a href="/admin/students" class="active"><span>♧</span> دانشجویان</a>
+            <a href="/admin/enrollments"><span>✓</span> ثبت‌نام‌ها</a>
+            <a href="/admin/payments"><span>₿</span> پرداخت‌ها</a>
+            <a href="/admin/partner-organizations"><span>♧</span> سازمان‌های طرف قرارداد</a>
+            <a href="/admin/organizations"><span>◈</span> تنظیمات سامانه</a>
+            <a href="/admin/reports"><span>▤</span> گزارش‌ها</a>
+            <a href="/admin/audit-logs"><span>◉</span> گزارش ممیزی</a>
+        </nav>
+
+        <div class="admin-sidebar-bottom">
+            <a href="/">← بازگشت به سایت</a>
+        </div>
+    </aside>
+
+    <main class="admin-main">
+        <header class="admin-topbar">
+            <div>
+                <span class="admin-label">مدیریت سامانه</span>
+                <h1>مدیریت دانشجویان</h1>
+            </div>
+            <div class="admin-user">
+                <div class="admin-avatar">د</div>
+                <div>
+                    <strong>@(Auth.FullName ?? "مدیر سیستم")</strong>
+                    <small>@(Auth.Role ?? "Administrator")</small>
+                </div>
+            </div>
+        </header>
+
+        <section class="students-content">
+            <div class="students-page-header">
+                <div>
+                    <h2>فهرست دانشجویان</h2>
+                    <p>مدیریت پرونده‌های دانشجویی مستقل از حساب‌های کاربری</p>
+                </div>
+                @if (CanCreate)
+                {
+                    <button type="button" class="students-btn students-btn-primary" @onclick="OpenCreateForm">
+                        ＋ افزودن دانشجو
+                    </button>
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                <div class="students-alert" role="alert">
+                    @ErrorMessage
+                </div>
+            }
+
+            @if (ShowCreateForm)
+            {
+                <div class="students-form-card">
+                    <div class="students-form-header">
+                        <h3>ثبت پرونده دانشجوی جدید</h3>
+                        <button type="button" class="students-btn students-btn-secondary" @onclick="CloseCreateForm">بستن</button>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(FormMessage))
+                    {
+                        <div class="students-form-message" role="alert">
+                            @FormMessage
+                        </div>
+                    }
+
+                    <EditForm Model="NewStudent" OnSubmit="CreateStudent">
+                        <div class="students-form-grid">
+                            <label>
+                                <span>حساب کاربری موجود (اختیاری)</span>
+                                <InputSelect @bind-Value="NewStudent.UserId" class="form-select">
+                                    <option value="">بدون اتصال به حساب کاربری</option>
+                                    @foreach (var user in AvailableUsers)
+                                    {
+                                        <option value="@user.Id">@user.FullName - @user.Username</option>
+                                    }
+                                </InputSelect>
+                            </label>
+
+                            <label>
+                                <span>نام *</span>
+                                <InputText @bind-Value="NewStudent.FirstName" class="form-control" />
+                            </label>
+                            <label>
+                                <span>نام خانوادگی *</span>
+                                <InputText @bind-Value="NewStudent.LastName" class="form-control" />
+                            </label>
+                            <label>
+                                <span>کد ملی *</span>
+                                <InputText @bind-Value="NewStudent.NationalCode" class="form-control" maxlength="10" />
+                            </label>
+                            <label>
+                                <span>شماره موبایل *</span>
+                                <InputText @bind-Value="NewStudent.Mobile" class="form-control" maxlength="11" />
+                            </label>
+                            <label>
+                                <span>تاریخ تولد</span>
+                                <InputDate @bind-Value="NewStudent.BirthDate" class="form-control" />
+                            </label>
+                            <label>
+                                <span>نام سرپرست</span>
+                                <InputText @bind-Value="NewStudent.GuardianName" class="form-control" />
+                            </label>
+                            <label>
+                                <span>موبایل سرپرست</span>
+                                <InputText @bind-Value="NewStudent.GuardianMobile" class="form-control" maxlength="11" />
+                            </label>
+                            <label>
+                                <span>سازمان همکار</span>
+                                <InputSelect @bind-Value="NewStudent.PartnerOrganizationId" class="form-select">
+                                    <option value="">بدون سازمان همکار</option>
+                                    @foreach (var organization in PartnerOrganizations)
+                                    {
+                                        <option value="@organization.Id">@organization.Name</option>
+                                    }
+                                </InputSelect>
+                            </label>
+
+                            @if (CanAssign)
+                            {
+                                <label>
+                                    <span>بازاریاب مسئول</span>
+                                    <InputSelect @bind-Value="NewStudent.MarketingUserId" class="form-select">
+                                        <option value="">بدون بازاریاب</option>
+                                        @foreach (var marketer in Marketers)
+                                        {
+                                            <option value="@marketer.Id">@marketer.FullName</option>
+                                        }
+                                    </InputSelect>
+                                </label>
+                                <label>
+                                    <span>کارشناس پشتیبانی</span>
+                                    <InputSelect @bind-Value="NewStudent.SupportUserId" class="form-select">
+                                        <option value="">بدون پشتیبان</option>
+                                        @foreach (var support in Supports)
+                                        {
+                                            <option value="@support.Id">@support.FullName</option>
+                                        }
+                                    </InputSelect>
+                                </label>
+                            }
+
+                            <label class="students-address-field">
+                                <span>نشانی</span>
+                                <InputText @bind-Value="NewStudent.Address" class="form-control" />
+                            </label>
+                        </div>
+
+                        <div class="students-form-actions">
+                            <button type="submit" class="students-btn students-btn-primary" disabled="@IsSaving">
+                                @(IsSaving ? "در حال ثبت..." : "ثبت دانشجو")
+                            </button>
+                            <button type="button" class="students-btn students-btn-secondary" @onclick="CloseCreateForm">انصراف</button>
+                        </div>
+                    </EditForm>
+                </div>
+            }
+
+            @if (ShowEditForm)
+            {
+                <div class="students-form-card">
+                    <div class="students-form-header">
+                        <h3>ویرایش پرونده دانشجو - شناسه @EditingStudentId</h3>
+                        <button type="button" class="students-btn students-btn-secondary" @onclick="CloseEditForm">بستن</button>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(EditFormMessage))
+                    {
+                        <div class="students-form-message" role="alert">@EditFormMessage</div>
+                    }
+
+                    <EditForm Model="EditingStudent" OnSubmit="UpdateStudent">
+                        <div class="students-form-grid">
+                            <label>
+                                <span>نام *</span>
+                                <InputText @bind-Value="EditingStudent.FirstName" class="form-control" />
+                            </label>
+                            <label>
+                                <span>نام خانوادگی *</span>
+                                <InputText @bind-Value="EditingStudent.LastName" class="form-control" />
+                            </label>
+                            <label>
+                                <span>کد ملی *</span>
+                                <InputText @bind-Value="EditingStudent.NationalCode" class="form-control" maxlength="10" />
+                            </label>
+                            <label>
+                                <span>موبایل *</span>
+                                <InputText @bind-Value="EditingStudent.Mobile" class="form-control" maxlength="11" />
+                            </label>
+                            <label>
+                                <span>تاریخ تولد</span>
+                                <InputDate @bind-Value="EditingStudent.BirthDate" class="form-control" />
+                            </label>
+                            <label>
+                                <span>نام سرپرست</span>
+                                <InputText @bind-Value="EditingStudent.GuardianName" class="form-control" />
+                            </label>
+                            <label>
+                                <span>موبایل سرپرست</span>
+                                <InputText @bind-Value="EditingStudent.GuardianMobile" class="form-control" maxlength="11" />
+                            </label>
+                            <label>
+                                <span>سازمان همکار</span>
+                                <InputSelect @bind-Value="EditingStudent.PartnerOrganizationId" class="form-select">
+                                    <option value="">بدون سازمان همکار</option>
+                                    @foreach (var organization in PartnerOrganizations)
+                                    {
+                                        <option value="@organization.Id">@organization.Name</option>
+                                    }
+                                </InputSelect>
+                            </label>
+
+                            @if (CanAssign)
+                            {
+                                <label>
+                                    <span>بازاریاب مسئول</span>
+                                    <InputSelect @bind-Value="EditingStudent.MarketingUserId" class="form-select">
+                                        <option value="">بدون بازاریاب</option>
+                                        @foreach (var marketer in Marketers)
+                                        {
+                                            <option value="@marketer.Id">@marketer.FullName</option>
+                                        }
+                                    </InputSelect>
+                                </label>
+                                <label>
+                                    <span>کارشناس پشتیبانی</span>
+                                    <InputSelect @bind-Value="EditingStudent.SupportUserId" class="form-select">
+                                        <option value="">بدون پشتیبان</option>
+                                        @foreach (var support in Supports)
+                                        {
+                                            <option value="@support.Id">@support.FullName</option>
+                                        }
+                                    </InputSelect>
+                                </label>
+                            }
+
+                            <label class="students-address-field">
+                                <span>نشانی</span>
+                                <InputText @bind-Value="EditingStudent.Address" class="form-control" />
+                            </label>
+                        </div>
+
+                        <div class="students-form-actions">
+                            <button type="submit" class="students-btn students-btn-primary" disabled="@IsUpdating">
+                                @(IsUpdating ? "در حال ذخیره..." : "ذخیره تغییرات")
+                            </button>
+                            <button type="button" class="students-btn students-btn-secondary" @onclick="CloseEditForm">انصراف</button>
+                        </div>
+                    </EditForm>
+                </div>
+            }
+
+            <div class="students-filter-panel students-advanced-filter-panel">
+                <div class="students-filter-grid">
+                    <label>
+                        <span>جستجوی عمومی</span>
+                        <input class="form-control" placeholder="نام، نام خانوادگی، کد ملی یا موبایل"
+                               @bind="SearchText" @bind:event="oninput" />
+                    </label>
+                    <label>
+                        <span>نام</span>
+                        <input class="form-control" @bind="FilterFirstName" @bind:event="oninput" placeholder="نام دانشجو" />
+                    </label>
+                    <label>
+                        <span>نام خانوادگی</span>
+                        <input class="form-control" @bind="FilterLastName" @bind:event="oninput" placeholder="نام خانوادگی" />
+                    </label>
+                    <label>
+                        <span>کد ملی</span>
+                        <input class="form-control" @bind="FilterNationalCode" @bind:event="oninput" placeholder="۱۰ رقم کد ملی" />
+                    </label>
+                    <label>
+                        <span>موبایل</span>
+                        <input class="form-control" @bind="FilterMobile" @bind:event="oninput" placeholder="شماره موبایل" />
+                    </label>
+                    <label>
+                        <span>سازمان همکار</span>
+                        <select class="form-select" @bind="FilterPartnerOrganizationId">
+                            <option value="">همه سازمان‌ها</option>
+                            <option value="none">بدون سازمان همکار</option>
+                            @foreach (var organization in PartnerOrganizations)
+                            {
+                                <option value="@organization.Id">@organization.Name</option>
+                            }
+                        </select>
+                    </label>
+
+                    @if (CanAssign)
+                    {
+                        <label>
+                            <span>بازاریاب</span>
+                            <select class="form-select" @bind="FilterMarketerId">
+                                <option value="">همه بازاریاب‌ها</option>
+                                <option value="none">بدون بازاریاب</option>
+                                @foreach (var marketer in Marketers)
+                                {
+                                    <option value="@marketer.Id">@marketer.FullName</option>
+                                }
+                            </select>
+                        </label>
+                        <label>
+                            <span>کارشناس پشتیبانی</span>
+                            <select class="form-select" @bind="FilterSupportId">
+                                <option value="">همه کارشناسان</option>
+                                <option value="none">بدون پشتیبان</option>
+                                @foreach (var support in Supports)
+                                {
+                                    <option value="@support.Id">@support.FullName</option>
+                                }
+                            </select>
+                        </label>
+                    }
+
+                    <label>
+                        <span>وضعیت حساب کاربری</span>
+                        <select class="form-select" @bind="FilterAccountStatus">
+                            <option value="">همه دانشجویان</option>
+                            <option value="linked">دارای حساب متصل</option>
+                            <option value="unlinked">بدون حساب متصل</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>ثبت پرونده از تاریخ</span>
+                        <input type="date" class="form-control" value="@FilterCreatedFrom" @onchange="@(e => FilterCreatedFrom = e.Value?.ToString() ?? string.Empty)" />
+                    </label>
+                    <label>
+                        <span>ثبت پرونده تا تاریخ</span>
+                        <input type="date" class="form-control" value="@FilterCreatedTo" @onchange="@(e => FilterCreatedTo = e.Value?.ToString() ?? string.Empty)" />
+                    </label>
+                    <label>
+                        <span>ترتیب نمایش</span>
+                        <select class="form-select" @bind="SortStudents">
+                            <option value="newest">جدیدترین</option>
+                            <option value="oldest">قدیمی‌ترین</option>
+                            <option value="name">نام و نام خانوادگی</option>
+                            <option value="id">شناسه دانشجو</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="students-filter-actions">
+                    <span class="students-count">نتیجه: @FilteredStudents.Count از @Students.Count دانشجو</span>
+                    <button type="button" class="students-btn students-btn-secondary" @onclick="ResetStudentFilters">
+                        پاک‌کردن فیلترها
+                    </button>
+                    <button type="button" class="students-btn students-btn-secondary" @onclick="LoadStudents" disabled="@IsLoading">
+                        ↻ بروزرسانی فهرست
+                    </button>
+                </div>
+            </div>
+
+            @if (IsLoading)
+            {
+                <div class="students-state students-loading">در حال دریافت فهرست دانشجویان...</div>
+            }
+            else if (FilteredStudents.Count == 0)
+            {
+                <div class="students-state students-empty">
+                    دانشجویی برای نمایش پیدا نشد.
+                </div>
+            }
+            else
+            {
+                <div class="students-table-wrapper">
+                    <table class="table table-hover align-middle students-table">
+                        <thead>
+                            <tr>
+                                <th>ردیف</th>
+                                <th>نام و نام خانوادگی</th>
+                                <th>کد ملی</th>
+                                <th>موبایل</th>
+                                <th>سازمان همکار</th>
+                                <th>تاریخ ایجاد پرونده</th>
+                                <th>شناسه حساب</th>
+                                <th>عملیات</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var student in FilteredStudents)
+                            {
+                                <tr @key="student.Id">
+                                    <td>@student.Id</td>
+                                    <td>@student.FirstName @student.LastName</td>
+                                    <td>@student.NationalCode</td>
+                                    <td>@student.Mobile</td>
+                                    <td>@(student.PartnerOrganizationName ?? "—")</td>
+                                    <td>@student.CreatedDate.ToLocalTime().ToString("yyyy/MM/dd")</td>
+                                    <td>@(student.UserId?.ToString() ?? "—")</td>
+                                    <td>
+                                        <button type="button" class="students-btn students-btn-secondary"
+                                                @onclick="() => OpenEditForm(student)">
+                                            ✎ ویرایش
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </main>
+</div>
+
+@code {
+    private List<StudentModel> Students { get; set; } = new();
+    private List<AvailableUserModel> AvailableUsers { get; set; } = new();
+    private List<AssignmentUserModel> Marketers { get; set; } = new();
+    private List<AssignmentUserModel> Supports { get; set; } = new();
+    private List<PartnerOrganizationModel> PartnerOrganizations { get; set; } = new();
+
+    private StudentCreateModel NewStudent { get; set; } = new();
+    private StudentEditModel EditingStudent { get; set; } = new();
+    private int? EditingStudentId { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private bool IsSaving { get; set; }
+    private bool IsUpdating { get; set; }
+    private bool ShowCreateForm { get; set; }
+    private bool ShowEditForm { get; set; }
+    private string SearchText { get; set; } = "";
+    private string FilterFirstName { get; set; } = "";
+    private string FilterLastName { get; set; } = "";
+    private string FilterNationalCode { get; set; } = "";
+    private string FilterMobile { get; set; } = "";
+    private string FilterPartnerOrganizationId { get; set; } = "";
+    private string FilterMarketerId { get; set; } = "";
+    private string FilterSupportId { get; set; } = "";
+    private string FilterAccountStatus { get; set; } = "";
+    private string FilterCreatedFrom { get; set; } = "";
+    private string FilterCreatedTo { get; set; } = "";
+    private string SortStudents { get; set; } = "newest";
+    private string? EditFormMessage { get; set; }
+    private string? ErrorMessage { get; set; }
+    private string? FormMessage { get; set; }
+
+    private bool CanCreate => Auth.Role is "Admin" or "EducationStaff" or "Marketer";
+    private bool CanAssign => Auth.Role is "Admin" or "EducationStaff";
+
+    private List<StudentModel> FilteredStudents
+    {
+        get
+        {
+            IEnumerable<StudentModel> result = Students;
+
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                var term = SearchText.Trim();
+                result = result.Where(s =>
+                    ContainsText($"{s.FirstName} {s.LastName}", term)
+                    || ContainsText(s.NationalCode, term)
+                    || ContainsText(s.Mobile, term));
+            }
+
+            if (!string.IsNullOrWhiteSpace(FilterFirstName))
+                result = result.Where(s => ContainsText(s.FirstName, FilterFirstName));
+
+            if (!string.IsNullOrWhiteSpace(FilterLastName))
+                result = result.Where(s => ContainsText(s.LastName, FilterLastName));
+
+            if (!string.IsNullOrWhiteSpace(FilterNationalCode))
+                result = result.Where(s => ContainsText(s.NationalCode, FilterNationalCode));
+
+            if (!string.IsNullOrWhiteSpace(FilterMobile))
+                result = result.Where(s => ContainsText(s.Mobile, FilterMobile));
+
+            if (FilterPartnerOrganizationId == "none")
+                result = result.Where(s => s.PartnerOrganizationId == null);
+            else if (int.TryParse(FilterPartnerOrganizationId, out var organizationId))
+                result = result.Where(s => s.PartnerOrganizationId == organizationId);
+
+            if (CanAssign)
+            {
+                if (FilterMarketerId == "none")
+                    result = result.Where(s => s.MarketingUserId == null);
+                else if (int.TryParse(FilterMarketerId, out var marketerId))
+                    result = result.Where(s => s.MarketingUserId == marketerId);
+
+                if (FilterSupportId == "none")
+                    result = result.Where(s => s.SupportUserId == null);
+                else if (int.TryParse(FilterSupportId, out var supportId))
+                    result = result.Where(s => s.SupportUserId == supportId);
+            }
+
+            if (FilterAccountStatus == "linked")
+                result = result.Where(s => s.UserId.HasValue);
+            else if (FilterAccountStatus == "unlinked")
+                result = result.Where(s => !s.UserId.HasValue);
+
+            if (DateTime.TryParse(FilterCreatedFrom, out var fromDate))
+                result = result.Where(s => s.CreatedDate.Date >= fromDate.Date);
+
+            if (DateTime.TryParse(FilterCreatedTo, out var toDate))
+                result = result.Where(s => s.CreatedDate.Date <= toDate.Date);
+
+            return SortStudents switch
+            {
+                "oldest" => result.OrderBy(s => s.CreatedDate).ToList(),
+                "name" => result.OrderBy(s => s.FirstName).ThenBy(s => s.LastName).ToList(),
+                "id" => result.OrderBy(s => s.Id).ToList(),
+                _ => result.OrderByDescending(s => s.CreatedDate).ToList()
+            };
+        }
+    }
+
+    private static bool ContainsText(string? value, string? search) =>
+        !string.IsNullOrWhiteSpace(value)
+        && !string.IsNullOrWhiteSpace(search)
+        && value.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStudentFilterOptions();
+        await LoadStudents();
+    }
+
+    private async Task LoadStudentFilterOptions()
+    {
+        var client = Auth.CreateAuthenticatedClient();
+
+        try
+        {
+            PartnerOrganizations = await client.GetFromJsonAsync<List<PartnerOrganizationModel>>(
+                "api/Students/active-partner-organizations") ?? new();
+        }
+        catch
+        {
+            PartnerOrganizations = new();
+        }
+
+        if (CanAssign)
+        {
+            try
+            {
+                var assignments = await client.GetFromJsonAsync<AssignmentUsersResponse>(
+                    "api/Students/assignment-users");
+                Marketers = assignments?.Marketers ?? new();
+                Supports = assignments?.Supports ?? new();
+            }
+            catch
+            {
+                Marketers = new();
+                Supports = new();
+            }
+        }
+    }
+
+    private void ResetStudentFilters()
+    {
+        SearchText = "";
+        FilterFirstName = "";
+        FilterLastName = "";
+        FilterNationalCode = "";
+        FilterMobile = "";
+        FilterPartnerOrganizationId = "";
+        FilterMarketerId = "";
+        FilterSupportId = "";
+        FilterAccountStatus = "";
+        FilterCreatedFrom = "";
+        FilterCreatedTo = "";
+        SortStudents = "newest";
+    }
+
+    private async Task OpenEditForm(StudentModel student)
+    {
+        await LoadStudentFilterOptions();
+
+        EditingStudentId = student.Id;
+        EditingStudent = new StudentEditModel
+        {
+            FirstName = student.FirstName,
+            LastName = student.LastName,
+            NationalCode = student.NationalCode,
+            BirthDate = student.BirthDate,
+            Mobile = student.Mobile,
+            Address = student.Address,
+            GuardianName = student.GuardianName,
+            GuardianMobile = student.GuardianMobile,
+            PartnerOrganizationId = student.PartnerOrganizationId,
+            MarketingUserId = student.MarketingUserId,
+            SupportUserId = student.SupportUserId
+        };
+
+        EditFormMessage = null;
+        ShowCreateForm = false;
+        ShowEditForm = true;
+    }
+
+    private void CloseEditForm()
+    {
+        ShowEditForm = false;
+        EditingStudentId = null;
+        EditFormMessage = null;
+    }
+
+    private async Task UpdateStudent(EditContext editContext)
+    {
+        EditFormMessage = null;
+
+        if (!EditingStudentId.HasValue)
+        {
+            EditFormMessage = "شناسه دانشجو معتبر نیست.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(EditingStudent.FirstName)
+            || EditingStudent.FirstName.Trim().Length < 2
+            || string.IsNullOrWhiteSpace(EditingStudent.LastName)
+            || EditingStudent.LastName.Trim().Length < 2)
+        {
+            EditFormMessage = "نام و نام خانوادگی باید حداقل دو کاراکتر داشته باشند.";
+            return;
+        }
+
+        if (EditingStudent.NationalCode?.Length != 10
+            || !EditingStudent.NationalCode.All(char.IsDigit))
+        {
+            EditFormMessage = "کد ملی باید دقیقاً ۱۰ رقم باشد.";
+            return;
+        }
+
+        if (EditingStudent.Mobile?.Length != 11
+            || !EditingStudent.Mobile.StartsWith("09")
+            || !EditingStudent.Mobile.All(char.IsDigit))
+        {
+            EditFormMessage = "شماره موبایل باید با 09 شروع شود و ۱۱ رقم باشد.";
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(EditingStudent.GuardianMobile)
+            && (EditingStudent.GuardianMobile.Length != 11
+                || !EditingStudent.GuardianMobile.StartsWith("09")
+                || !EditingStudent.GuardianMobile.All(char.IsDigit)))
+        {
+            EditFormMessage = "شماره موبایل سرپرست باید با 09 شروع شود و ۱۱ رقم باشد.";
+            return;
+        }
+
+        IsUpdating = true;
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+            using var response = await client.PutAsJsonAsync(
+                $"api/Students/{EditingStudentId.Value}", EditingStudent);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detail = await response.Content.ReadAsStringAsync();
+                EditFormMessage = "ذخیره تغییرات انجام نشد. " + detail;
+                return;
+            }
+
+            ShowEditForm = false;
+            EditingStudentId = null;
+            EditFormMessage = null;
+            await LoadStudents();
+            ErrorMessage = "تغییرات پرونده دانشجو با موفقیت ذخیره شد.";
+        }
+        catch
+        {
+            EditFormMessage = "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            IsUpdating = false;
+        }
+    }
+
+    private async Task LoadStudents()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+            Students = await client.GetFromJsonAsync<List<StudentModel>>("api/Students") ?? new();
+        }
+        catch
+        {
+            ErrorMessage = "دریافت فهرست دانشجویان انجام نشد. ورود مدیر و اجرای Backend را بررسی کنید.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task OpenCreateForm()
+    {
+        FormMessage = null;
+        NewStudent = new StudentCreateModel();
+        ShowCreateForm = true;
+
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+
+            AvailableUsers = await client.GetFromJsonAsync<List<AvailableUserModel>>(
+                "api/Students/available-users") ?? new();
+
+            var organizationsTask = client.GetFromJsonAsync<List<PartnerOrganizationModel>>(
+                "api/Students/active-partner-organizations");
+
+            PartnerOrganizations = await organizationsTask ?? new();
+
+            if (CanAssign)
+            {
+                var assignments = await client.GetFromJsonAsync<AssignmentUsersResponse>(
+                    "api/Students/assignment-users");
+                Marketers = assignments?.Marketers ?? new();
+                Supports = assignments?.Supports ?? new();
+            }
+        }
+        catch
+        {
+            FormMessage = "برخی اطلاعات فرم دریافت نشد. سطح دسترسی و اتصال Backend را بررسی کنید.";
+        }
+    }
+
+    private void CloseCreateForm()
+    {
+        ShowCreateForm = false;
+        FormMessage = null;
+    }
+
+    private async Task CreateStudent(EditContext editContext)
+    {
+        FormMessage = null;
+
+        if (string.IsNullOrWhiteSpace(NewStudent.FirstName)
+            || NewStudent.FirstName.Trim().Length < 2
+            || string.IsNullOrWhiteSpace(NewStudent.LastName)
+            || NewStudent.LastName.Trim().Length < 2)
+        {
+            FormMessage = "نام و نام خانوادگی باید حداقل دو کاراکتر داشته باشند.";
+            return;
+        }
+
+        if (NewStudent.NationalCode?.Length != 10
+            || !NewStudent.NationalCode.All(char.IsDigit))
+        {
+            FormMessage = "کد ملی باید دقیقاً ۱۰ رقم باشد.";
+            return;
+        }
+
+        if (NewStudent.Mobile?.Length != 11
+            || !NewStudent.Mobile.StartsWith("09")
+            || !NewStudent.Mobile.All(char.IsDigit))
+        {
+            FormMessage = "شماره موبایل باید با 09 شروع شود و ۱۱ رقم باشد.";
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(NewStudent.GuardianMobile)
+            && (NewStudent.GuardianMobile.Length != 11
+                || !NewStudent.GuardianMobile.StartsWith("09")
+                || !NewStudent.GuardianMobile.All(char.IsDigit)))
+        {
+            FormMessage = "شماره موبایل سرپرست باید با 09 شروع شود و ۱۱ رقم باشد.";
+            return;
+        }
+
+        IsSaving = true;
+        try
+        {
+            var client = Auth.CreateAuthenticatedClient();
+            using var response = await client.PostAsJsonAsync("api/Students", NewStudent);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detail = await response.Content.ReadAsStringAsync();
+                FormMessage = "ثبت دانشجو انجام نشد. " + detail;
+                return;
+            }
+
+            ShowCreateForm = false;
+            NewStudent = new StudentCreateModel();
+            await LoadStudents();
+        }
+        catch
+        {
+            FormMessage = "ارتباط با سرور برقرار نشد.";
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+    public class StudentModel
+    {
+        public int Id { get; set; }
+        public int? UserId { get; set; }
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
+        public string NationalCode { get; set; } = "";
+        public DateTime? BirthDate { get; set; }
+        public string Mobile { get; set; } = "";
+        public string? Address { get; set; }
+        public string? GuardianName { get; set; }
+        public string? GuardianMobile { get; set; }
+        public int? MarketingUserId { get; set; }
+        public int? SupportUserId { get; set; }
+        public int? PartnerOrganizationId { get; set; }
+        public string? PartnerOrganizationName { get; set; }
+        public DateTime CreatedDate { get; set; }
+    }
+
+    public class StudentCreateModel
+    {
+        public int? UserId { get; set; }
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
+        public string NationalCode { get; set; } = "";
+        public DateTime? BirthDate { get; set; }
+        public string Mobile { get; set; } = "";
+        public string? Address { get; set; }
+        public string? GuardianName { get; set; }
+        public string? GuardianMobile { get; set; }
+        public int? MarketingUserId { get; set; }
+        public int? SupportUserId { get; set; }
+        public int? PartnerOrganizationId { get; set; }
+    }
+
+    public class StudentEditModel
+    {
+        public string FirstName { get; set; } = "";
+        public string LastName { get; set; } = "";
+        public string NationalCode { get; set; } = "";
+        public DateTime? BirthDate { get; set; }
+        public string Mobile { get; set; } = "";
+        public string? Address { get; set; }
+        public string? GuardianName { get; set; }
+        public string? GuardianMobile { get; set; }
+        public int? PartnerOrganizationId { get; set; }
+        public int? MarketingUserId { get; set; }
+        public int? SupportUserId { get; set; }
+    }
+    public class AvailableUserModel
+    {
+        public int Id { get; set; }
+        public string? FullName { get; set; }
+        public string? Username { get; set; }
+        public string? Mobile { get; set; }
+    }
+
+    public class AssignmentUserModel
+    {
+        public int Id { get; set; }
+        public string? FullName { get; set; }
+    }
+
+    public class PartnerOrganizationModel
+    {
+        public int Id { get; set; }
+        public string? Name { get; set; }
+    }
+
+    public class AssignmentUsersResponse
+    {
+        public List<AssignmentUserModel> Marketers { get; set; } = new();
+        public List<AssignmentUserModel> Supports { get; set; } = new();
+    }
+}

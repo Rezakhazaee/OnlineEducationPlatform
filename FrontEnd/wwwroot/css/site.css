@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap');
 /* ================================
    Site Theme
    ================================ */
@@ -5679,5 +5679,2524 @@ textarea {
 
     .admin-users-page .users-modal-footer button {
         width: 100%;
+    }
+}
+
+/* ADMIN-USERS-VISUAL-FINAL-20261108 */
+.admin-users-page {
+    --users-primary: #397f9b;
+    --users-primary-light: #e5f2f7;
+    --users-dark: #203b49;
+    --users-accent: #65b5bd;
+    --users-border: #dce9ee;
+    --users-shadow: 0 12px 32px rgba(35, 73, 91, .09);
+}
+
+.admin-users-page .admin-main {
+    background:
+        radial-gradient(ellipse at 5% 0%, rgba(101,181,189,.10), transparent 35%),
+        linear-gradient(145deg, #f3f8fa 0%, #f8fafc 55%, #eef5f8 100%);
+}
+
+.admin-users-page .admin-content-card {
+    padding: 26px;
+    border: 1px solid rgba(86,143,168,.18);
+    border-radius: 22px;
+    background: linear-gradient(145deg, #ffffff 0%, #fafdfe 100%);
+    box-shadow: var(--users-shadow);
+}
+
+.admin-users-page .admin-card-header {
+    gap: 18px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--users-border);
+}
+
+.admin-users-page .admin-card-header h2 {
+    color: var(--users-dark);
+    font-weight: 850;
+    letter-spacing: -.35px;
+}
+
+.admin-users-page .admin-card-header span {
+    color: var(--users-primary);
+    font-weight: 800;
+}
+
+.admin-users-page .users-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 7px 14px;
+    border: 1px solid #d5e8ef;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #eaf5f8, #f5fafb);
+    color: #315d70;
+    font-weight: 800;
+}
+
+.admin-users-page .admin-primary-btn,
+.admin-users-page .admin-outline-btn {
+    min-height: 42px;
+    padding: 10px 17px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-weight: 750;
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+    cursor: pointer;
+}
+
+.admin-users-page .admin-primary-btn {
+    border: 1px solid #397f9b;
+    background: linear-gradient(125deg, #397f9b 0%, #326b86 55%, #28566d 100%);
+    color: #fff;
+    box-shadow: 0 5px 13px rgba(48,112,139,.22);
+}
+
+.admin-users-page .admin-primary-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: linear-gradient(125deg, #286c88, #244f68);
+    box-shadow: 0 9px 19px rgba(48,112,139,.28);
+}
+
+.admin-users-page .admin-outline-btn {
+    border: 1px solid #cbdfe7;
+    background: linear-gradient(135deg, #fff, #f2f8fa);
+    color: #315c70;
+    box-shadow: 0 3px 9px rgba(38,75,91,.06);
+}
+
+.admin-users-page .admin-outline-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-color: #78afc1;
+    background: linear-gradient(135deg, #eaf5f8, #fff);
+    box-shadow: 0 7px 15px rgba(48,112,139,.13);
+}
+
+.admin-users-page button:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+    transform: none;
+    box-shadow: none;
+}
+
+.admin-users-page button:focus-visible {
+    outline: 3px solid rgba(72,151,179,.35);
+    outline-offset: 3px;
+}
+
+.admin-users-page .users-filter-panel {
+    margin: 23px 0;
+    padding: 22px;
+    border: 1px solid #dce9ee;
+    border-radius: 19px;
+    background:
+        radial-gradient(circle at 100% 0%, rgba(101,181,189,.11), transparent 38%),
+        linear-gradient(135deg, #f1f7f9, #fff 70%);
+    box-shadow: 0 7px 22px rgba(38,73,89,.055);
+}
+
+.admin-users-page .users-search-box .admin-input,
+.admin-users-page .users-filter-control .admin-input {
+    min-height: 47px;
+    border: 1px solid #d3e2e9;
+    border-radius: 12px;
+    background: #fff;
+    color: #263d4a;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.admin-users-page .users-search-box .admin-input:focus,
+.admin-users-page .users-filter-control .admin-input:focus {
+    border-color: #4c94ae;
+    box-shadow: 0 0 0 4px rgba(76,148,174,.12);
+}
+
+.admin-users-page .users-filter-control label {
+    color: #34596b;
+    font-weight: 800;
+}
+
+.admin-users-page .users-table-wrapper {
+    margin-top: 22px;
+    border: 1px solid #dce8ed;
+    border-radius: 17px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(38,73,89,.065);
+}
+
+.admin-users-page .users-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.admin-users-page .users-table thead th {
+    padding: 17px 14px;
+    background: linear-gradient(120deg, #e6f1f5, #f1f7f9);
+    color: #294d5e;
+    font-size: 13px;
+    font-weight: 850;
+    border-bottom: 1px solid #d8e7ed;
+}
+
+.admin-users-page .users-table tbody td {
+    padding: 15px 14px;
+    color: #405765;
+    border-bottom: 1px solid #edf2f5;
+    transition: background .18s ease;
+}
+
+.admin-users-page .users-table tbody tr:nth-child(even) {
+    background: #f9fbfc;
+}
+
+.admin-users-page .users-table tbody tr:hover {
+    background: #edf6f9;
+}
+
+.admin-users-page .users-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.admin-users-page .user-role,
+.admin-users-page .user-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 29px;
+    padding: 5px 11px;
+    border: 1px solid transparent;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.admin-users-page .user-role.admin {
+    color: #7652a1;
+    background: #f2eafd;
+    border-color: #e4d5f7;
+}
+
+.admin-users-page .user-role.student {
+    color: #287b70;
+    background: #e5f5ef;
+    border-color: #cdeadd;
+}
+
+.admin-users-page .user-role.instructor {
+    color: #986b24;
+    background: #fff4dc;
+    border-color: #f3e2b7;
+}
+
+.admin-users-page .user-role.support {
+    color: #347b9b;
+    background: #e6f3fa;
+    border-color: #d1e7f2;
+}
+
+.admin-users-page .user-status.active {
+    color: #23784d;
+    background: #e5f5eb;
+    border-color: #ccebd8;
+}
+
+.admin-users-page .user-status.inactive {
+    color: #a34d50;
+    background: #fff0ef;
+    border-color: #f4d7d5;
+}
+
+.admin-users-page .admin-user-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+    min-width: 250px;
+}
+
+.admin-users-page .admin-user-actions button {
+    min-height: 35px;
+    padding: 7px 11px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.admin-users-page .admin-user-actions button:hover {
+    transform: translateY(-2px);
+}
+
+.admin-users-page .users-modal-backdrop {
+    background: rgba(20,43,55,.68);
+    backdrop-filter: blur(11px);
+    -webkit-backdrop-filter: blur(11px);
+}
+
+.admin-users-page .users-edit-modal.users-management-modal {
+    padding: 0;
+    border: 1px solid rgba(255,255,255,.85);
+    border-radius: 24px;
+    background: linear-gradient(150deg, #fff 0%, #f5f9fb 100%);
+    box-shadow: 0 28px 90px rgba(12,35,48,.32);
+}
+
+.admin-users-page .users-modal-header {
+    padding: 25px 28px;
+    border-bottom: 1px solid #dce9ee;
+    background:
+        radial-gradient(circle at 95% 0%, rgba(101,181,189,.22), transparent 45%),
+        linear-gradient(120deg, #e8f3f7, #fff);
+}
+
+.admin-users-page .users-modal-header h2 {
+    color: #203f50;
+    font-size: 23px;
+    font-weight: 850;
+}
+
+.admin-users-page .users-modal-close {
+    border-radius: 12px;
+    transition: all .2s ease;
+}
+
+.admin-users-page .users-modal-close:hover {
+    transform: rotate(5deg);
+    background: #e7f3f7;
+    box-shadow: 0 5px 12px rgba(38,75,91,.1);
+}
+
+.admin-users-page .users-modal-body {
+    padding: 25px 28px;
+}
+
+.admin-users-page .users-modal-tabs {
+    display: flex;
+    gap: 9px;
+    padding: 7px;
+    border: 1px solid #e0ebef;
+    border-radius: 15px;
+    background: #edf4f7;
+}
+
+.admin-users-page .users-modal-tabs button {
+    flex: 1 1 auto;
+    min-height: 43px;
+    padding: 10px 15px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    background: transparent;
+    color: #456373;
+    font-family: inherit;
+    font-weight: 800;
+    transition: all .2s ease;
+}
+
+.admin-users-page .users-modal-tabs button:hover {
+    background: #fff;
+    color: #285d75;
+}
+
+.admin-users-page .users-modal-tabs button.active,
+.admin-users-page .users-modal-tabs button[aria-selected="true"] {
+    border-color: #397f9b;
+    background: linear-gradient(120deg, #397f9b, #285d75);
+    color: #fff;
+    box-shadow: 0 5px 13px rgba(48,112,139,.2);
+}
+
+.admin-users-page .users-tab-intro {
+    padding: 15px 18px;
+    border: 1px solid #d8e9ef;
+    border-radius: 14px;
+    background: linear-gradient(120deg, #eaf4f7, #f9fcfd);
+    color: #315568;
+}
+
+.admin-users-page .users-student-fields {
+    gap: 18px;
+}
+
+.admin-users-page .users-student-fields .admin-form-group {
+    padding: 13px;
+    border: 1px solid #e5edf1;
+    border-radius: 13px;
+    background: rgba(255,255,255,.78);
+}
+
+.admin-users-page .users-student-fields .admin-label,
+.admin-users-page .users-student-fields label {
+    color: #345568;
+    font-weight: 800;
+}
+
+.admin-users-page .users-edit-modal .admin-input,
+.admin-users-page .users-edit-modal input,
+.admin-users-page .users-edit-modal select,
+.admin-users-page .users-edit-modal textarea {
+    min-height: 45px;
+    border: 1px solid #d5e3e9;
+    border-radius: 11px;
+    background: #fff;
+}
+
+.admin-users-page .users-edit-modal input:focus,
+.admin-users-page .users-edit-modal select:focus,
+.admin-users-page .users-edit-modal textarea:focus {
+    border-color: #4b94ad;
+    box-shadow: 0 0 0 4px rgba(75,148,173,.12);
+}
+
+.admin-users-page .users-modal-footer {
+    padding: 19px 28px 24px;
+    border-top: 1px solid #e1ebef;
+    background: #f8fbfc;
+}
+
+.admin-users-page .users-success-message {
+    border: 1px solid #bfe5d0;
+    background: linear-gradient(120deg, #e7f7ed, #f5fcf7);
+    color: #236d46;
+    font-weight: 700;
+}
+
+.admin-users-page .admin-error {
+    padding: 12px 15px;
+    border: 1px solid #f0cccc;
+    border-radius: 11px;
+    background: #fff2f1;
+    color: #a33f42;
+    line-height: 1.8;
+}
+
+.admin-users-page .users-account-status {
+    border-color: #d9e8ee;
+    background: linear-gradient(120deg, #edf5f8, #fff);
+    border-radius: 15px;
+}
+
+.admin-users-page .users-protected-note {
+    border: 1px solid #e5e4d8;
+    background: #faf9f2;
+    color: #756b46;
+}
+
+.admin-users-page .users-no-results {
+    border-color: #c9dfe8;
+    background: linear-gradient(135deg, #f0f7fa, #fff);
+    color: #456373;
+}
+
+@media (max-width: 900px) {
+    .admin-users-page .admin-content-card {
+        padding: 19px;
+    }
+
+    .admin-users-page .users-filter-panel {
+        padding: 16px;
+    }
+
+    .admin-users-page .users-modal-tabs {
+        flex-wrap: wrap;
+    }
+
+    .admin-users-page .users-modal-tabs button {
+        flex: 1 1 calc(50% - 9px);
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-users-page .admin-content-card {
+        padding: 13px;
+        border-radius: 16px;
+    }
+
+    .admin-users-page .admin-card-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-users-page .users-header-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+    }
+
+    .admin-users-page .users-header-actions button {
+        width: 100%;
+        padding-inline: 8px;
+        font-size: 12px;
+    }
+
+    .admin-users-page .users-count {
+        grid-column: 1 / -1;
+    }
+
+    .admin-users-page .users-modal-backdrop {
+        padding: 5px;
+    }
+
+    .admin-users-page .users-edit-modal.users-management-modal {
+        width: 100%;
+        max-height: 96vh;
+        border-radius: 17px;
+    }
+
+    .admin-users-page .users-modal-header,
+    .admin-users-page .users-modal-body {
+        padding: 16px;
+    }
+
+    .admin-users-page .users-modal-footer {
+        padding: 14px 16px 18px;
+    }
+
+    .admin-users-page .users-modal-tabs button {
+        flex-basis: 100%;
+    }
+
+    .admin-users-page .users-student-fields {
+        grid-template-columns: minmax(0,1fr);
+    }
+
+    .admin-users-page .users-student-fields .full-width {
+        grid-column: auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-users-page *,
+    .admin-users-page *::before,
+    .admin-users-page *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+    }
+}
+/* END ADMIN-USERS-VISUAL-FINAL-20261108 */
+
+/* ADMIN ENROLLMENTS - MODAL DESIGN */
+.admin-enrollments-page .admin-content-card {
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.admin-enrollments-page .admin-card-header {
+    gap: 18px;
+    flex-wrap: wrap;
+    background: linear-gradient(135deg, #f3f8fb, #ffffff);
+}
+
+.admin-enrollments-page .enrollments-new-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 44px;
+    padding: 0 21px;
+    border: 1px solid #568fa8;
+    border-radius: 12px;
+    color: #fff;
+    background: linear-gradient(135deg, #6ba5bd, #365f73);
+    box-shadow: 0 7px 18px rgba(54, 95, 115, .2);
+    font-family: inherit;
+    font-size: .82rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.admin-enrollments-page .enrollments-new-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 23px rgba(54, 95, 115, .28);
+}
+
+.admin-enrollments-page .enrollments-new-btn span {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.admin-enrollments-page .enrollments-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+    background: rgba(18, 35, 46, .62);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    animation: enrollmentsBackdropEnter .2s ease both;
+}
+
+.admin-enrollments-page .enrollments-modal {
+    width: min(100%, 820px);
+    max-height: min(92vh, 900px);
+    overflow-y: auto;
+    border: 1px solid rgba(255,255,255,.8);
+    border-radius: 22px;
+    background: #fff;
+    box-shadow: 0 24px 75px rgba(10, 30, 42, .28);
+    animation: enrollmentsModalEnter .24s ease both;
+}
+
+.admin-enrollments-page .course-form-card {
+    margin: 0 !important;
+    padding: 26px;
+    border: 0;
+    border-radius: 22px;
+    background: linear-gradient(145deg, #fff, #f8fbfd);
+    box-shadow: none;
+}
+
+.admin-enrollments-page .course-form-header {
+    align-items: center;
+    padding-bottom: 19px;
+    border-bottom: 1px solid #dce8ed;
+}
+
+.admin-enrollments-page .course-form-header h3 {
+    color: #263d4a;
+    font-size: 1.2rem;
+    font-weight: 850;
+}
+
+.admin-enrollments-page .course-form-header span {
+    color: #6d8997;
+}
+
+.admin-enrollments-page .enrollments-modal-close {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #d8e4e9;
+    border-radius: 12px;
+    color: #496979;
+    background: #f5f9fb;
+    font-size: 25px;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.admin-enrollments-page .enrollments-modal-close:hover:not(:disabled) {
+    color: #fff;
+    background: #527f94;
+    transform: rotate(90deg);
+}
+
+.admin-enrollments-page .enrollments-modal-close:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+.admin-enrollments-page .course-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.admin-enrollments-page .course-form-grid .form-group {
+    min-width: 0;
+}
+
+.admin-enrollments-page .course-form-grid input,
+.admin-enrollments-page .course-form-grid select,
+.admin-enrollments-page .course-form-grid textarea {
+    min-height: 46px;
+    border-color: #d2e0e7;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.admin-enrollments-page .course-form-grid input:focus,
+.admin-enrollments-page .course-form-grid select:focus,
+.admin-enrollments-page .course-form-grid textarea:focus {
+    border-color: #6b9db2;
+    box-shadow: 0 0 0 3px rgba(86, 143, 168, .13);
+}
+
+.admin-enrollments-page .enrollment-price-box {
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 13px;
+    border: 1px solid #d7e5eb;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f3f8fa, #fff);
+}
+
+.admin-enrollments-page .course-form-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.admin-enrollments-page .course-form-actions button {
+    min-width: 125px;
+    min-height: 43px;
+    border-radius: 11px;
+    font-family: inherit;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+.admin-enrollments-page .course-form-error {
+    border-radius: 12px;
+}
+
+.admin-enrollments-page .admin-card-header input[type="search"] {
+    min-height: 43px;
+    border: 1px solid #d2e0e7 !important;
+    border-radius: 11px !important;
+    background: #fff;
+    font-family: inherit;
+}
+
+.admin-enrollments-page .admin-card-header select {
+    min-height: 43px;
+    border: 1px solid #d2e0e7 !important;
+    border-radius: 11px !important;
+    background: #fff;
+    font-family: inherit;
+}
+
+.admin-enrollments-page .courses-table-wrapper {
+    border-color: #d8e5eb;
+    border-radius: 15px;
+}
+
+.admin-enrollments-page .courses-table th {
+    background: linear-gradient(135deg, #edf4f7, #f7fafb);
+    color: #38596a;
+}
+
+.admin-enrollments-page .courses-table tbody tr:hover {
+    background: #f2f8fa;
+}
+
+@keyframes enrollmentsBackdropEnter {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes enrollmentsModalEnter {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(.985);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 760px) {
+    .admin-enrollments-page .admin-card-header {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 19px;
+    }
+
+    .admin-enrollments-page .enrollments-new-btn {
+        width: 100%;
+    }
+
+    .admin-enrollments-page .enrollments-modal-backdrop {
+        align-items: flex-start;
+        padding: 10px;
+    }
+
+    .admin-enrollments-page .enrollments-modal {
+        width: 100%;
+        max-height: calc(100vh - 20px);
+        border-radius: 17px;
+    }
+
+    .admin-enrollments-page .course-form-card {
+        padding: 19px 15px;
+    }
+
+    .admin-enrollments-page .course-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    .admin-enrollments-page .course-description-group {
+        grid-column: auto;
+    }
+
+    .admin-enrollments-page .course-form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-enrollments-page .course-form-actions button {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-enrollments-page .enrollments-modal-backdrop,
+    .admin-enrollments-page .enrollments-modal {
+        animation: none;
+    }
+
+    .admin-enrollments-page *,
+    .admin-enrollments-page *::before,
+    .admin-enrollments-page *::after {
+        transition-duration: .01ms !important;
+    }
+}
+/* END ADMIN ENROLLMENTS MODAL DESIGN */
+
+/* ADMIN ENROLLMENTS - FORM AND ACTION BUTTON POLISH */
+.admin-enrollments-page .course-form-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    margin-bottom: 24px;
+}
+
+.admin-enrollments-page .course-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 20px;
+    width: 100%;
+}
+
+.admin-enrollments-page .course-form-grid .form-group {
+    min-width: 0;
+    width: 100%;
+}
+
+.admin-enrollments-page .course-form-grid .course-description-group {
+    grid-column: 1 / -1;
+}
+
+.admin-enrollments-page .course-form-grid .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.admin-enrollments-page .course-form-grid input,
+.admin-enrollments-page .course-form-grid select,
+.admin-enrollments-page .course-form-grid textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.admin-enrollments-page .course-form-grid .enrollment-price-box {
+    min-height: 46px;
+    box-sizing: border-box;
+}
+
+.admin-enrollments-page .enrollments-clear-filters-btn,
+.admin-enrollments-page .enrollments-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 42px;
+    padding: 9px 16px;
+    border: 1px solid #b9d2dc;
+    border-radius: 11px;
+    background: linear-gradient(135deg, #edf6f9, #dcebf1);
+    color: #315f73;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease,
+                border-color .2s ease, transform .2s ease,
+                box-shadow .2s ease;
+}
+
+.admin-enrollments-page .enrollments-clear-filters-btn:hover,
+.admin-enrollments-page .enrollments-edit-btn:hover {
+    color: #fff;
+    border-color: #477f97;
+    background: linear-gradient(135deg, #568fa8, #3d7189);
+    box-shadow: 0 5px 14px rgba(61, 113, 137, .18);
+    transform: translateY(-1px);
+}
+
+.admin-enrollments-page .enrollments-clear-filters-btn:focus-visible,
+.admin-enrollments-page .enrollments-edit-btn:focus-visible {
+    outline: 3px solid rgba(86, 143, 168, .28);
+    outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+    .admin-enrollments-page .course-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    .admin-enrollments-page .course-form-grid .course-description-group {
+        grid-column: auto;
+    }
+
+    .admin-enrollments-page .course-form-header {
+        gap: 10px;
+    }
+
+    .admin-enrollments-page .enrollments-clear-filters-btn,
+    .admin-enrollments-page .enrollments-edit-btn {
+        min-height: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-enrollments-page .enrollments-clear-filters-btn,
+    .admin-enrollments-page .enrollments-edit-btn {
+        transition: none;
+    }
+}
+/* END ADMIN ENROLLMENTS - FORM AND ACTION BUTTON POLISH */
+/* ADMIN PAGES - SPACING AND PAYMENTS MODAL */
+.admin-courses-page .admin-main > .admin-content-card,
+.admin-financial-details-page .admin-main > .admin-content-card {
+    margin-bottom: 24px;
+}
+
+.admin-payments-page .admin-main > .admin-content-card {
+    margin-bottom: 24px;
+    padding: 26px;
+    border: 1px solid rgba(86, 143, 168, .16);
+    border-radius: 22px;
+    background: linear-gradient(145deg, #ffffff, #f7fbfd);
+    box-shadow: 0 10px 30px rgba(38, 61, 74, .07);
+}
+
+.admin-enrollments-page .admin-main > .admin-content-card {
+    margin-bottom: 24px;
+}
+
+.admin-payments-page .payments-list-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 18px;
+}
+
+.admin-payments-page .payments-filter-panel {
+    display: grid;
+    grid-template-columns: minmax(220px, 2fr) repeat(2, minmax(150px, 1fr)) auto;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0 22px;
+    padding: 16px;
+    border: 1px solid #e2edf2;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #f8fbfd, #eef5f8);
+}
+
+.admin-payments-page .payments-filter-panel > * {
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.admin-payments-page .payments-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow-y: auto;
+    background: rgba(17, 35, 45, .58);
+    backdrop-filter: blur(7px);
+    animation: enrollmentsBackdropEnter .2s ease-out;
+}
+
+.admin-payments-page .payments-modal {
+    position: relative;
+    width: min(760px, 100%);
+    max-height: min(90vh, 900px);
+    overflow-y: auto;
+    margin: auto;
+    padding: 28px;
+    border: 1px solid rgba(255, 255, 255, .8);
+    border-radius: 24px;
+    background: linear-gradient(145deg, #ffffff, #f5fafc);
+    box-shadow: 0 24px 80px rgba(10, 31, 42, .28);
+    animation: enrollmentsModalEnter .25s ease-out;
+}
+
+.admin-payments-page .payments-modal-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #e1edf2;
+}
+
+.admin-payments-page .payments-modal-heading span {
+    color: #568fa8;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.admin-payments-page .payments-modal-heading h2 {
+    margin: 7px 0;
+    color: #263d4a;
+    font-size: 21px;
+}
+
+.admin-payments-page .payments-modal-heading p {
+    margin: 0;
+    color: #71838d;
+    font-size: 13px;
+}
+
+.admin-payments-page .payments-modal-close {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #d9e7ed;
+    border-radius: 12px;
+    background: #f0f6f8;
+    color: #426b7d;
+    font-size: 27px;
+    line-height: 1;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.admin-payments-page .payments-modal-close:hover {
+    color: #fff;
+    border-color: #568fa8;
+    background: #568fa8;
+}
+
+.admin-payments-page .payments-modal-close:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+.admin-payments-page .payments-modal .admin-form-group {
+    min-width: 0;
+}
+
+.admin-payments-page .payments-modal .admin-input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.admin-payments-page .payments-modal .admin-form-grid {
+    gap: 18px;
+}
+
+.admin-payments-page .payments-modal .course-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid #e5eef2;
+}
+
+.admin-payments-page .payments-clear-btn,
+.admin-payments-page .payments-add-btn {
+    min-height: 44px;
+    border-radius: 12px;
+}
+
+.admin-payments-page .payments-clear-btn {
+    white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+    .admin-payments-page .payments-filter-panel {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-payments-page .payments-search-input {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-courses-page .admin-main > .admin-content-card,
+    .admin-financial-details-page .admin-main > .admin-content-card,
+    .admin-enrollments-page .admin-main > .admin-content-card,
+    .admin-payments-page .admin-main > .admin-content-card {
+        margin-bottom: 18px;
+        padding: 17px;
+        border-radius: 17px;
+    }
+
+    .admin-payments-page .payments-modal-backdrop {
+        align-items: flex-start;
+        padding: 10px;
+    }
+
+    .admin-payments-page .payments-modal {
+        max-height: calc(100vh - 20px);
+        padding: 18px;
+        border-radius: 18px;
+    }
+
+    .admin-payments-page .payments-filter-panel {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 12px;
+    }
+
+    .admin-payments-page .payments-search-input {
+        grid-column: auto;
+    }
+
+    .admin-payments-page .payments-list-toolbar {
+        justify-content: stretch;
+    }
+
+    .admin-payments-page .payments-add-btn {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-payments-page .payments-modal-backdrop,
+    .admin-payments-page .payments-modal,
+    .admin-payments-page .payments-modal-close {
+        animation: none;
+        transition: none;
+    }
+}
+/* END ADMIN PAGES - SPACING AND PAYMENTS MODAL */
+/* FINAL ADMIN VISUAL FIX */
+.admin-courses-page .admin-main > .admin-content-card,
+.admin-enrollments-page .admin-main > .admin-content-card {
+    margin-bottom: 28px !important;
+}
+.admin-payments-page .admin-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    border-radius: 14px;
+}
+.admin-payments-page .users-table {
+    min-width: 1050px;
+}
+.admin-payments-page .payments-date {
+    white-space: nowrap;
+    direction: ltr;
+    display: inline-block;
+}
+.admin-payments-page .payments-action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 125px;
+}
+.admin-payments-page .payments-action-buttons button {
+    min-width: 58px;
+    white-space: nowrap;
+    margin: 0;
+}
+@media (max-width: 600px) {
+    .admin-courses-page .admin-main > .admin-content-card,
+    .admin-enrollments-page .admin-main > .admin-content-card {
+        margin-bottom: 20px !important;
+    }
+    .admin-payments-page .payments-action-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* COURSES FILTERS AND TABLE - SPACING REFINEMENT 20261108 */
+.admin-courses-page .courses-table-wrapper {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    padding: 22px;
+    margin-top: 22px;
+    background: #ffffff;
+    border: 1px solid #dce7ec;
+    border-radius: 18px;
+    box-shadow: 0 8px 26px rgba(38, 61, 74, 0.07);
+}
+
+.admin-courses-page .course-filters {
+    box-sizing: border-box;
+    display: grid !important;
+    grid-template-columns: minmax(220px, 1.7fr) repeat(3, minmax(145px, 1fr)) !important;
+    align-items: center !important;
+    gap: 17px !important;
+    width: 100%;
+    padding: 22px !important;
+    margin: 0 0 22px !important;
+    background: #f3f7f9 !important;
+    border: 1px solid #dce7ec !important;
+    border-radius: 15px !important;
+}
+
+.admin-courses-page .course-filters > input,
+.admin-courses-page .course-filters > select {
+    box-sizing: border-box !important;
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 49px !important;
+    padding: 0 14px !important;
+    color: #263d4a !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cbdbe2 !important;
+    border-radius: 11px !important;
+    box-shadow: 0 2px 7px rgba(38, 61, 74, 0.045) !important;
+    outline: none;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.admin-courses-page .course-filters > input:focus,
+.admin-courses-page .course-filters > select:focus {
+    border-color: #568fa8 !important;
+    box-shadow: 0 0 0 4px rgba(86, 143, 168, .13) !important;
+}
+
+.admin-courses-page .course-filters > button {
+    grid-column: 1 / 3;
+    justify-self: start;
+    min-height: 43px !important;
+    padding: 0 20px !important;
+    color: #426b7e !important;
+    background: #e5f0f4 !important;
+    border: 1px solid #c8dfe8 !important;
+    border-radius: 10px !important;
+    font-weight: 600;
+}
+
+.admin-courses-page .course-filters > button:hover {
+    background: #d8eaf0 !important;
+}
+
+.admin-courses-page .course-filters > span {
+    grid-column: 3 / -1 !important;
+    justify-self: end;
+    align-self: center;
+    padding: 10px 16px !important;
+    color: #365e72 !important;
+    background: #e8f2f6 !important;
+    border: 1px solid #d4e5ec;
+    border-radius: 10px !important;
+    font-weight: 700;
+}
+
+.admin-courses-page .courses-table {
+    width: 100%;
+    min-width: 760px;
+    margin: 0;
+    border-collapse: separate !important;
+    border-spacing: 0;
+    background: #ffffff;
+}
+
+.admin-courses-page .courses-table thead th {
+    padding: 17px 15px !important;
+    color: #365e72;
+    background: #edf4f7;
+    border-top: 1px solid #dce7ec;
+    border-bottom: 2px solid #d5e3e9;
+    white-space: nowrap;
+}
+
+.admin-courses-page .courses-table thead th:first-child {
+    border-right: 1px solid #dce7ec;
+    border-top-right-radius: 10px;
+}
+
+.admin-courses-page .courses-table thead th:last-child {
+    border-left: 1px solid #dce7ec;
+    border-top-left-radius: 10px;
+}
+
+.admin-courses-page .courses-table tbody td {
+    padding: 17px 15px !important;
+    background: #ffffff;
+    border-bottom: 1px solid #e5edf0;
+    vertical-align: middle;
+    line-height: 1.9;
+}
+
+.admin-courses-page .courses-table tbody tr:hover td {
+    background: #f5f9fb;
+}
+
+.admin-courses-page .courses-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+@media (max-width: 1100px) {
+    .admin-courses-page .course-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .admin-courses-page .course-filters > input {
+        grid-column: 1 / -1;
+    }
+
+    .admin-courses-page .course-filters > button {
+        grid-column: 1 / 2;
+    }
+
+    .admin-courses-page .course-filters > span {
+        grid-column: 2 / 3 !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-courses-page .courses-table-wrapper {
+        padding: 12px;
+        margin-top: 16px;
+        border-radius: 13px;
+    }
+
+    .admin-courses-page .course-filters {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 12px !important;
+        padding: 14px !important;
+        margin-bottom: 16px !important;
+        border-radius: 12px !important;
+    }
+
+    .admin-courses-page .course-filters > input,
+    .admin-courses-page .course-filters > select,
+    .admin-courses-page .course-filters > button,
+    .admin-courses-page .course-filters > span {
+        grid-column: 1 / -1 !important;
+        width: 100%;
+        justify-self: stretch;
+    }
+
+    .admin-courses-page .course-filters > span {
+        text-align: center;
+    }
+
+    .admin-courses-page .courses-table thead th,
+    .admin-courses-page .courses-table tbody td {
+        padding: 13px 11px !important;
+    }
+}
+/* END COURSES FILTERS AND TABLE - SPACING REFINEMENT */
+/* ENROLLMENTS FILTERS AND TABLE - SPACING REFINEMENT 20261108 */
+.admin-enrollments-page .enrollment-filters {
+    display: grid;
+    grid-template-columns: minmax(220px, 2fr) minmax(170px, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    margin: 24px 0;
+    padding: 20px;
+    background: #f5f9fb;
+    border: 1px solid #dce8ed;
+    border-radius: 15px;
+}
+
+.admin-enrollments-page .enrollment-search-input,
+.admin-enrollments-page .enrollment-status-select {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    height: 49px;
+    padding: 0 14px;
+    color: #263d4a;
+    background: #fff;
+    border: 1px solid #cbdbe2;
+    border-radius: 10px;
+    box-shadow: 0 2px 7px rgba(38, 61, 74, .05);
+    outline: none;
+}
+
+.admin-enrollments-page .enrollment-search-input:focus,
+.admin-enrollments-page .enrollment-status-select:focus {
+    border-color: #568fa8;
+    box-shadow: 0 0 0 3px rgba(86, 143, 168, .14);
+}
+
+.admin-enrollments-page .enrollments-clear-filters-btn {
+    min-height: 46px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.admin-enrollments-page .courses-table-wrapper {
+    margin-top: 22px;
+    padding: 18px;
+    overflow-x: auto;
+    background: #fff;
+    border: 1px solid #dce6eb;
+    border-radius: 15px;
+    box-shadow: 0 5px 18px rgba(38, 61, 74, .06);
+}
+
+.admin-enrollments-page .courses-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.admin-enrollments-page .courses-table thead th {
+    padding: 15px 13px;
+    background: #edf4f7;
+    color: #263d4a;
+    border-bottom: 2px solid #d4e2e8;
+    white-space: nowrap;
+}
+
+.admin-enrollments-page .courses-table tbody td {
+    padding: 14px 13px;
+    border-bottom: 1px solid #e8eef1;
+    vertical-align: middle;
+}
+
+.admin-enrollments-page .courses-table tbody tr:hover {
+    background: #f5fafc;
+}
+
+.admin-enrollments-page .courses-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+@media (max-width: 900px) {
+    .admin-enrollments-page .enrollment-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-enrollments-page .enrollment-search-input {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-enrollments-page .enrollment-filters {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+        margin: 18px 0;
+        padding: 14px;
+    }
+
+    .admin-enrollments-page .enrollment-search-input {
+        grid-column: auto;
+    }
+
+    .admin-enrollments-page .enrollments-clear-filters-btn {
+        width: 100%;
+    }
+
+    .admin-enrollments-page .courses-table-wrapper {
+        margin-top: 16px;
+        padding: 10px;
+    }
+}
+/* ENROLLMENTS VISUAL SEPARATION REFINEMENT 20261108 */
+.admin-enrollments-page .admin-content-card {
+    padding: 28px !important;
+}
+
+.admin-enrollments-page .admin-content-card > .admin-card-header {
+    margin-bottom: 28px !important;
+    padding-bottom: 22px !important;
+    border-bottom: 1px solid #dce6eb !important;
+}
+
+.admin-enrollments-page .enrollment-filters {
+    display: grid !important;
+    grid-template-columns: minmax(220px, 2fr) minmax(180px, 1fr) auto !important;
+    gap: 18px !important;
+    margin: 28px 0 32px !important;
+    padding: 24px !important;
+    background: #f1f7fa !important;
+    border: 2px solid #d3e3ea !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 14px rgba(38, 61, 74, .07) !important;
+}
+
+.admin-enrollments-page .enrollment-filters input,
+.admin-enrollments-page .enrollment-filters select {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 52px !important;
+    padding: 12px 15px !important;
+    background: #fff !important;
+    border: 1px solid #b9ced8 !important;
+    border-radius: 11px !important;
+}
+
+.admin-enrollments-page .enrollment-filters button {
+    min-height: 50px !important;
+    padding: 11px 20px !important;
+    border-radius: 11px !important;
+}
+
+.admin-enrollments-page .courses-table-wrapper {
+    margin-top: 30px !important;
+    padding: 20px !important;
+    background: #fff !important;
+    border: 2px solid #dce6eb !important;
+    border-radius: 16px !important;
+    box-shadow: 0 5px 18px rgba(38, 61, 74, .06) !important;
+}
+
+@media (max-width: 900px) {
+    .admin-enrollments-page .enrollment-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-enrollments-page .admin-content-card {
+        padding: 14px !important;
+    }
+
+    .admin-enrollments-page .enrollment-filters {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 13px !important;
+        margin: 20px 0 24px !important;
+        padding: 16px !important;
+    }
+}
+
+/* STU04 - ADMIN STUDENTS RESPONSIVE UI */
+.admin-students-page {
+    --students-primary: #397f9b;
+    --students-dark: #263d4a;
+    --students-border: #dce8ed;
+    --students-muted: #718793;
+}
+
+.admin-students-page .admin-main {
+    min-width: 0;
+    background:
+        radial-gradient(ellipse at 5% 0%, rgba(86,143,168,.10), transparent 36%),
+        linear-gradient(145deg, #f3f8fa 0%, #f9fbfc 58%, #edf5f8 100%);
+}
+
+.admin-students-page .students-content {
+    min-width: 0;
+    padding: 26px;
+}
+
+.admin-students-page .students-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 22px;
+    padding: 22px 24px;
+    border: 1px solid var(--students-border);
+    border-radius: 18px;
+    background: linear-gradient(135deg, #fff, #f5fafc);
+    box-shadow: 0 8px 24px rgba(38, 75, 91, .06);
+}
+
+.admin-students-page .students-page-header h2 {
+    margin: 0 0 8px;
+    color: var(--students-dark);
+    font-size: 1.2rem;
+    font-weight: 850;
+}
+
+.admin-students-page .students-page-header p {
+    margin: 0;
+    color: var(--students-muted);
+    font-size: .88rem;
+    line-height: 1.9;
+}
+
+.admin-students-page .students-form-card {
+    margin-bottom: 24px;
+    padding: 24px;
+    border: 1px solid rgba(86,143,168,.22);
+    border-radius: 19px;
+    background: linear-gradient(145deg, #fff, #f8fbfc);
+    box-shadow: 0 10px 28px rgba(38,75,91,.08);
+}
+
+.admin-students-page .students-form-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--students-border);
+}
+
+.admin-students-page .students-form-header h3 {
+    margin: 0;
+    color: var(--students-dark);
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.admin-students-page .students-form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 19px 16px;
+}
+
+.admin-students-page .students-form-grid > label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    margin: 0;
+    color: #405c6a;
+    font-size: .84rem;
+    font-weight: 750;
+}
+
+.admin-students-page .students-form-grid > label > span {
+    line-height: 1.7;
+}
+
+.admin-students-page .students-form-grid .form-control,
+.admin-students-page .students-form-grid .form-select,
+.admin-students-page .students-search-input {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px 13px;
+    border: 1px solid #d5e2e8;
+    border-radius: 11px;
+    background-color: #fff;
+    color: #304b58;
+    font-family: inherit;
+    font-size: .86rem;
+    box-sizing: border-box;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.admin-students-page .students-form-grid .form-control:focus,
+.admin-students-page .students-form-grid .form-select:focus,
+.admin-students-page .students-search-input:focus {
+    border-color: #6ba6bd;
+    box-shadow: 0 0 0 3px rgba(86,143,168,.13);
+    outline: none;
+}
+
+.admin-students-page .students-form-grid .students-address-field {
+    grid-column: 1 / -1;
+}
+
+.admin-students-page .students-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 11px;
+    margin-top: 22px;
+    padding-top: 17px;
+    border-top: 1px solid #e8eff2;
+}
+
+.admin-students-page .students-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 42px;
+    padding: 9px 18px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    font-family: inherit;
+    font-size: .84rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.admin-students-page .students-btn-primary {
+    border-color: #397f9b;
+    background: linear-gradient(125deg, #397f9b, #28566d);
+    color: #fff;
+    box-shadow: 0 5px 13px rgba(48,112,139,.19);
+}
+
+.admin-students-page .students-btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(48,112,139,.25);
+    color: #fff;
+}
+
+.admin-students-page .students-btn-secondary {
+    border-color: #cbdfe7;
+    background: linear-gradient(135deg, #fff, #f2f8fa);
+    color: #315c70;
+}
+
+.admin-students-page .students-btn-secondary:hover:not(:disabled) {
+    border-color: #78afc1;
+    background: #eaf5f8;
+}
+
+.admin-students-page .students-btn:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+.admin-students-page .students-alert,
+.admin-students-page .students-form-message {
+    margin-bottom: 17px;
+    padding: 12px 16px;
+    border: 1px solid #f0cccc;
+    border-radius: 11px;
+    background: #fff3f3;
+    color: #9d3434;
+    line-height: 1.9;
+}
+
+.admin-students-page .students-form-message {
+    border-color: #f0dfbd;
+    background: #fff8eb;
+    color: #805b19;
+}
+
+.admin-students-page .students-filter-panel {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 13px;
+    margin: 22px 0 17px;
+    padding: 17px;
+    border: 1px solid var(--students-border);
+    border-radius: 16px;
+    background: linear-gradient(135deg, #fff, #f5f9fb);
+    box-shadow: 0 5px 17px rgba(38,75,91,.045);
+}
+
+.admin-students-page .students-search-input {
+    flex: 1 1 280px;
+    max-width: 440px;
+}
+
+.admin-students-page .students-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 39px;
+    padding: 7px 14px;
+    border: 1px solid #d5e8ef;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #eaf5f8, #f5fafb);
+    color: #315d70;
+    font-size: .83rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.admin-students-page .students-state {
+    padding: 30px 18px;
+    border: 1px solid var(--students-border);
+    border-radius: 14px;
+    background: #fff;
+    color: var(--students-muted);
+    text-align: center;
+    line-height: 2;
+}
+
+.admin-students-page .students-empty {
+    border-style: dashed;
+    background: linear-gradient(135deg, #fff, #f5fafc);
+}
+
+.admin-students-page .students-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #dce7ec;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(38,75,91,.06);
+    -webkit-overflow-scrolling: touch;
+}
+
+.admin-students-page .students-table {
+    width: 100%;
+    min-width: 900px;
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    color: #405966;
+    font-size: .85rem;
+    vertical-align: middle;
+}
+
+.admin-students-page .students-table thead th {
+    padding: 16px 14px;
+    border-bottom: 1px solid #d9e7ed;
+    background: linear-gradient(135deg, #edf5f8, #e5f0f4);
+    color: #31566a;
+    font-weight: 850;
+    white-space: nowrap;
+}
+
+.admin-students-page .students-table tbody td {
+    padding: 14px;
+    border-bottom: 1px solid #edf1f3;
+    background: #fff;
+    white-space: nowrap;
+}
+
+.admin-students-page .students-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.admin-students-page .students-table tbody tr:hover td {
+    background: #f2f8fa;
+}
+
+.admin-students-page button:focus-visible {
+    outline: 3px solid rgba(72,151,179,.35);
+    outline-offset: 2px;
+}
+
+@media (max-width: 1000px) {
+    .admin-students-page .students-form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-students-page .students-content {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-students-page .students-content {
+        padding: 12px;
+    }
+
+    .admin-students-page .students-page-header {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 17px;
+        border-radius: 15px;
+    }
+
+    .admin-students-page .students-page-header .students-btn {
+        width: 100%;
+    }
+
+    .admin-students-page .students-form-card {
+        padding: 15px;
+        border-radius: 15px;
+    }
+
+    .admin-students-page .students-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 15px;
+    }
+
+    .admin-students-page .students-form-grid .students-address-field {
+        grid-column: auto;
+    }
+
+    .admin-students-page .students-form-actions {
+        flex-direction: column;
+    }
+
+    .admin-students-page .students-form-actions .students-btn {
+        width: 100%;
+    }
+
+    .admin-students-page .students-filter-panel {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 13px;
+    }
+
+    .admin-students-page .students-search-input {
+        max-width: none;
+        flex-basis: auto;
+    }
+
+    .admin-students-page .students-filter-panel .students-btn {
+        width: 100%;
+    }
+
+    .admin-students-page .students-count {
+        width: 100%;
+    }
+
+    .admin-students-page .students-table-wrapper {
+        border-radius: 11px;
+    }
+}
+/* STU04 ADVANCED STUDENT FILTERS */
+.admin-students-page .students-advanced-filter-panel {
+    display: block;
+}
+
+.admin-students-page .students-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 15px;
+    width: 100%;
+}
+
+.admin-students-page .students-filter-grid > label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+    margin: 0;
+    color: #405966;
+    font-size: .84rem;
+    font-weight: 750;
+}
+
+.admin-students-page .students-filter-grid .form-control,
+.admin-students-page .students-filter-grid .form-select {
+    width: 100%;
+    min-width: 0;
+    min-height: 43px;
+    border: 1px solid #d5e2e8;
+    border-radius: 10px;
+    background-color: #fff;
+}
+
+.admin-students-page .students-filter-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 17px;
+    padding-top: 15px;
+    border-top: 1px solid #e6eef1;
+}
+
+@media (max-width: 1000px) {
+    .admin-students-page .students-filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-students-page .students-filter-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-students-page .students-filter-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-students-page .students-filter-actions > * {
+        width: 100%;
+    }
+}
+
+/* ADMIN PARTNER ORGANIZATIONS + AUDIT LOGS VISUAL REFRESH */
+.admin-partner-organizations-page .admin-main,
+.admin-audit-logs-page .admin-main {
+    min-width: 0;
+    background:
+        radial-gradient(ellipse at 5% 0%, rgba(86,143,168,.10), transparent 36%),
+        linear-gradient(145deg, #f3f8fa 0%, #f9fbfc 58%, #edf5f8 100%);
+}
+
+.admin-partner-organizations-page .admin-main,
+.admin-audit-logs-page .admin-main {
+    padding: 26px;
+}
+
+.admin-partner-organizations-page .admin-topbar,
+.admin-audit-logs-page .admin-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 22px;
+    padding: 22px 24px;
+    border: 1px solid #dce8ed;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #fff, #f5fafc);
+    box-shadow: 0 8px 24px rgba(38,75,91,.06);
+}
+
+.admin-partner-organizations-page .admin-topbar h1,
+.admin-audit-logs-page .admin-topbar h1 {
+    margin: 0 0 8px;
+    color: #263d4a;
+    font-size: 1.35rem;
+    font-weight: 850;
+}
+
+.admin-partner-organizations-page .admin-topbar p,
+.admin-audit-logs-page .admin-topbar p {
+    margin: 0;
+    color: #718793;
+    font-size: .88rem;
+    line-height: 1.9;
+}
+
+.admin-partner-organizations-page .admin-form-card,
+.admin-partner-organizations-page .admin-table-card {
+    min-width: 0;
+    margin: 0 0 22px;
+    padding: 23px;
+    border: 1px solid rgba(86,143,168,.22);
+    border-radius: 19px;
+    background: linear-gradient(145deg, #fff, #f8fbfc);
+    box-shadow: 0 10px 28px rgba(38,75,91,.07);
+}
+
+.admin-partner-organizations-page .admin-form-header,
+.admin-partner-organizations-page .admin-table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #dce8ed;
+}
+
+.admin-partner-organizations-page .admin-form-header h2,
+.admin-partner-organizations-page .admin-table-header h2 {
+    margin: 0 0 7px;
+    color: #263d4a;
+    font-size: 1.05rem;
+    font-weight: 850;
+}
+
+.admin-partner-organizations-page .admin-form-header p {
+    margin: 0;
+    color: #718793;
+    line-height: 1.8;
+    font-size: .85rem;
+}
+
+.admin-partner-organizations-page .admin-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 16px;
+}
+
+.admin-partner-organizations-page .admin-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    color: #405c6a;
+    font-size: .85rem;
+    font-weight: 750;
+}
+
+.admin-partner-organizations-page .admin-form-group.admin-form-full {
+    grid-column: 1 / -1;
+}
+
+.admin-partner-organizations-page .admin-input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px 13px;
+    border: 1px solid #d5e2e8;
+    border-radius: 11px;
+    background: #fff;
+    color: #304b58;
+    font: inherit;
+    font-weight: 400;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.admin-partner-organizations-page .admin-input:focus {
+    border-color: #6ba6bd;
+    box-shadow: 0 0 0 3px rgba(86,143,168,.13);
+    outline: none;
+}
+
+.admin-partner-organizations-page .admin-textarea {
+    min-height: 105px;
+    resize: vertical;
+}
+
+.admin-partner-organizations-page .admin-checkbox-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    width: fit-content;
+    padding: 11px 14px;
+    border: 1px solid #dce8ed;
+    border-radius: 11px;
+    background: #f5fafc;
+    cursor: pointer;
+}
+
+.admin-partner-organizations-page .admin-form-actions,
+.admin-partner-organizations-page .admin-row-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.admin-partner-organizations-page .admin-form-actions {
+    margin-top: 22px;
+    padding-top: 17px;
+    border-top: 1px solid #e8eff2;
+}
+
+.admin-partner-organizations-page .admin-primary-btn,
+.admin-partner-organizations-page .admin-secondary-btn,
+.admin-partner-organizations-page .admin-action-btn,
+.admin-partner-organizations-page .partner-account-btn,
+.admin-partner-organizations-page .partner-account-submit,
+.admin-audit-logs-page .refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 41px;
+    padding: 9px 16px;
+    border-radius: 11px;
+    font-family: inherit;
+    font-size: .84rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.admin-partner-organizations-page .admin-secondary-btn,
+.admin-partner-organizations-page .admin-action-btn {
+    border: 1px solid #cbdfe7;
+    background: linear-gradient(135deg, #fff, #f2f8fa);
+    color: #315c70;
+}
+
+.admin-partner-organizations-page .admin-action-btn.danger {
+    border-color: #f0d2d2;
+    background: #fff5f5;
+    color: #a33b3b;
+}
+
+.admin-partner-organizations-page .admin-count {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    margin-top: 5px;
+    padding: 6px 13px;
+    border: 1px solid #d5e8ef;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #eaf5f8, #f5fafb);
+    color: #315d70;
+    font-size: .82rem;
+    font-weight: 800;
+}
+
+.admin-partner-organizations-page .admin-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #dce7ec;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(38,75,91,.05);
+    -webkit-overflow-scrolling: touch;
+}
+
+.admin-partner-organizations-page .admin-table {
+    width: 100%;
+    min-width: 850px;
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    color: #405966;
+    font-size: .84rem;
+    vertical-align: middle;
+}
+
+.admin-partner-organizations-page .admin-table thead th {
+    padding: 15px 13px;
+    border-bottom: 1px solid #d9e7ed;
+    background: linear-gradient(135deg, #edf5f8, #e5f0f4);
+    color: #31566a;
+    font-weight: 850;
+    white-space: nowrap;
+}
+
+.admin-partner-organizations-page .admin-table tbody td {
+    padding: 14px 13px;
+    border-bottom: 1px solid #edf1f3;
+    background: #fff;
+    vertical-align: middle;
+}
+
+.admin-partner-organizations-page .admin-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.admin-partner-organizations-page .admin-table tbody tr:hover td {
+    background: #f2f8fa;
+}
+
+.admin-partner-organizations-page .partner-org-name,
+.admin-partner-organizations-page .partner-org-dates {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 125px;
+    line-height: 1.8;
+}
+
+.admin-partner-organizations-page .partner-org-name small,
+.admin-partner-organizations-page .partner-org-mobile,
+.admin-partner-organizations-page .partner-org-dates {
+    color: #718793;
+    font-size: .78rem;
+    overflow-wrap: anywhere;
+}
+
+.admin-partner-organizations-page .admin-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 65px;
+    padding: 6px 11px;
+    border-radius: 30px;
+    font-size: .78rem;
+    font-weight: 800;
+}
+
+.admin-partner-organizations-page .admin-status.active {
+    border: 1px solid #cce8dc;
+    background: #eaf7f0;
+    color: #24734d;
+}
+
+.admin-partner-organizations-page .admin-status.inactive {
+    border: 1px solid #ead8d8;
+    background: #fff1f1;
+    color: #a34b4b;
+}
+
+.admin-partner-organizations-page .admin-alert {
+    margin-bottom: 17px;
+    padding: 13px 16px;
+    border-radius: 12px;
+    line-height: 1.9;
+}
+
+.admin-partner-organizations-page .admin-alert-error {
+    border: 1px solid #f0cccc;
+    background: #fff3f3;
+    color: #9d3434;
+}
+
+.admin-partner-organizations-page .admin-alert-success {
+    border: 1px solid #cce8dc;
+    background: #effaf4;
+    color: #24734d;
+}
+
+.admin-partner-organizations-page .admin-empty-state {
+    padding: 32px 18px;
+    border: 1px dashed #d5e2e8;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #fff, #f5fafc);
+    text-align: center;
+}
+
+.admin-partner-organizations-page .partner-account-create {
+    margin: 0 0 22px;
+    border-radius: 19px;
+}
+
+.admin-partner-organizations-page .partner-account-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-partner-organizations-page button:focus-visible,
+.admin-audit-logs-page button:focus-visible {
+    outline: 3px solid rgba(72,151,179,.35);
+    outline-offset: 2px;
+}
+
+/* Audit logs */
+.admin-audit-logs-page .admin-user {
+    min-width: 0;
+}
+
+.admin-audit-logs-page .admin-main > section:first-of-type {
+    box-sizing: border-box;
+    margin: 0 0 22px !important;
+    padding: 22px !important;
+    border: 1px solid #dce8ed;
+    border-radius: 18px !important;
+    background: linear-gradient(145deg, #fff, #f8fbfc) !important;
+    box-shadow: 0 8px 24px rgba(38,75,91,.06);
+}
+
+.admin-audit-logs-page .admin-main > section:first-of-type > div {
+    display: grid !important;
+    grid-template-columns: minmax(130px, .7fr) minmax(220px, 1.5fr) auto auto auto;
+    align-items: end !important;
+    gap: 13px !important;
+}
+
+.admin-audit-logs-page .admin-main > section:first-of-type label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    color: #405c6a;
+    font-size: .84rem;
+    font-weight: 750;
+}
+
+.admin-audit-logs-page .admin-main > section:first-of-type input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px 13px;
+    border: 1px solid #d5e2e8;
+    border-radius: 11px;
+    background: #fff;
+    color: #304b58;
+    font: inherit;
+}
+
+.admin-audit-logs-page .admin-main > section:first-of-type input:focus {
+    border-color: #6ba6bd;
+    box-shadow: 0 0 0 3px rgba(86,143,168,.13);
+    outline: none;
+}
+
+.admin-audit-logs-page .refresh-btn {
+    border: 1px solid #cbdfe7;
+    background: linear-gradient(135deg, #fff, #f2f8fa);
+    color: #315c70;
+}
+
+.admin-audit-logs-page .refresh-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: #78afc1;
+    background: #eaf5f8;
+}
+
+.admin-audit-logs-page .refresh-btn:disabled {
+    cursor: not-allowed;
+    opacity: .5;
+}
+
+.admin-audit-logs-page .admin-main > section:first-of-type > p {
+    margin: 17px 0 0;
+    padding-top: 14px;
+    border-top: 1px solid #e6eef1;
+    color: #718793;
+    font-size: .88rem;
+}
+
+.admin-audit-logs-page .admin-main > section:first-of-type > p strong {
+    color: #315d70;
+    font-size: 1rem;
+}
+
+.admin-audit-logs-page .admin-main > section:nth-of-type(2) {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 16px !important;
+    border: 1px solid #dce7ec;
+    border-radius: 16px !important;
+    background: linear-gradient(145deg, #fff, #f8fbfc) !important;
+    box-shadow: 0 8px 24px rgba(38,75,91,.06);
+    -webkit-overflow-scrolling: touch;
+}
+
+.admin-audit-logs-page .admin-main > section:nth-of-type(2) table {
+    width: 100%;
+    min-width: 1050px;
+    border-collapse: separate !important;
+    border-spacing: 0;
+    color: #405966;
+    font-size: .82rem;
+}
+
+.admin-audit-logs-page .admin-main > section:nth-of-type(2) thead th {
+    padding: 14px 12px;
+    border-bottom: 1px solid #d9e7ed;
+    background: linear-gradient(135deg, #edf5f8, #e5f0f4) !important;
+    color: #31566a;
+    font-weight: 850;
+    white-space: nowrap;
+}
+
+.admin-audit-logs-page .admin-main > section:nth-of-type(2) tbody td {
+    padding: 13px 12px;
+    border-bottom: 1px solid #edf1f3;
+    background: #fff;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.admin-audit-logs-page .admin-main > section:nth-of-type(2) tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.admin-audit-logs-page .admin-main > section:nth-of-type(2) tbody tr:hover td {
+    background: #f2f8fa;
+}
+
+.admin-audit-logs-page .report-state,
+.admin-audit-logs-page .report-error {
+    margin: 0 0 18px;
+    padding: 24px;
+    border: 1px solid #dce8ed;
+    border-radius: 15px;
+    background: #fff;
+    color: #718793;
+    text-align: center;
+    line-height: 2;
+}
+
+.admin-audit-logs-page .report-error {
+    border-color: #f0cccc;
+    background: #fff3f3;
+    color: #9d3434;
+}
+
+.admin-audit-logs-page .admin-main > div:last-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px !important;
+    padding: 15px 18px;
+    border: 1px solid #dce8ed;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #fff, #f5fafc);
+    color: #526d7a;
+}
+
+.admin-audit-logs-page .admin-main > div:last-child > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+
+@media (max-width: 1050px) {
+    .admin-audit-logs-page .admin-main > section:first-of-type > div {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-audit-logs-page .admin-main > section:first-of-type > div > button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 900px) {
+    .admin-partner-organizations-page .admin-main,
+    .admin-audit-logs-page .admin-main {
+        padding: 20px;
+    }
+
+    .admin-partner-organizations-page .admin-form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .admin-partner-organizations-page .admin-main,
+    .admin-audit-logs-page .admin-main {
+        padding: 12px;
+    }
+
+    .admin-partner-organizations-page .admin-topbar,
+    .admin-audit-logs-page .admin-topbar {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 17px;
+        border-radius: 15px;
+    }
+
+    .admin-partner-organizations-page .admin-topbar > button {
+        width: 100%;
+    }
+
+    .admin-partner-organizations-page .admin-form-card,
+    .admin-partner-organizations-page .admin-table-card {
+        padding: 15px;
+        border-radius: 15px;
+    }
+
+    .admin-partner-organizations-page .admin-form-grid,
+    .admin-partner-organizations-page .partner-account-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 15px;
+    }
+
+    .admin-partner-organizations-page .admin-form-group.admin-form-full {
+        grid-column: auto;
+    }
+
+    .admin-partner-organizations-page .admin-form-actions {
+        flex-direction: column;
+    }
+
+    .admin-partner-organizations-page .admin-form-actions > button {
+        width: 100%;
+    }
+
+    .admin-partner-organizations-page .partner-account-create {
+        padding: 17px;
+    }
+
+    .admin-partner-organizations-page .partner-account-actions {
+        flex-direction: column;
+    }
+
+    .admin-partner-organizations-page .partner-account-actions > button {
+        width: 100%;
+    }
+
+    .admin-partner-organizations-page .admin-table-wrapper {
+        border-radius: 11px;
+    }
+
+    .admin-audit-logs-page .admin-main > section:first-of-type {
+        padding: 15px !important;
+    }
+
+    .admin-audit-logs-page .admin-main > section:first-of-type > div {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-audit-logs-page .admin-main > section:first-of-type > div > button {
+        width: 100%;
+    }
+
+    .admin-audit-logs-page .admin-main > section:nth-of-type(2) {
+        padding: 10px !important;
+        border-radius: 12px !important;
+    }
+
+    .admin-audit-logs-page .admin-main > div:last-child {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-audit-logs-page .admin-main > div:last-child > div {
+        width: 100%;
+    }
+
+    .admin-audit-logs-page .admin-main > div:last-child > div > button {
+        flex: 1;
     }
 }

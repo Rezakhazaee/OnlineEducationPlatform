@@ -22,38 +22,57 @@
 
         <nav class="admin-menu">
 
-            <a href="/admin">
-                <span>⌂</span>
-                داشبورد
-            </a>
+    <a href="/admin">
+        <span>⌂</span>
+        داشبورد
+    </a>
 
-            <a href="/admin/courses">
-                <span>▣</span>
-                دوره‌ها
-            </a>
+    <a href="/admin/courses">
+        <span>▣</span>
+        دوره‌ها
+    </a>
 
-            <a href="/admin/users" class="active">
-                <span>♙</span>
-                کاربران
-            </a>
+    <a href="/admin/users" class="active">
+        <span>♙</span>
+        کاربران
+    </a>
 
-            <a href="/admin/enrollments">
-                <span>✓</span>
-                ثبت‌نام‌ها
-            </a>
+    <a href="/admin/students">
+        <span>♧</span>
+        دانشجویان
+    </a>
 
-            <a href="/admin/payments">
-                <span>₿</span>
-                پرداخت‌ها
-            </a>
+    <a href="/admin/enrollments">
+        <span>✓</span>
+        ثبت‌نام‌ها
+    </a>
 
-            <a href="/admin/reports">
-                <span>▤</span>
-                گزارش‌ها
-            </a>
+    <a href="/admin/payments">
+        <span>₿</span>
+        پرداخت‌ها
+    </a>
 
-            <a href="/admin/audit-logs">گزارش ممیزی</a>
-        </nav>
+    <a href="/admin/partner-organizations">
+        <span>♧</span>
+        سازمان‌های طرف قرارداد
+    </a>
+
+    <a href="/admin/organizations">
+        <span>◈</span>
+        تنظیمات سامانه
+    </a>
+
+    <a href="/admin/reports">
+        <span>▤</span>
+        گزارش‌ها
+    </a>
+
+    <a href="/admin/audit-logs">
+        <span>◉</span>
+        گزارش ممیزی
+    </a>
+
+</nav>
 
         <div class="admin-sidebar-bottom">
             <a href="/">
@@ -105,7 +124,7 @@
                     <div class="admin-card-header">
                         <div>
                             <span>کاربر جدید</span>
-                            <h2>افزودن کاربر</h2>
+                            <h2>@(RoleFilter == "Student" ? "افزودن دانشجو" : "افزودن کاربر")</h2>
                         </div>
 
                         <button
@@ -458,7 +477,7 @@
                     <div class="users-header-actions">
                         <span class="users-count">@FilteredUsers.Count از @Users.Count کاربر</span>
                         <button type="button" class="admin-outline-btn users-tool-btn" @onclick="LoadUsers" disabled="@IsLoading">↻ تازه‌سازی</button>
-                        <button type="button" class="admin-primary-btn users-tool-btn" @onclick="OpenCreateUserForm">＋ افزودن کاربر</button>
+                        <button type="button" class="admin-primary-btn users-tool-btn" @onclick="OpenCreateUserForm">@(RoleFilter == "Student" ? "＋ افزودن دانشجو" : "＋ افزودن کاربر")</button>
                     </div>
 
                 </div>

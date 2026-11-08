@@ -1,5 +1,4 @@
-@inject Microsoft.JSInterop.IJSRuntime JS
-@page "/admin/enrollments"
+﻿@page "/admin/enrollments"
 
 @using System.Net.Http.Json
 @using System.Globalization
@@ -10,7 +9,7 @@
 
 <PageTitle>مدیریت ثبت‌نام‌ها | آموزش‌یار</PageTitle>
 
-<div class="admin-page">
+<div class="admin-page admin-enrollments-page">
 
     <aside class="admin-sidebar">
 
@@ -25,47 +24,57 @@
 
         <nav class="admin-menu">
 
-            <a href="/admin">
-                <span>⌂</span>
-                داشبورد
-            </a>
+    <a href="/admin">
+        <span>⌂</span>
+        داشبورد
+    </a>
 
-            <a href="/admin/courses">
-                <span>▣</span>
-                دوره‌ها
-            </a>
+    <a href="/admin/courses">
+        <span>▣</span>
+        دوره‌ها
+    </a>
 
-            <a href="/admin/users">
-                <span>♙</span>
-                کاربران
-            </a>
+    <a href="/admin/users">
+        <span>♙</span>
+        کاربران
+    </a>
 
-            <a href="/admin/organizations">
-                <span>▧</span>
-                سازمان‌ها و ظاهر
-            </a>
+    <a href="/admin/users">
+        <span>♧</span>
+        دانشجویان
+    </a>
 
-            <a href="/admin/partner-organizations">
-                <span>▣</span>
-                سازمان‌های طرف قرارداد
-            </a>
+    <a href="/admin/enrollments" class="active">
+        <span>✓</span>
+        ثبت‌نام‌ها
+    </a>
 
-            <a href="/admin/enrollments" class="active">
-                <span>✓</span>
-                ثبت‌نام‌ها
-            </a>
+    <a href="/admin/payments">
+        <span>₿</span>
+        پرداخت‌ها
+    </a>
 
-            <a href="/admin/payments">
-                مالی و پرداخت‌ها
-            </a>"
+    <a href="/admin/partner-organizations">
+        <span>♧</span>
+        سازمان‌های طرف قرارداد
+    </a>
 
-"<a href="/admin/reports">
-                <span>▤</span>
-                گزارش‌ها
-            </a>
+    <a href="/admin/organizations">
+        <span>◈</span>
+        تنظیمات سامانه
+    </a>
 
-            <a href="/admin/audit-logs">گزارش ممیزی</a>
-        </nav>
+    <a href="/admin/reports">
+        <span>▤</span>
+        گزارش‌ها
+    </a>
+
+    <a href="/admin/audit-logs">
+        <span>◉</span>
+        گزارش ممیزی
+    </a>
+
+</nav>
 
         <div class="admin-sidebar-bottom">
 
@@ -157,23 +166,30 @@
         else
         {
             <section class="admin-content-card">
+    <div class="admin-card-header">
+        <div>
+            <span>مدیریت آموزشی</span>
+            <h2>مدیریت ثبت‌نام‌ها</h2>
+        </div>
 
-                <div class="admin-card-header">
+        <button type="button"
+                class="enrollments-new-btn"
+                @onclick="OpenNewEnrollmentForm">
+            <span aria-hidden="true">＋</span>
+            ثبت‌نام جدید
+        </button>
+    </div>
+</section>
 
-                    <div>
-                        <span>
-                            مدیریت آموزشی
-                        </span>
-
-                        <h2>
-                            ثبت‌نام جدید
-                        </h2>
-                    </div>
-
-                </div>
-
-
-                <div id="enrollment-form" tabindex="-1" class="course-form-card">
+@if (ShowEnrollmentForm)
+{
+    <div class="enrollments-modal-backdrop" @onclick="CloseEnrollmentForm">
+        <section class="enrollments-modal"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="enrollment-modal-title"
+                 @onclick:stopPropagation="true">
+<div id="enrollment-form" tabindex="-1" class="course-form-card">
 
                     <div class="course-form-header">
 
@@ -182,15 +198,19 @@
                                 ثبت‌نام دانشجو
                             </span>
 
-                            <h3>
+                            <h3 id="enrollment-modal-title">
                                 @(IsEditMode
                                  ? "ویرایش ثبت‌نام"
                                  : "ایجاد ثبت‌نام جدید")
                             </h3>
                         </div>
-
+                        <button type="button"
+                                class="enrollments-modal-close"
+                                aria-label="بستن پنجره"
+                                title="بستن"
+                                @onclick="CloseEnrollmentForm"
+                                disabled="@IsSaving">×</button>
                     </div>
-
 
                     <div class="course-form-grid">
 
@@ -475,11 +495,7 @@
                 : "ثبت‌نام دانشجو")
 
     </button>
-
-
-    @if (IsEditMode)
-    {
-        <button
+                    <button
             type="button"
             class="admin-secondary-btn"
             @onclick="CancelEdit"
@@ -488,13 +504,14 @@
             انصراف
 
         </button>
-    }
 
 </div>
 
                 </div>
 
-            </section>
+                    </section>
+    </div>
+}
 
 
             <section class="admin-content-card">
@@ -532,8 +549,7 @@
                         <option value="Suspended">تعلیق‌شده</option>
                         <option value="Cancelled">لغوشده</option>
                     </select>
-                    <button type="button" @onclick="ClearEnrollmentFilters"
-                            style="padding:10px 16px;border:1px solid #ccc;border-radius:8px">
+                    <button type="button" class="enrollments-clear-filters-btn" @onclick="ClearEnrollmentFilters">
                         پاک‌کردن فیلترها
                     </button>
                 </div>
@@ -551,7 +567,7 @@
                         </h3>
 
                         <p>
-                            از فرم بالا اولین ثبت‌نام را ایجاد کنید.
+                            برای شروع، از دکمه «ثبت‌نام جدید» استفاده کنید.
                         </p>
 
                     </div>
@@ -680,7 +696,7 @@ else
                                         <td>
                                         <button
                                             type="button"
-                                            class="admin-secondary-btn"
+                                            class="admin-secondary-btn enrollments-edit-btn"
                                             @onclick="() => BeginEditEnrollment(enrollment)">
 
                                             ویرایش
@@ -743,6 +759,7 @@ else
 
     private bool IsSaving { get; set; }
     private bool IsEditMode { get; set; }
+    private bool ShowEnrollmentForm { get; set; }
 
     private int EditingEnrollmentId { get; set; }
 
@@ -935,7 +952,7 @@ else
     FormCoursePartnerOrganizationId = enrollment.CoursePartnerOrganization?.Id.ToString() ?? string.Empty;
     CoursePartnerOrganizations.Clear();
     await LoadCoursePartnerOrganizations();
-    await JS.InvokeVoidAsync("eval", """document.getElementById('enrollment-form')?.scrollIntoView({behavior:'smooth',block:'start'})""");
+    ShowEnrollmentForm = true;
 }
 
     private async Task OnCourseChanged(ChangeEventArgs e)
@@ -953,12 +970,30 @@ else
         await LoadCoursePartnerOrganizations();
     }
     
-    private void CancelEdit()
+    private void OpenNewEnrollmentForm()
 {
     IsEditMode = false;
     EditingEnrollmentId = 0;
-
     ResetForm();
+    ShowEnrollmentForm = true;
+}
+
+private void CloseEnrollmentForm()
+{
+    if (IsSaving)
+    {
+        return;
+    }
+
+    ShowEnrollmentForm = false;
+    IsEditMode = false;
+    EditingEnrollmentId = 0;
+    ResetForm();
+}
+
+private void CancelEdit()
+{
+    CloseEnrollmentForm();
 }
 
     private async Task LoadCoursePartnerOrganizations()
@@ -1113,6 +1148,7 @@ private async Task SaveEnrollment()
 
         IsEditMode = false;
         EditingEnrollmentId = 0;
+        ShowEnrollmentForm = false;
 
         await LoadData();
     }
