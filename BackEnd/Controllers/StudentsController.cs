@@ -1,4 +1,4 @@
-using BackEnd.DTOs;
+﻿using BackEnd.DTOs;
 using BackEnd.Data;
 using BackEnd.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -20,8 +20,45 @@ public class StudentsController : ControllerBase
     }
 
 
+    // دریافت سازمان‌های همکار فعال
+    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support")]
+    [HttpGet("active-partner-organizations")]
+    public async Task<IActionResult> GetActivePartnerOrganizations()
+    {
+        var organizations = await _context.PartnerOrganizations
+            .AsNoTracking()
+            .Where(p => p.IsActive)
+            .OrderBy(p => p.Name)
+            .Select(p => new { p.Id, p.Name })
+            .ToListAsync();
+
+        return Ok(organizations);
+    }
+
+    // دریافت بازاریاب‌ها و پشتیبان‌های فعال برای فرم انتساب
+    [Authorize(Roles = "Admin,EducationStaff")]
+    [HttpGet("assignment-users")]
+    public async Task<IActionResult> GetAssignmentUsers()
+    {
+        var marketers = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Role == "Marketer" && u.IsActive)
+            .OrderBy(u => u.FullName)
+            .Select(u => new { u.Id, u.FullName })
+            .ToListAsync();
+
+        var supports = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Role == "Support" && u.IsActive)
+            .OrderBy(u => u.FullName)
+            .Select(u => new { u.Id, u.FullName })
+            .ToListAsync();
+
+        return Ok(new { marketers, supports });
+    }
+
     // Student - مشاهده پروفایل خودش
-    [Authorize(Roles = "Admin,EducationStaff,Marketer,Support")]     [HttpGet("active-partner-organizations")]     public async Task<IActionResult> GetActivePartnerOrganizations()     {         var organizations = await _context.PartnerOrganizations             .AsNoTracking()             .Where(p => p.IsActive)             .OrderBy(p => p.Name)             .Select(p => new { p.Id, p.Name })             .ToListAsync();          return Ok(organizations);     }     [Authorize(Roles = "Student")]
+    [Authorize(Roles = "Student")]
     [HttpGet("me")]
     public async Task<ActionResult<StudentDto>> GetMyProfile()
     {
@@ -86,6 +123,7 @@ public class StudentsController : ControllerBase
         var result = new StudentDto
         {
             Id = student.Id,
+            UserId = student.UserId,
             FirstName = student.FirstName,
             LastName = student.LastName,
             NationalCode = student.NationalCode,
@@ -161,6 +199,7 @@ public class StudentsController : ControllerBase
             .Select(s => new StudentDto
             {
                 Id = s.Id,
+                UserId = s.UserId,
                 FirstName = s.FirstName,
                 LastName = s.LastName,
                 NationalCode = s.NationalCode,
@@ -309,6 +348,7 @@ public class StudentsController : ControllerBase
         var result = new StudentDto
         {
             Id = student.Id,
+            UserId = student.UserId,
             FirstName = student.FirstName,
             LastName = student.LastName,
             NationalCode = student.NationalCode,
@@ -335,6 +375,7 @@ public class StudentsController : ControllerBase
     {
         var student = await _context.Students
             .Include(s => s.PartnerOrganization)
+        .Include(s => s.User)
             .FirstOrDefaultAsync(s => s.Id == studentId);
 
         if (student == null)
@@ -368,6 +409,34 @@ public class StudentsController : ControllerBase
                 return BadRequest(new { message = "سازمان همکار معتبر و فعال پیدا نشد." });
         }
 
+        // تغییر انتساب‌ها فقط برای مدیر و کارشناس آموزش مجاز است.
+        if (User.IsInRole("Admin") || User.IsInRole("EducationStaff"))
+        {
+            if (dto.MarketingUserId.HasValue)
+            {
+                var marketerExists = await _context.Users.AnyAsync(u =>
+                    u.Id == dto.MarketingUserId.Value &&
+                    u.Role == "Marketer" &&
+                    u.IsActive);
+
+                if (!marketerExists)
+                    return BadRequest(new { message = "بازاریاب معتبر و فعال پیدا نشد." });
+            }
+
+            if (dto.SupportUserId.HasValue)
+            {
+                var supportExists = await _context.Users.AnyAsync(u =>
+                    u.Id == dto.SupportUserId.Value &&
+                    u.Role == "Support" &&
+                    u.IsActive);
+
+                if (!supportExists)
+                    return BadRequest(new { message = "پشتیبان معتبر و فعال پیدا نشد." });
+            }
+
+            student.MarketingUserId = dto.MarketingUserId;
+            student.SupportUserId = dto.SupportUserId;
+        }
         student.FirstName = dto.FirstName.Trim();
         student.LastName = dto.LastName.Trim();
         student.NationalCode = dto.NationalCode.Trim();
@@ -384,11 +453,28 @@ public class StudentsController : ControllerBase
             : dto.GuardianMobile.Trim();
         student.PartnerOrganizationId = dto.PartnerOrganizationId;
 
+        if (student.User != null)
+        {
+            var normalizedMobile = dto.Mobile.Trim();
+
+            if (!string.Equals(student.User.Mobile, normalizedMobile, StringComparison.Ordinal))
+            {
+                var mobileInUse = await _context.Users.AnyAsync(
+                    u => u.Id != student.User.Id && u.Mobile == normalizedMobile);
+
+                if (mobileInUse)
+                    return BadRequest(new { message = "این شماره موبایل برای حساب کاربری دیگری ثبت شده است." });
+            }
+
+            student.User.FullName = $"{dto.FirstName.Trim()} {dto.LastName.Trim()}";
+            student.User.Mobile = normalizedMobile;
+        }
         await _context.SaveChangesAsync();
 
         return Ok(new StudentDto
         {
             Id = student.Id,
+            UserId = student.UserId,
             FirstName = student.FirstName,
             LastName = student.LastName,
             NationalCode = student.NationalCode,
@@ -400,7 +486,7 @@ public class StudentsController : ControllerBase
             MarketingUserId = student.MarketingUserId,
             SupportUserId = student.SupportUserId,
             PartnerOrganizationId = student.PartnerOrganizationId,
-            PartnerOrganizationName = student.PartnerOrganization?.Name,
+            PartnerOrganizationName = dto.PartnerOrganizationId.HasValue ? await _context.PartnerOrganizations.Where(p => p.Id == dto.PartnerOrganizationId.Value).Select(p => p.Name).FirstOrDefaultAsync() : null,
             CreatedDate = student.CreatedDate
         });
     }
@@ -425,6 +511,7 @@ public class StudentsController : ControllerBase
         return Ok(new StudentDto
         {
             Id = student.Id,
+            UserId = student.UserId,
             FirstName = student.FirstName,
             LastName = student.LastName,
             NationalCode = student.NationalCode,
@@ -499,6 +586,7 @@ public class StudentsController : ControllerBase
         return Ok(new StudentDto
         {
             Id = student.Id,
+            UserId = student.UserId,
             FirstName = student.FirstName,
             LastName = student.LastName,
             NationalCode = student.NationalCode,

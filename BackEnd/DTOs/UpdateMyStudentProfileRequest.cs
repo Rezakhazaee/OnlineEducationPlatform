@@ -1,4 +1,4 @@
-namespace BackEnd.DTOs;
+﻿namespace BackEnd.DTOs;
 
 public class UpdateMyStudentProfileRequest
 {
@@ -19,4 +19,8 @@ public class UpdateMyStudentProfileRequest
     public string? GuardianMobile { get; set; }
 
     public int? PartnerOrganizationId { get; set; }
+
+    public int? MarketingUserId { get; set; }
+
+    public int? SupportUserId { get; set; }
 }
