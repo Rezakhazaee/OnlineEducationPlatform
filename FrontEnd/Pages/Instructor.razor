@@ -372,20 +372,7 @@ else
                                                 <textarea rows="2" @bind="LessonDescription"></textarea>
                                             </div>
 
-                                            @if (LessonContentType == "Video")
-                                            {
-                                                <div class="full">
-                                                    <label>آدرس ویدئو</label>
-                                                    <input @bind="LessonContentUrl" />
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                <div class="full">
-                                                    <label>متن کامل درس</label>
-                                                    <textarea rows="8" @bind="LessonContent"></textarea>
-                                                </div>
-                                            }
+                                            @if (LessonContentType == "Video") { <div class="full"><label>آدرس ویدئو</label><input @bind="LessonContentUrl" /></div> } <div class="full"><label>متن کامل درس و جزوه آموزشی</label><textarea rows="14" @bind="LessonContent"></textarea></div>
 
                                         </div>
 
@@ -793,8 +780,9 @@ else
 
     private async Task SaveLesson()
     {
-        if (SelectedModule == null || string.IsNullOrWhiteSpace(LessonTitle))
-            return;
+        if (SelectedModule == null) { ErrorMessage = "ابتدا یک سرفصل انتخاب کن."; return; }
+        if (string.IsNullOrWhiteSpace(LessonTitle) || LessonTitle.Trim().Length < 2) { ErrorMessage = "عنوان درس باید حداقل ۲ کاراکتر باشد."; return; }
+        if (LessonContentType == "Video" && (!Uri.TryCreate(LessonContentUrl, UriKind.Absolute, out var videoUri) || (videoUri.Scheme != Uri.UriSchemeHttp && videoUri.Scheme != Uri.UriSchemeHttps))) { ErrorMessage = "نشانی ویدئو باید یک آدرس معتبر HTTP یا HTTPS باشد."; return; }
 
         Saving = true;
         ErrorMessage = null;
@@ -806,10 +794,10 @@ else
 
             var payload = new
             {
-                title = LessonTitle,
+                title = LessonTitle.Trim(),
                 description = LessonDescription,
                 contentType = LessonContentType,
-                contentUrl = LessonContentUrl,
+                contentUrl = LessonContentType == "Video" ? LessonContentUrl?.Trim() : null,
                 content = LessonContent,
                 durationMinutes = LessonDuration,
                 sortOrder = LessonSortOrder,
