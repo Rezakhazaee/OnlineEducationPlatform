@@ -1,6 +1,7 @@
 using BackEnd.Data;
 using BackEnd.DTOs;
 using BackEnd.Models;
+using BackEnd.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -170,7 +171,7 @@ public class CoursesController : ControllerBase
 
         // اطلاعات قابل ویرایش
         course.Title = dto.Title;
-        course.Description = dto.Description;
+        course.Description = RichTextSanitizer.Sanitize(dto.Description);
         course.Price = dto.Price;
         if (dto.DeliveryType is not null)
         {
@@ -340,7 +341,7 @@ public async Task<ActionResult<CourseDto>> UpdateStatus(
         var course = new Course
         {
             Title = dto.Title,
-            Description = dto.Description,
+            Description = RichTextSanitizer.Sanitize(dto.Description),
             Price = dto.Price,
             DeliveryType = dto.DeliveryType,
             InstructorId = dto.InstructorId,

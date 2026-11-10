@@ -390,7 +390,7 @@
         return $"{value:N0} تومان";
     }
 
-    private class StudentEnrollmentInfo
+    public class StudentEnrollmentInfo
     {
         public int Id { get; set; }
         public int CourseId { get; set; }
@@ -401,7 +401,7 @@
         public string Status { get; set; } = string.Empty;
     }
 
-    private class StudentFinancialInfo
+    public class StudentFinancialInfo
     {
         public int EnrollmentId { get; set; }
         public string StudentName { get; set; } = string.Empty;
@@ -412,7 +412,7 @@
         public string PaymentStatus { get; set; } = string.Empty;
     }
 
-    private class StudentCourseContentDto
+    public class StudentCourseContentDto
     {
         public int CourseId { get; set; }
         public string CourseTitle { get; set; } = string.Empty;
@@ -420,7 +420,7 @@
         public List<StudentCourseModuleDto> Modules { get; set; } = new();
     }
 
-    private class StudentCourseModuleDto
+    public class StudentCourseModuleDto
     {
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
@@ -428,7 +428,7 @@
         public List<StudentCourseLessonDto> Lessons { get; set; } = new();
     }
 
-    private class StudentCourseLessonDto
+    public class StudentCourseLessonDto
     {
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;

@@ -5,6 +5,7 @@
 
 @inject AuthService Auth
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <PageTitle>پنل مدرس | آموزش‌یار</PageTitle>
 
@@ -171,7 +172,7 @@ else
 
                                         <div class="full">
                                             <label>توضیحات</label>
-                                            <textarea rows="3" @bind="CourseDescription"></textarea>
+                                            <RichTextEditor @bind-Value="CourseDescription" Label="توضیحات دوره" Placeholder="توضیحات و معرفی دوره را بنویسید..." />
                                         </div>
 
                                     </div>
@@ -279,6 +280,7 @@ else
                                                         </div>
 
                                                         <div class="lesson-actions">
+<button type="button" @onclick="() => PreviewLesson(lesson)">پیش‌نمایش</button>
                                                             <button @onclick="() => BeginEditLesson(lesson)">ویرایش</button>
                                                             <button class="danger" @onclick="() => DeleteLesson(lesson.Id)">حذف</button>
                                                         </div>
@@ -292,7 +294,7 @@ else
 
                                 </div>
 
-                                <InstructorCourseStudents CourseId="@SelectedCourse.Id" />
+
 
 
                                 @if (EditingModule)
@@ -372,7 +374,11 @@ else
                                                 <textarea rows="2" @bind="LessonDescription"></textarea>
                                             </div>
 
-                                            @if (LessonContentType == "Video") { <div class="full"><label>آدرس ویدئو</label><input @bind="LessonContentUrl" /></div> } <div class="full"><label>متن کامل درس و جزوه آموزشی</label><textarea rows="14" @bind="LessonContent"></textarea></div>
+                                            @if (LessonContentType == "Video") { <div class="full"><label>آدرس ویدئو</label><input @bind="LessonContentUrl" /></div> }
+<div class="full">
+<label>متن کامل درس و جزوه آموزشی</label>
+<RichTextEditor @bind-Value="LessonContent" Label="متن کامل درس و جزوه آموزشی" Placeholder="محتوای کامل درس را اینجا بنویسید..." />
+</div>
 
                                         </div>
 
@@ -407,6 +413,34 @@ else
 
                                     </div>
                                 }
+
+                                @if (LessonPreviewVisible)
+                                {
+                                    <section class="instructor-lesson-preview">
+                                        <div class="instructor-preview-header">
+                                            <strong>@PreviewTitle</strong>
+                                            <button type="button" @onclick="CloseLessonPreview">بستن</button>
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(PreviewDescription))
+                                        {
+                                            <p>@PreviewDescription</p>
+                                        }
+                                        @if (PreviewContentType == "Video" && !string.IsNullOrWhiteSpace(PreviewContentUrl))
+                                        {
+                                            <CourseMediaPlayer Url="@PreviewContentUrl" Title="@PreviewTitle" />
+                                        }
+                                        else if (!string.IsNullOrWhiteSpace(PreviewContent))
+                                        {
+                                            <div class="instructor-preview-text">@((MarkupString)(FrontEnd.Services.RichTextSanitizer.Sanitize(PreviewContent) ?? string.Empty))</div>
+                                        }
+                                        else
+                                        {
+                                            <p>محتوایی برای نمایش وجود ندارد.</p>
+                                        }
+                                    </section>
+                                }
+
+                                <InstructorCourseStudents CourseId="@SelectedCourse.Id" />
 
                                 @if (!string.IsNullOrWhiteSpace(ErrorMessage))
                                 {
@@ -473,6 +507,12 @@ else
     private bool LessonIsActive { get; set; } = true;
     private bool LessonIsFreePreview { get; set; }
 
+    private bool LessonPreviewVisible { get; set; }
+    private string PreviewTitle { get; set; } = string.Empty;
+    private string? PreviewDescription { get; set; }
+    private string PreviewContentType { get; set; } = "Text";
+    private string? PreviewContentUrl { get; set; }
+    private string? PreviewContent { get; set; }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender)
@@ -712,6 +752,7 @@ else
 
     private async Task DeleteModule(int id)
     {
+        if (!await JS.InvokeAsync<bool>("confirm", "آیا از حذف این سرفصل و تمام درس‌های وابسته به آن مطمئن هستید؟")) return;
         try
         {
             var response = await Client().DeleteAsync($"api/CourseModules/{id}");
@@ -737,6 +778,20 @@ else
         }
     }
 
+    private void PreviewLesson(CourseLessonDto lesson)
+    {
+        PreviewTitle = lesson.Title;
+        PreviewDescription = lesson.Description;
+        PreviewContentType = lesson.ContentType;
+        PreviewContentUrl = lesson.ContentUrl;
+        PreviewContent = lesson.Content;
+        LessonPreviewVisible = true;
+    }
+
+    private void CloseLessonPreview()
+    {
+        LessonPreviewVisible = false;
+    }
     private void BeginNewLesson()
     {
         if (SelectedModule == null)
@@ -859,6 +914,7 @@ else
 
     private async Task DeleteLesson(int id)
     {
+        if (!await JS.InvokeAsync<bool>("confirm", "آیا از حذف این درس مطمئن هستید؟")) return;
         try
         {
             var response = await Client().DeleteAsync(

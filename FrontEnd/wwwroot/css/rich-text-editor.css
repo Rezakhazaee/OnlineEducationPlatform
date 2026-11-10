@@ -1,0 +1,127 @@
+.rte-shell {
+    direction: rtl;
+    width: 100%;
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid rgba(86, 143, 168, .38);
+    border-radius: 16px;
+    background: linear-gradient(145deg, #f8fcfd, #eaf4f6);
+    box-shadow: 0 8px 24px rgba(38, 61, 74, .10), inset 0 1px 0 rgba(255,255,255,.9);
+    color: #263d4a;
+}
+
+.rte-shell .jodit-container {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #a9cbd5;
+    border-radius: 12px;
+    background: #fff;
+    color: #263d4a;
+    box-shadow: 0 3px 12px rgba(38,61,74,.07);
+}
+
+.rte-shell .jodit-toolbar__box {
+    border-bottom: 1px solid rgba(86,143,168,.3);
+    background: linear-gradient(135deg,#e5f2f5,#f8fcfd);
+}
+
+.rte-shell .jodit-toolbar-button__button {
+    border-radius: 7px;
+}
+
+.rte-shell .jodit-toolbar-button__button:hover {
+    background: linear-gradient(145deg,#dff2f5,#c8e4eb);
+}
+
+.rte-shell .jodit-workplace {
+    min-width: 0;
+    overflow-x: auto;
+    background: #fff;
+}
+
+.rte-shell .jodit-wysiwyg {
+    min-height: 260px;
+    padding: 18px;
+    color: #263d4a;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 2;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.rte-shell .jodit-wysiwyg table,
+.rte-preview-content table {
+    width: auto;
+    max-width: none;
+    margin: 12px 0;
+}
+
+.rte-shell .jodit-wysiwyg td,
+.rte-shell .jodit-wysiwyg th,
+.rte-preview-content td,
+.rte-preview-content th {
+    min-width: 0;
+}
+
+.rte-shell .jodit-wysiwyg img,
+.rte-preview-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.rte-shell .jodit-status-bar {
+    border-top: 1px solid #e1edf0;
+    background: #f5fafb;
+}
+
+.rte-preview {
+    margin-top: 14px;
+    padding: 14px;
+    border: 1px solid rgba(86,143,168,.3);
+    border-radius: 12px;
+    background: linear-gradient(145deg,#f1f8fa,#fff);
+}
+
+.rte-preview > strong {
+    display: block;
+    margin-bottom: 10px;
+    color: #28758f;
+}
+
+.rte-preview-content {
+    min-width: 0;
+    line-height: 2;
+    overflow-wrap: anywhere;
+    overflow-x: auto;
+}
+
+.rte-preview-content h1,
+.rte-preview-content h2,
+.rte-preview-content h3 {
+    margin: 1em 0 .5em;
+    color: #263d4a;
+}
+
+@media (max-width: 640px) {
+    .rte-shell {
+        padding: 9px;
+        border-radius: 12px;
+    }
+
+    .rte-shell .jodit-wysiwyg {
+        min-height: 220px;
+        padding: 12px;
+        font-size: .95rem;
+    }
+
+    .rte-shell .jodit-toolbar__box {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    .rte-shell .jodit-container {
+        max-width: 100%;
+    }
+}

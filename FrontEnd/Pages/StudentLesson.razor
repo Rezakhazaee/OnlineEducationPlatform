@@ -132,7 +132,7 @@
                             محتوای درس
                         </h3>
                         <div style="white-space:pre-wrap; line-height:2;">
-                            @Lesson.Content
+                            @((MarkupString)(FrontEnd.Services.RichTextSanitizer.Sanitize(Lesson.Content) ?? string.Empty))
                         </div>
                     </div>
                 </div>

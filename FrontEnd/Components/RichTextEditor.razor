@@ -1,0 +1,76 @@
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div class="rte-shell" dir="rtl">
+    <div id="@EditorId"
+         class="rte-editable"
+         role="textbox"
+         aria-multiline="true"
+         aria-label="@Label"
+         data-placeholder="@Placeholder"></div>
+
+    @if (ShowPreview)
+    {
+        <div class="rte-preview">
+            <strong>پیش‌نمایش زنده</strong>
+            <div class="rte-preview-content">@((MarkupString)PreviewHtml)</div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public string Label { get; set; } = "ویرایشگر متن";
+    [Parameter] public string Placeholder { get; set; } = "متن خود را اینجا بنویسید...";
+    [Parameter] public bool ShowPreview { get; set; } = true;
+
+    private readonly string EditorId = $"rte-{Guid.NewGuid():N}";
+    private DotNetObjectReference<RichTextEditor>? _reference;
+    private bool _initialized;
+    private string _lastValue = "";
+    private string PreviewHtml = "";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _lastValue = Value ?? "";
+            PreviewHtml = FrontEnd.Services.RichTextSanitizer.Sanitize(_lastValue) ?? "";
+
+            _reference = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("richTextEditor.init", EditorId, _reference, _lastValue);
+
+            _initialized = true;
+            await InvokeAsync(StateHasChanged);
+        }
+        else if (_initialized && !string.Equals(Value ?? "", _lastValue, StringComparison.Ordinal))
+        {
+            _lastValue = Value ?? "";
+            PreviewHtml = FrontEnd.Services.RichTextSanitizer.Sanitize(_lastValue) ?? "";
+
+            await JS.InvokeVoidAsync("richTextEditor.setContent", EditorId, _lastValue);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnEditorInput(string html)
+    {
+        _lastValue = html ?? "";
+        PreviewHtml = FrontEnd.Services.RichTextSanitizer.Sanitize(_lastValue) ?? "";
+
+        await ValueChanged.InvokeAsync(_lastValue);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_initialized)
+            await JS.InvokeVoidAsync("richTextEditor.dispose", EditorId);
+
+        _reference?.Dispose();
+    }
+}

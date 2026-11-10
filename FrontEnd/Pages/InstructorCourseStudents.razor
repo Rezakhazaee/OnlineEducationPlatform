@@ -62,9 +62,16 @@
                             {
                                 <small>@student.Mobile</small>
                             }
+                            <div class="instructor-student-meta">
+                                <span>شروع: @FormatPersianDate(student.StartDate)</span>
+                                <span class="instructor-enrollment-status @GetEnrollmentStatusClass(student.Status)">@GetEnrollmentStatusLabel(student.Status)</span>
+                            </div>
+                            <div class="instructor-progress-track" role="progressbar" aria-valuenow="@Math.Clamp(student.ProgressPercent, 0m, 100m)" aria-valuemin="0" aria-valuemax="100">
+                                <span style="width: @(Math.Clamp(student.ProgressPercent, 0m, 100m))%"></span>
+                            </div>
                         </div>
 
-                        <strong>@student.ProgressPercent%</strong>
+                        <strong class="instructor-progress-value">@student.ProgressPercent٪</strong>
 
                         <button class="instructor-small-btn"
                                 @onclick="() => ToggleDetails(student.EnrollmentId)">
@@ -197,12 +204,34 @@
         }
     }
 
+    private static string FormatPersianDate(DateTime? date)
+    {
+        if (date == null) return "ثبت نشده";
+        var calendar = new System.Globalization.PersianCalendar();
+        var value = date.Value;
+        return $"{calendar.GetYear(value):0000}/{calendar.GetMonth(value):00}/{calendar.GetDayOfMonth(value):00}";
+    }
+
+    private static string GetEnrollmentStatusLabel(string? status) => status?.Trim().ToLowerInvariant() switch
+    {
+        "active" => "فعال",
+        "completed" => "تکمیل‌شده",
+        "cancelled" => "لغوشده",
+        "suspended" => "تعلیق‌شده",
+        "pending" => "در انتظار تأیید",
+        _ => string.IsNullOrWhiteSpace(status) ? "نامشخص" : status
+    };
+
+    private static string GetEnrollmentStatusClass(string? status) => "status-" + (status ?? "unknown").Trim().ToLowerInvariant();
+
     private class StudentProgressDto
     {
         public int EnrollmentId { get; set; }
         public int StudentId { get; set; }
         public string StudentName { get; set; } = "";
         public string? Mobile { get; set; }
+        public DateTime? StartDate { get; set; }
+        public string Status { get; set; } = "Pending";
         public int TotalLessons { get; set; }
         public int CompletedLessons { get; set; }
         public decimal ProgressPercent { get; set; }

@@ -143,7 +143,7 @@ public CourseLessonsController(
             Description = dto.Description,
             ContentType = dto.ContentType,
             ContentUrl = dto.ContentUrl,
-            Content = dto.Content,
+            Content = RichTextSanitizer.Sanitize(dto.Content),
             DurationMinutes = dto.DurationMinutes,
             SortOrder = dto.SortOrder,
             IsActive = dto.IsActive,
@@ -200,7 +200,7 @@ public CourseLessonsController(
         lesson.Description = dto.Description;
         lesson.ContentType = dto.ContentType;
         lesson.ContentUrl = dto.ContentUrl;
-        lesson.Content = dto.Content;
+        lesson.Content = RichTextSanitizer.Sanitize(dto.Content);
         lesson.DurationMinutes = dto.DurationMinutes;
         lesson.SortOrder = dto.SortOrder;
         lesson.IsActive = dto.IsActive;
